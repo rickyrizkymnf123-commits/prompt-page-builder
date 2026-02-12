@@ -16,10 +16,11 @@ export function PromptPanel({ promptText, hasPrompt }: Props) {
 
   const handleBuat = async () => {
     await navigator.clipboard.writeText(promptText);
-    window.open('https://chat.z.ai/', '_blank');
+    const encodedPrompt = encodeURIComponent(promptText);
+    window.open(`https://chat.z.ai/?q=${encodedPrompt}`, '_blank');
     toast({
       title: 'Prompt sudah disalin',
-      description: 'Paste di chat.z.ai lalu Run.',
+      description: 'Prompt otomatis dikirim ke chat.z.ai.',
     });
   };
 
