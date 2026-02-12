@@ -37,7 +37,7 @@ export function GroupedSelect({
           {isGrouped
             ? (options as GroupedOption[]).map((group) => (
                 <SelectGroup key={group.group}>
-                  <SelectLabel className="text-muted-foreground font-semibold text-xs uppercase tracking-wide">
+                  <SelectLabel className="text-accent font-bold text-xs uppercase tracking-wide pt-3 pb-1">
                     {group.group}
                   </SelectLabel>
                   {group.options.map((opt) => (
