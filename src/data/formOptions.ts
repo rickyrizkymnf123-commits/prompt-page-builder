@@ -262,13 +262,78 @@ export const targetAudienceOptions: GroupedOption[] = [
   },
 ];
 
-export const gayaDesainOptions: string[] = [
-  'Bold & High Conversion',
-  'Modern SaaS',
-  'Clean & Minimal',
-  'Luxury Dark',
-  'High Contrast Offer',
-  'Story-Based Visual',
+export const gayaDesainOptions: GroupedOption[] = [
+  {
+    group: 'A. Archetype Brand (Specific Look)',
+    options: [
+      'Apple Style',
+      'Stripe / Linear Style',
+      'Airbnb Style',
+      'Notion Style',
+      'Nike / Adidas Style',
+      'Tesla Style',
+    ],
+  },
+  {
+    group: 'B. Popular & Standard',
+    options: [
+      'Clean & Minimalist',
+      'Modern SaaS',
+      'Bold & High Conversion',
+      'Elegant & Premium',
+      'Trust & Authority',
+      'Dark Mode Style',
+    ],
+  },
+  {
+    group: 'C. Tech & Future',
+    options: [
+      'Futuristic Cyberpunk',
+      'AI / SaaS Modern',
+      'Holographic & Glass',
+      'Dark Tech Interface',
+      'Abstract Gradient',
+    ],
+  },
+  {
+    group: 'D. Trending & Aesthetic',
+    options: [
+      'Bento Grid / Modular',
+      'Neobrutalism / Pop Art',
+      'Glassmorphism',
+    ],
+  },
+  {
+    group: 'E. Industry Specific',
+    options: [
+      'Medical / Health',
+      'Real Estate',
+      'Wedding / Event',
+      'Finance / Bank',
+      'Government / Formal',
+    ],
+  },
+  {
+    group: 'F. Industry Specific (Original)',
+    options: [
+      'Editorial / Magazine (Lifestyle)',
+      'Gamer / Neon',
+      'Organic & Natural',
+      'Corporate / Blue-Chip',
+    ],
+  },
+  {
+    group: 'G. Mood & Vibe',
+    options: [
+      'Playful & Fun',
+      'Typography-Driven',
+      'Retro / Vintage',
+    ],
+  },
+  {
+    group: 'H. Visual Storytelling',
+    options: ['Visual Storytelling'],
+  },
 ];
 
 export const elemenTambahanOptions: string[] = [

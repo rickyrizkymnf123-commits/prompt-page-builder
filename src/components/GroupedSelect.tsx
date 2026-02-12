@@ -33,7 +33,7 @@ export function GroupedSelect({
         <SelectTrigger className="w-full bg-secondary border-border">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent className="bg-popover border-border z-50 max-h-[300px]">
+        <SelectContent className="bg-popover border-border z-50">
           {isGrouped
             ? (options as GroupedOption[]).map((group) => (
                 <SelectGroup key={group.group}>
