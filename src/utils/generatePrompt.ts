@@ -6,63 +6,81 @@ export function generatePrompt(form: FormState): string {
     .map(([k]) => k);
 
   const hargaSection = form.hargaNormal || form.hargaPromo
-    ? `\n## Offer\n- Harga Normal: ${form.hargaNormal || '-'}\n- Harga Promo: ${form.hargaPromo || '-'}`
+    ? `\nPENAWARAN (OFFER):\n\n- Harga Normal: ${form.hargaNormal || '-'}\n- Harga Promo: ${form.hargaPromo || '-'}\n- CTA Utama: "${form.ctaUtama || '-'}"`
     : '';
 
   const platformInstructions: Record<string, string> = {
-    'Scalev': 'Buat dalam format HTML single page yang kompatibel dengan Scalev page builder. Gunakan struktur section-based.',
-    'Lynk.id': 'Buat dalam format HTML single page yang kompatibel dengan Lynk.id. Gunakan layout single column yang mobile-first.',
-    'WordPress (Elementor/Divi)': 'Buat dalam format HTML single page yang bisa di-import ke WordPress dengan Elementor atau Divi. Gunakan section dan column structure.',
-    'Shopify': 'Buat dalam format HTML/Liquid single page yang kompatibel dengan Shopify theme. Gunakan section-based layout.',
-    'Copy HTML': 'Buat dalam format HTML single file standalone. Tidak bergantung pada platform apapun.',
+    'Scalev': 'Scalev',
+    'Lynk.id': 'Lynk.id',
+    'WordPress (Elementor/Divi)': 'WordPress (Elementor/Divi)',
+    'Shopify': 'Shopify',
+    'Copy HTML': 'Copy HTML',
   };
 
-  return `# ROLE
-Kamu adalah AI Landing Page Expert — seorang copywriter, UI designer, dan conversion strategist yang menguasai framework ${form.framework}.
+  const platformName = platformInstructions[form.platformTarget] || 'Copy HTML';
 
-# TASK
-Buatkan satu landing page HTML lengkap untuk produk "${form.namaProduk}" menggunakan framework copywriting **${form.framework}** dengan gaya bahasa **${form.gayaBahasa}**.
+  const awarenessMap: Record<string, string> = {
+    'Unaware (Belum sadar)': 'Unaware',
+    'Problem Aware (Tahu masalah)': 'Problem Aware',
+    'Solution Aware (Cari solusi)': 'Solution Aware',
+    'Product Aware (Tahu produk)': 'Product Aware',
+    'Most Aware (Siap beli)': 'Most Aware',
+  };
 
-# PRODUCT PROFILE
-- Nama Produk: ${form.namaProduk}
-- Tipe Produk: ${form.tipeProduk}
-- Tujuan Utama: ${form.tujuanUtama}
-- Level Awareness Target: ${form.levelAwareness}
-- Target Audience: ${form.targetAudience}
-- Deskripsi & Benefit: ${form.deskripsiBenefit || '-'}
-- CTA Utama: ${form.ctaUtama || '-'}
+  const awarenessLevel = awarenessMap[form.levelAwareness] || form.levelAwareness;
+
+  return `ANDA ADALAH: Senior Conversion Copywriter + UI/UX minded marketer yang sudah menciptakan ratusan landing page yang mengkonversi untuk penjualan di social media.
+
+TUGAS ANDA: Menulis Copywriting Landing Page (Sales Page) dengan struktur HTML yang rapi, persuasif, dan aman untuk kebijakan iklan (Meta/Google Ads Compliance).
+
+ATURAN PENULISAN & LAYOUT (WAJIB DIPATUHI):
+
+1. LAYOUT: Desain WAJIB menggunakan SATU KOLOM TUNGGAL (Single Column) di seluruh ukuran layar (Mobile, Tablet, Desktop). Jangan gunakan grid atau layout berkolom meskipun di desktop.
+
+2. TEMA VISUAL: Wajib menggunakan latar belakang Dark Mode (Gelap) di seluruh bagian. Gunakan warna teks terang (putih/abu) untuk keterbacaan yang maksimal.
+
+3. Skimming-friendly: Gunakan heading yang jelas dan bullet points.
+
+4. Emoji hemat & relevan: Maksimal 1 emoji per bullet point atau heading. Jangan berlebihan.
+
+5. Headline Curiosity-First atau menyebut masalah spesifik. Hindari headline generik yang membosankan.
+
+6. Hidden CTA Wajib: Tuliskan 1–2 baris teks reassurance/trust (micro-copy) tepat di bawah setiap tombol CTA.
+
+7. Anti Overclaim: Jangan gunakan kata "pasti", "jamin", "100%", atau klaim medis/finansial yang tidak realistis agar aman dari banned iklan.
+
+8. Penyesuaian Awareness: Tulis copywriting dengan level awareness "${awarenessLevel}". Fokus pada "Sadar masalah, cari solusi".
+
+9. Tone: Gunakan gaya bahasa "${form.gayaBahasa}".
+
+PROFIL PRODUK & MARKET:
+
+- Nama Produk: ${form.namaProduk || '-'}
+
+- Kategori: ${form.tipeProduk || '-'}
+
+- Deskripsi & Benefit: ${form.deskripsiBenefit || form.namaProduk || '-'}
+
+- Target Market: ${form.targetAudience || '-'}
+
+- Tujuan Utama: ${form.tujuanUtama || '-'}
+
+- Framework Utama: ${form.framework || '-'}
 ${hargaSection}
 
-# DESIGN STYLE
-- Gaya Desain: ${form.gayaDesain}
+STRUKTUR HALAMAN (PLATFORM: ${platformName}):
 
-# LAYOUT RULES
-1. Single column layout
-2. Mobile-first responsive
-3. Dark mode default
-4. Gunakan Tailwind CSS (CDN)
-5. Single HTML file, no external dependencies selain Tailwind CDN
-6. Micro-copy pada setiap CTA button
-7. Smooth scroll antar section
+1. HERO SECTION: Hook maut yang relevan dengan target audience.
 
-# PLATFORM
-${platformInstructions[form.platformTarget] || platformInstructions['Copy HTML']}
+2. BODY CONTENT: Mengikuti alur framework ${form.framework || '-'}.
 
-# ADDITIONAL SECTIONS
-Tambahkan section berikut ke dalam landing page:
-${activeElements.map((el) => `- ${el}`).join('\n')}
+3. ADDITIONAL SECTIONS: Wajib masukkan section tambahan berikut: ${activeElements.join(', ') || '-'}.
 
-# COMPLIANCE RULES
-- Tidak boleh ada overclaim atau janji berlebihan
-- Gunakan bahasa yang etis dan tidak manipulatif
-- Sertakan disclaimer jika diperlukan
-- Pastikan aksesibilitas dasar (alt text, contrast ratio, semantic HTML)
+4. TRUST ELEMENTS: Masukkan Social Proof dan Reassurance.
 
-# OUTPUT REQUIREMENTS
-- Output: Satu file HTML lengkap
-- Styling: Tailwind CSS via CDN
-- Layout: Single column, responsive
-- Mode: Dark mode default
-- Semua teks dalam Bahasa Indonesia
-- Siap di-copy-paste dan langsung bisa digunakan`;
+5. CONVERSION BLOCK: Kontras harga dan urgensi yang masuk akal.
+
+6. HIDDEN CTA: Pastikan ada micro-copy trust di bawah tombol.
+
+OUTPUT: Generate kode HTML utuh (single file) dengan Tailwind CSS, visual premium sesuai gaya "${form.gayaDesain || 'Bold & High Conversion'}" dengan nuansa warna dominan "dark ungu", dan copywriting yang sangat persuasif namun aman secara regulasi.`;
 }
