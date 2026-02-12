@@ -1,6 +1,28 @@
+import { useState } from 'react';
 import { StepCard } from '@/components/StepCard';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const ctaOptions = [
+  'Beli Sekarang',
+  'Daftar Sekarang',
+  'Gabung Sekarang',
+  'Konsultasi Gratis',
+  'Download Sekarang',
+  'Amankan Slot',
+  'Mulai Sekarang',
+  'Apply Now (Lamar)',
+  'Get Quote (Minta Penawaran)',
+  'Start Free Trial',
+  'Join Waitlist',
+];
 
 interface Props {
   namaProduk: string;
@@ -12,6 +34,18 @@ interface Props {
 }
 
 export function Step4Detail({ namaProduk, hargaNormal, hargaPromo, deskripsiBenefit, ctaUtama, onChange }: Props) {
+  const [isManualCta, setIsManualCta] = useState(false);
+
+  const handleCtaSelect = (value: string) => {
+    if (value === '__manual__') {
+      setIsManualCta(true);
+      onChange('ctaUtama', '');
+    } else {
+      setIsManualCta(false);
+      onChange('ctaUtama', value);
+    }
+  };
+
   return (
     <StepCard step={4} title="Detail Produk & Copy">
       <div className="space-y-2">
@@ -56,12 +90,31 @@ export function Step4Detail({ namaProduk, hargaNormal, hargaPromo, deskripsiBene
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium text-foreground">CTA Utama</label>
-        <Input
-          placeholder='Contoh: "Daftar Sekarang"'
-          value={ctaUtama}
-          onChange={(e) => onChange('ctaUtama', e.target.value)}
-          className="bg-secondary border-border"
-        />
+        <Select
+          value={isManualCta ? '__manual__' : ctaUtama}
+          onValueChange={handleCtaSelect}
+        >
+          <SelectTrigger className="w-full bg-secondary border-border">
+            <SelectValue placeholder="Pilih CTA..." />
+          </SelectTrigger>
+          <SelectContent className="bg-popover border-border z-50">
+            {ctaOptions.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {opt}
+              </SelectItem>
+            ))}
+            <SelectItem value="__manual__">Isi Manual...</SelectItem>
+          </SelectContent>
+        </Select>
+        {isManualCta && (
+          <Input
+            placeholder="Tulis CTA kamu..."
+            value={ctaUtama}
+            onChange={(e) => onChange('ctaUtama', e.target.value)}
+            className="bg-secondary border-border mt-2"
+            autoFocus
+          />
+        )}
       </div>
     </StepCard>
   );
