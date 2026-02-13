@@ -9,9 +9,12 @@ interface Props {
 export function Header({ darkMode, onToggleDark }: Props) {
   return (
     <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
-      <h1 className="text-xl font-bold text-foreground">
-        Landing Page <span className="text-primary">Builder</span> <span className="text-sm font-normal text-muted-foreground">by Digital Strategi</span>
-      </h1>
+      <div className="flex flex-col">
+        <h1 className="text-xl font-bold text-foreground">
+          Landing Page <span className="text-primary">Builder</span>
+        </h1>
+        <span className="text-xs text-muted-foreground">By Digital Strategi</span>
+      </div>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={onToggleDark}>
           {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
