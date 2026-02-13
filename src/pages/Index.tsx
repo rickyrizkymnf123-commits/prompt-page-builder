@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Step1Framework } from '@/components/steps/Step1Framework';
 import { Step2Product } from '@/components/steps/Step2Product';
@@ -60,17 +61,32 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="text-center py-16 px-6 border-b border-border">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-6"
+        >
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           NEW V3.0 RELEASE
-        </div>
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-tight max-w-3xl mx-auto">
+        </motion.div>
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-tight max-w-3xl mx-auto"
+        >
           Buat Landing Page professional cuman dalam{' '}
           <span className="text-primary">Hitungan menit</span> <Zap className="inline h-10 w-10 text-primary" />
-        </h2>
-        <p className="mt-6 text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mt-6 text-muted-foreground text-base md:text-lg max-w-2xl mx-auto"
+        >
           Generate Landing Page dari format yang benar, karena landing page yang gagal biasanya bukan salah katanya, tapi salah strukturnya.
-        </p>
+        </motion.p>
       </section>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 p-6 max-w-[1400px] mx-auto w-full">
