@@ -1,0 +1,244 @@
+import { encode as base64Encode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-scalev-hmac-sha256",
+};
+
+// Route mapping: product_code → provision endpoint URL
+// Add new products here. Use env vars for external project URLs.
+function getRoutes(): Record<string, string> {
+  return {
+    // LPE is handled locally (this project)
+    LPE: "LOCAL",
+    // External projects — add env vars as you set up each project
+    ...(Deno.env.get("ROUTE_SWA_URL") ? { SWA: Deno.env.get("ROUTE_SWA_URL")! } : {}),
+    ...(Deno.env.get("ROUTE_PEA_URL") ? { PEA: Deno.env.get("ROUTE_PEA_URL")! } : {}),
+    ...(Deno.env.get("ROUTE_DST_URL") ? { DST: Deno.env.get("ROUTE_DST_URL")! } : {}),
+    ...(Deno.env.get("ROUTE_MAA_URL") ? { MAA: Deno.env.get("ROUTE_MAA_URL")! } : {}),
+    ...(Deno.env.get("ROUTE_PNA_URL") ? { PNA: Deno.env.get("ROUTE_PNA_URL")! } : {}),
+  };
+}
+
+async function verifyScalevSignature(
+  rawBody: string,
+  signature: string,
+  secret: string
+): Promise<boolean> {
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const signed = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+    const calculatedSignature = base64Encode(new Uint8Array(signed));
+    return calculatedSignature === signature;
+  } catch {
+    return false;
+  }
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  // Health check
+  if (req.method === "GET") {
+    const routes = getRoutes();
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        status: "gateway_ready",
+        registered_products: Object.keys(routes),
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    const rawBody = await req.text();
+
+    // Handle empty body (ping)
+    if (!rawBody || rawBody.trim() === "") {
+      return new Response(
+        JSON.stringify({ ok: true, status: "ping_received" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const PROVISION_SECRET = Deno.env.get("PROVISION_SECRET");
+    if (!PROVISION_SECRET) {
+      return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify HMAC or query param
+    const scalevSignature = req.headers.get("x-scalev-hmac-sha256");
+    const url = new URL(req.url);
+    const querySecret = url.searchParams.get("secret");
+
+    let authorized = false;
+    if (scalevSignature) {
+      authorized = await verifyScalevSignature(rawBody, scalevSignature, PROVISION_SECRET);
+    } else if (querySecret) {
+      authorized = querySecret === PROVISION_SECRET;
+    }
+
+    // Allow test events without auth
+    if (!authorized) {
+      try {
+        const testBody = JSON.parse(rawBody);
+        if (testBody.event === "business.test_event") {
+          return new Response(
+            JSON.stringify({ ok: true, status: "test_event_received" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } catch { /* ignore */ }
+
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let body;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return new Response(
+        JSON.stringify({ ok: true, status: "invalid_json_ignored" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle test event
+    if (body.event === "business.test_event") {
+      return new Response(
+        JSON.stringify({ ok: true, status: "test_event_received" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Determine product_code from payload
+    const data = body.data || body;
+    let product_code = data.product_code || body.product_code || "";
+
+    // Try to detect from orderlines product name if no explicit product_code
+    if (!product_code && data.orderlines && data.orderlines.length > 0) {
+      const productName = (data.orderlines[0].product_name || "").toUpperCase();
+      // Map product names to codes — customize as needed
+      if (productName.includes("LANDING PAGE") || productName.includes("LPE")) product_code = "LPE";
+      else if (productName.includes("STORY WEAVER") || productName.includes("SWA") || productName.includes("EBOOK")) product_code = "SWA";
+      else if (productName.includes("PROPERTY") || productName.includes("PEA")) product_code = "PEA";
+      else if (productName.includes("DIGITAL STRATEGY") || productName.includes("DST")) product_code = "DST";
+      else if (productName.includes("META ADS") || productName.includes("MAA")) product_code = "MAA";
+      else if (productName.includes("PROFIT") || productName.includes("PNA")) product_code = "PNA";
+    }
+
+    // Default to LPE if no product_code detected
+    if (!product_code) product_code = "LPE";
+
+    console.log("Gateway routing:", { product_code, event: body.event });
+
+    const routes = getRoutes();
+    const targetUrl = routes[product_code];
+
+    if (!targetUrl) {
+      console.error(`No route configured for product_code: ${product_code}`);
+      return new Response(
+        JSON.stringify({
+          error: `No route configured for product: ${product_code}`,
+          registered_products: Object.keys(routes),
+        }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // LOCAL = process in this project's provision function
+    if (targetUrl === "LOCAL") {
+      const localUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/provision`;
+      console.log("Routing to LOCAL provision:", localUrl);
+
+      const forwardResponse = await fetch(localUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Pass the original HMAC signature
+          ...(scalevSignature
+            ? { "x-scalev-hmac-sha256": scalevSignature }
+            : {}),
+        },
+        body: rawBody,
+      });
+
+      const forwardResult = await forwardResponse.text();
+      return new Response(forwardResult, {
+        status: forwardResponse.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // EXTERNAL = forward to another project's provision endpoint
+    console.log(`Routing to EXTERNAL ${product_code}:`, targetUrl);
+
+    // Get the secret for the target project (each project can have its own)
+    const targetSecret = Deno.env.get(`ROUTE_${product_code}_SECRET`) || PROVISION_SECRET;
+
+    // Re-sign the body with the target project's secret
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(targetSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const signed = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+    const newSignature = base64Encode(new Uint8Array(signed));
+
+    const forwardResponse = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-scalev-hmac-sha256": newSignature,
+      },
+      body: rawBody,
+    });
+
+    const forwardResult = await forwardResponse.text();
+    console.log(`Forward response from ${product_code}:`, forwardResponse.status, forwardResult);
+
+    return new Response(forwardResult, {
+      status: forwardResponse.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Gateway error:", error);
+    return new Response(
+      JSON.stringify({ ok: false, error: (error as Error).message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+});
