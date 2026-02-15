@@ -161,18 +161,46 @@ Deno.serve(async (req) => {
       else if (productName.includes("PROFIT") || productName.includes("PNA")) product_code = "PNA";
     }
 
-    // 4. Try to detect from metadata.event_source_url
+    // 4. Slug mapping from SCALEV_SLUG_MAP env var (JSON: {"slug-name":"PRODUCT_CODE"})
     if (!product_code && data.metadata?.event_source_url) {
-      const sourceUrl = data.metadata.event_source_url.toLowerCase();
-      if (sourceUrl.includes("story-weaver") || sourceUrl.includes("swa") || sourceUrl.includes("ebook")) product_code = "SWA";
-      else if (sourceUrl.includes("property") || sourceUrl.includes("pea")) product_code = "PEA";
-      else if (sourceUrl.includes("digital-strategy") || sourceUrl.includes("dst")) product_code = "DST";
-      else if (sourceUrl.includes("meta-ads") || sourceUrl.includes("maa")) product_code = "MAA";
-      else if (sourceUrl.includes("profit") || sourceUrl.includes("pna")) product_code = "PNA";
+      const sourceUrl = data.metadata.event_source_url;
+      // Extract slug from URL (last path segment)
+      const slug = sourceUrl.split("/").filter(Boolean).pop() || "";
+      
+      const slugMapRaw = Deno.env.get("SCALEV_SLUG_MAP");
+      if (slugMapRaw) {
+        try {
+          const slugMap: Record<string, string> = JSON.parse(slugMapRaw);
+          // Check exact slug match
+          if (slugMap[slug]) {
+            product_code = slugMap[slug];
+          } else {
+            // Check if any key is contained in the full URL
+            for (const [key, code] of Object.entries(slugMap)) {
+              if (sourceUrl.toLowerCase().includes(key.toLowerCase())) {
+                product_code = code;
+                break;
+              }
+            }
+          }
+        } catch { /* ignore invalid JSON */ }
+      }
+
+      // Fallback: keyword detection from URL
+      if (!product_code) {
+        const lower = sourceUrl.toLowerCase();
+        if (lower.includes("story-weaver") || lower.includes("swa") || lower.includes("ebook")) product_code = "SWA";
+        else if (lower.includes("property") || lower.includes("pea")) product_code = "PEA";
+        else if (lower.includes("digital-strategy") || lower.includes("dst")) product_code = "DST";
+        else if (lower.includes("meta-ads") || lower.includes("maa")) product_code = "MAA";
+        else if (lower.includes("profit") || lower.includes("pna")) product_code = "PNA";
+      }
     }
 
     // Default to LPE if no product_code detected
     if (!product_code) product_code = "LPE";
+
+    console.log("Gateway routing:", { product_code, slug: data.metadata?.event_source_url, event: body.event });
 
     console.log("Gateway routing:", { product_code, event: body.event });
 
