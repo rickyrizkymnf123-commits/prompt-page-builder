@@ -278,7 +278,7 @@ Deno.serve(async (req) => {
       message: `User provisioned successfully. Phone: ${phone || "N/A"}`,
     });
 
-    const APP_DOMAIN = Deno.env.get("APP_DOMAIN") || "https://ai-page-craft-96.lovable.app";
+    const APP_DOMAIN = (Deno.env.get("APP_DOMAIN") || "https://ai-page-craft-96.lovable.app").replace(/\/+$/, "");
 
     const messageTemplate = `Yeay! 🎉 Pembayaran berhasil,\n\nHalo kak ${name || ""} 🙌\nPembayaran kamu untuk Landing Page Engine sudah kami terima ✨\n\nAkses akun kamu di sini:\n👉 ${APP_DOMAIN}/login\n\nEmail: ${email}\nPassword: ${password}\n\n⚠️ Penting:\nPassword ini tidak bisa diubah, mohon disimpan dan dijaga dengan baik.`;
 
