@@ -280,7 +280,49 @@ Deno.serve(async (req) => {
 
     const APP_DOMAIN = "https://ai-page-craft-96.lovable.app";
 
-    const messageTemplate = `Yeay! 🎉 Pembayaran berhasil,\n\nHalo kak ${name || ""} 🙌\nPembayaran kamu untuk Landing Page Engine sudah kami terima ✨\n\nAkses akun kamu di sini:\n👉 ${APP_DOMAIN}/login\n\nEmail: ${email}\nPassword: ${password}\n\n⚠️ Penting:\nPassword ini tidak bisa diubah, mohon disimpan dan dijaga dengan baik.\n`;
+    const messageTemplate = `Yeay! 🎉 Pembayaran berhasil,\n\nHalo kak ${name || ""} 🙌\nPembayaran kamu untuk Landing Page Engine sudah kami terima ✨\n\nAkses akun kamu di sini:\n👉 ${APP_DOMAIN}/login\n\nEmail: ${email}\nPassword: ${password}\n\n⚠️ Penting:\nPassword ini tidak bisa diubah, mohon disimpan dan dijaga dengan baik.`;
+
+    // Send WhatsApp notification via WAHA
+    const wahaApiUrl = Deno.env.get("WAHA_API_URL");
+    const wahaApiKey = Deno.env.get("WAHA_API_KEY");
+    const wahaSession = Deno.env.get("WAHA_SESSION_NAME");
+
+    if (wahaApiUrl && wahaApiKey && wahaSession && phone) {
+      try {
+        // Format phone number: ensure it starts with country code, no +
+        let chatId = phone.replace(/[^0-9]/g, "");
+        if (!chatId.startsWith("62") && chatId.startsWith("0")) {
+          chatId = "62" + chatId.substring(1);
+        }
+        chatId = chatId + "@c.us";
+
+        const wahaResponse = await fetch(`${wahaApiUrl}/api/sendText`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${wahaApiKey}`,
+          },
+          body: JSON.stringify({
+            session: wahaSession,
+            chatId,
+            text: messageTemplate,
+          }),
+        });
+
+        const wahaResult = await wahaResponse.text();
+        console.log("WAHA response:", wahaResponse.status, wahaResult);
+      } catch (wahaError) {
+        console.error("Failed to send WhatsApp notification:", wahaError.message);
+        // Don't fail the provisioning if WhatsApp fails
+      }
+    } else {
+      console.log("WhatsApp notification skipped:", {
+        hasApiUrl: !!wahaApiUrl,
+        hasApiKey: !!wahaApiKey,
+        hasSession: !!wahaSession,
+        hasPhone: !!phone,
+      });
+    }
 
     return new Response(
       JSON.stringify({
@@ -289,6 +331,7 @@ Deno.serve(async (req) => {
         email,
         password,
         message_template: messageTemplate,
+        whatsapp_sent: !!(wahaApiUrl && wahaApiKey && wahaSession && phone),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
