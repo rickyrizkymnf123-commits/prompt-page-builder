@@ -135,20 +135,40 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Determine product_code from payload
+    // Determine product_code from multiple sources
     const data = body.data || body;
-    let product_code = data.product_code || body.product_code || "";
+    let product_code = "";
 
-    // Try to detect from orderlines product name if no explicit product_code
+    // 1. Check query parameter ?product=SWA (highest priority)
+    const queryProduct = url.searchParams.get("product");
+    if (queryProduct) {
+      product_code = queryProduct.toUpperCase();
+    }
+
+    // 2. Check explicit product_code in payload
+    if (!product_code) {
+      product_code = data.product_code || body.product_code || "";
+    }
+
+    // 3. Try to detect from orderlines product name
     if (!product_code && data.orderlines && data.orderlines.length > 0) {
       const productName = (data.orderlines[0].product_name || "").toUpperCase();
-      // Map product names to codes — customize as needed
       if (productName.includes("LANDING PAGE") || productName.includes("LPE")) product_code = "LPE";
       else if (productName.includes("STORY WEAVER") || productName.includes("SWA") || productName.includes("EBOOK")) product_code = "SWA";
       else if (productName.includes("PROPERTY") || productName.includes("PEA")) product_code = "PEA";
       else if (productName.includes("DIGITAL STRATEGY") || productName.includes("DST")) product_code = "DST";
       else if (productName.includes("META ADS") || productName.includes("MAA")) product_code = "MAA";
       else if (productName.includes("PROFIT") || productName.includes("PNA")) product_code = "PNA";
+    }
+
+    // 4. Try to detect from metadata.event_source_url
+    if (!product_code && data.metadata?.event_source_url) {
+      const sourceUrl = data.metadata.event_source_url.toLowerCase();
+      if (sourceUrl.includes("story-weaver") || sourceUrl.includes("swa") || sourceUrl.includes("ebook")) product_code = "SWA";
+      else if (sourceUrl.includes("property") || sourceUrl.includes("pea")) product_code = "PEA";
+      else if (sourceUrl.includes("digital-strategy") || sourceUrl.includes("dst")) product_code = "DST";
+      else if (sourceUrl.includes("meta-ads") || sourceUrl.includes("maa")) product_code = "MAA";
+      else if (sourceUrl.includes("profit") || sourceUrl.includes("pna")) product_code = "PNA";
     }
 
     // Default to LPE if no product_code detected
