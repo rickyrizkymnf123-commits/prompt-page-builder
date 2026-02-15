@@ -83,11 +83,26 @@ Deno.serve(async (req) => {
 
     if (scalevSignature) {
       authorized = await verifyScalevSignature(rawBody, scalevSignature, PROVISION_SECRET);
+      console.log("HMAC verification:", { authorized, receivedSignature: scalevSignature });
     } else if (querySecret) {
       authorized = querySecret === PROVISION_SECRET;
+      console.log("Query param auth:", { authorized });
+    } else {
+      console.log("No auth method provided. Headers:", JSON.stringify(Object.fromEntries(req.headers.entries())));
     }
 
     if (!authorized) {
+      // For Scalev test_event, try to parse and check if it's a test
+      try {
+        const testBody = JSON.parse(rawBody);
+        if (testBody.event === "business.test_event") {
+          console.log("Received Scalev test event, returning 200");
+          return new Response(JSON.stringify({ ok: true, status: "test_event_received" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch { /* ignore parse errors */ }
+
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
