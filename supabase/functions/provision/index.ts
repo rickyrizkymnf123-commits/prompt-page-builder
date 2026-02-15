@@ -118,6 +118,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Handle Scalev test event (sent when saving webhook config)
+    if (body.event === "business.test_event") {
+      console.log("Received Scalev test event, returning 200");
+      return new Response(JSON.stringify({ ok: true, status: "test_event_received" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Parse Scalev payload format
     const event = body.event;
     const data = body.data || body;
