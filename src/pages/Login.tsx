@@ -53,35 +53,41 @@ export default function Login() {
         return;
       }
 
-      // Check entitlement
-      const { data: entitlement } = await supabase
+      // Check active entitlement
+      const { data: activeEntitlement } = await supabase
         .from("entitlements")
         .select("id, status")
         .eq("product_code", "LPE")
+        .eq("status", "active")
+        .limit(1)
         .maybeSingle();
 
-      if (!entitlement) {
-        setError("Akses belum aktif. Silakan hubungi support.");
-        await supabase.auth.signOut();
-        setLoading(false);
+      if (activeEntitlement) {
+        navigate("/app");
         return;
       }
 
-      if (entitlement.status === "pending") {
+      // Check if pending
+      const { data: pendingEntitlement } = await supabase
+        .from("entitlements")
+        .select("id, status")
+        .eq("product_code", "LPE")
+        .eq("status", "pending")
+        .limit(1)
+        .maybeSingle();
+
+      if (pendingEntitlement) {
         setError("Akun Anda masih menunggu persetujuan admin.");
         await supabase.auth.signOut();
         setLoading(false);
         return;
       }
 
-      if (entitlement.status === "rejected") {
-        setError("Pendaftaran Anda ditolak. Silakan hubungi support.");
-        await supabase.auth.signOut();
-        setLoading(false);
-        return;
-      }
-
-      navigate("/app");
+      // No entitlement at all or rejected
+      setError("Akses belum aktif. Silakan hubungi support.");
+      await supabase.auth.signOut();
+      setLoading(false);
+      return;
     } catch {
       setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {

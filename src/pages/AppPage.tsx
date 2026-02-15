@@ -22,6 +22,7 @@ export default function AppPage() {
         .select("id")
         .eq("product_code", "LPE")
         .eq("status", "active")
+        .limit(1)
         .maybeSingle();
 
       if (!entitlement) {
