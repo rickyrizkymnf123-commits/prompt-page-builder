@@ -126,6 +126,9 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Log full payload for debugging
+    console.log("Full payload:", JSON.stringify(body));
+
     // Parse Scalev payload format
     const event = body.event;
     const data = body.data || body;
@@ -138,6 +141,8 @@ Deno.serve(async (req) => {
     const name = destination.name || data.name || body.name || "";
     const email = (destination.email || data.email || body.email || "").toLowerCase();
     const phone = destination.phone || data.phone || body.phone || "";
+
+    console.log("Parsed fields:", { order_id, email, phone, name, payment_status, event });
 
     // Extract product info from orderlines if available
     let product_code = data.product_code || body.product_code || "LPE";
