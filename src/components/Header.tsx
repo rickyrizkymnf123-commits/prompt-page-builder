@@ -1,4 +1,6 @@
 import { Moon, Sun, LogOut, Rocket } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -7,6 +9,13 @@ interface Props {
 }
 
 export function Header({ darkMode, onToggleDark }: Props) {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
+
   return (
     <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -24,7 +33,7 @@ export function Header({ darkMode, onToggleDark }: Props) {
         <Button variant="ghost" size="icon" onClick={onToggleDark}>
           {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" onClick={handleLogout}>
           <LogOut className="h-5 w-5" />
         </Button>
       </div>
