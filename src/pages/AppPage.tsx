@@ -1,12 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { LogOut, CheckCircle } from "lucide-react";
+import { Header } from "@/components/Header";
+import { PromptPanel } from "@/components/PromptPanel";
+import { Step1Framework } from "@/components/steps/Step1Framework";
+import { Step2Product } from "@/components/steps/Step2Product";
+import { Step3Target } from "@/components/steps/Step3Target";
+import { Step4Detail } from "@/components/steps/Step4Detail";
+import { Step5Design } from "@/components/steps/Step5Design";
+import { Step6Elements } from "@/components/steps/Step6Elements";
+import { Step7Platform } from "@/components/steps/Step7Platform";
+import { FormState, initialFormState } from "@/types/form";
+import { generatePrompt } from "@/utils/generatePrompt";
 
 export default function AppPage() {
   const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState("");
+  const [darkMode, setDarkMode] = useState(true);
+  const [form, setForm] = useState<FormState>(initialFormState);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,27 +27,18 @@ export default function AppPage() {
         return;
       }
 
-      const { data: entitlement } = await supabase
+      const { data: entitlements } = await supabase
         .from("entitlements")
         .select("id")
         .eq("product_code", "LPE")
-        .eq("status", "active")
-        .limit(1)
-        .maybeSingle();
+        .eq("status", "active");
 
-      if (!entitlement) {
+      if (!entitlements || entitlements.length === 0) {
         await supabase.auth.signOut();
         navigate("/login");
         return;
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("name")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
-      setUserName(profile?.name || session.user.email || "User");
       setLoading(false);
     };
 
@@ -49,10 +50,18 @@ export default function AppPage() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
-  };
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+  }, [darkMode]);
+
+  const handleChange = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
+  const handleToggleElement = (element: string) =>
+    setForm((prev) => ({
+      ...prev,
+      elemenTambahan: { ...prev.elemenTambahan, [element]: !prev.elemenTambahan[element] },
+    }));
+  const promptText = generatePrompt(form);
+  const hasPrompt = !!(form.framework && form.tipeProduk && form.namaProduk);
 
   if (loading) {
     return (
@@ -64,21 +73,30 @@ export default function AppPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">
-          Landing Page <span className="text-primary">Engine</span>
-        </h1>
-        <Button variant="ghost" size="icon" onClick={handleLogout}>
-          <LogOut className="h-5 w-5" />
-        </Button>
-      </header>
-      <main className="flex items-center justify-center p-8">
-        <div className="text-center space-y-4">
-          <CheckCircle className="h-16 w-16 text-primary mx-auto" />
-          <h2 className="text-2xl font-bold text-foreground">Welcome, {userName}!</h2>
-          <p className="text-muted-foreground">Akses aktif. Selamat menggunakan Landing Page Engine.</p>
+      <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 p-6 max-w-[1440px] mx-auto">
+        <div className="space-y-6">
+          <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
+          <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
+          <Step3Target targetAudience={form.targetAudience} levelAwareness={form.levelAwareness} onChange={handleChange} />
+          <Step4Detail
+            namaProduk={form.namaProduk}
+            hargaNormal={form.hargaNormal}
+            hargaPromo={form.hargaPromo}
+            deskripsiBenefit={form.deskripsiBenefit}
+            ctaUtama={form.ctaUtama}
+            onChange={handleChange}
+          />
+          <Step5Design gayaDesain={form.gayaDesain} onChange={handleChange} />
+          <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
+          <Step7Platform platformTarget={form.platformTarget} onChange={handleChange} />
         </div>
-      </main>
+        <div className="hidden lg:block">
+          <div className="sticky top-6">
+            <PromptPanel promptText={promptText} hasPrompt={hasPrompt} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
