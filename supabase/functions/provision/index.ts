@@ -41,6 +41,13 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Health check / ping for webhook validation (Scalev sends GET or empty POST on save)
+  if (req.method === "GET") {
+    return new Response(JSON.stringify({ ok: true, status: "ready" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -50,6 +57,14 @@ Deno.serve(async (req) => {
 
   try {
     const rawBody = await req.text();
+
+    // Handle empty body (ping/validation request from Scalev on webhook save)
+    if (!rawBody || rawBody.trim() === "") {
+      return new Response(JSON.stringify({ ok: true, status: "ping_received" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const PROVISION_SECRET = Deno.env.get("PROVISION_SECRET");
 
     if (!PROVISION_SECRET) {
@@ -79,7 +94,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = JSON.parse(rawBody);
+    let body;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return new Response(JSON.stringify({ ok: true, status: "invalid_json_ignored" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Parse Scalev payload format
     const event = body.event;
