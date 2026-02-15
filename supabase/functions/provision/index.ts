@@ -300,7 +300,7 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${wahaApiKey}`,
+            "X-Api-Key": wahaApiKey,
           },
           body: JSON.stringify({
             session: wahaSession,
