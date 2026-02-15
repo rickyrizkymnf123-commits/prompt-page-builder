@@ -136,11 +136,12 @@ Deno.serve(async (req) => {
     const order_id = data.order_id || body.order_id;
     const payment_status = (data.payment_status || body.payment_status || "").toLowerCase();
 
-    // Extract customer info from destination_address (Scalev format) or fallback to flat fields
+    // Extract customer info from Scalev customer object, destination_address, or flat fields
+    const customer = data.customer || {};
     const destination = data.destination_address || {};
-    const name = destination.name || data.name || body.name || "";
-    const email = (destination.email || data.email || body.email || "").toLowerCase();
-    const phone = destination.phone || data.phone || body.phone || "";
+    const name = customer.name || destination.name || data.name || body.name || "";
+    const email = (customer.email || destination.email || data.email || body.email || "").toLowerCase();
+    const phone = customer.phone || destination.phone || data.phone || body.phone || "";
 
     console.log("Parsed fields:", { order_id, email, phone, name, payment_status, event });
 
