@@ -1,9 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as base64Encode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-scalev-hmac-sha256",
 };
 
 function generatePassword(length = 10): string {
@@ -15,6 +16,24 @@ function generatePassword(length = 10): string {
     result += chars[array[i] % chars.length];
   }
   return result;
+}
+
+async function verifyScalevSignature(
+  rawBody: string,
+  signature: string,
+  secret: string
+): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signed = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+  const calculatedSignature = base64Encode(new Uint8Array(signed));
+  return calculatedSignature === signature;
 }
 
 Deno.serve(async (req) => {
@@ -30,15 +49,62 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    const { secret, order_id, name, email, phone, product_code, payment_status } = body;
-
+    const rawBody = await req.text();
     const PROVISION_SECRET = Deno.env.get("PROVISION_SECRET");
-    if (!PROVISION_SECRET || secret !== PROVISION_SECRET) {
+
+    if (!PROVISION_SECRET) {
+      return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Auth: check HMAC signature header OR query param fallback
+    const scalevSignature = req.headers.get("x-scalev-hmac-sha256");
+    const url = new URL(req.url);
+    const querySecret = url.searchParams.get("secret");
+
+    let authorized = false;
+
+    if (scalevSignature) {
+      authorized = await verifyScalevSignature(rawBody, scalevSignature, PROVISION_SECRET);
+    } else if (querySecret) {
+      authorized = querySecret === PROVISION_SECRET;
+    }
+
+    if (!authorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const body = JSON.parse(rawBody);
+
+    // Parse Scalev payload format
+    const event = body.event;
+    const data = body.data || body;
+
+    const order_id = data.order_id || body.order_id;
+    const payment_status = (data.payment_status || body.payment_status || "").toLowerCase();
+
+    // Extract customer info from destination_address (Scalev format) or fallback to flat fields
+    const destination = data.destination_address || {};
+    const name = destination.name || data.name || body.name || "";
+    const email = (destination.email || data.email || body.email || "").toLowerCase();
+    const phone = destination.phone || data.phone || body.phone || "";
+
+    // Extract product info from orderlines if available
+    let product_code = data.product_code || body.product_code || "LPE";
+    if (data.orderlines && data.orderlines.length > 0) {
+      // Could map product_name to product_code if needed
+    }
+
+    if (!email || !order_id) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: email and order_id" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const supabaseAdmin = createClient(
@@ -46,13 +112,13 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Skip if not PAID
-    if (payment_status !== "PAID") {
+    // Skip if not paid
+    if (payment_status !== "paid") {
       await supabaseAdmin.from("provision_logs").insert({
         order_id,
         email,
         status: "skipped",
-        message: `payment_status: ${payment_status}`,
+        message: `event: ${event || "unknown"}, payment_status: ${payment_status}`,
       });
       return new Response(
         JSON.stringify({ ok: true, skipped: true }),
@@ -84,18 +150,15 @@ Deno.serve(async (req) => {
     let userId: string;
     const password = generatePassword(12);
 
-    // Check if user exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     const existingUser = existingUsers?.users?.find(
-      (u) => u.email?.toLowerCase() === email.toLowerCase()
+      (u) => u.email?.toLowerCase() === email
     );
 
     if (existingUser) {
       userId = existingUser.id;
-      // Update password for existing user
       await supabaseAdmin.auth.admin.updateUserById(userId, { password });
     } else {
-      // Create new user
       const { data: newUser, error: createError } =
         await supabaseAdmin.auth.admin.createUser({
           email,
@@ -122,8 +185,7 @@ Deno.serve(async (req) => {
 
       userId = newUser.user.id;
 
-      // Update profile with phone
-      if (phone) {
+      if (phone || name) {
         await supabaseAdmin
           .from("profiles")
           .update({ phone, name })
