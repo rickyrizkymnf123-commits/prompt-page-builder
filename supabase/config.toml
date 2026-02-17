@@ -1,1 +1,7 @@
 project_id = "npgglrvvdlhagztsxsjc"
+
+[functions.gateway-provision]
+verify_jwt = false
+
+[functions.provision]
+verify_jwt = false
