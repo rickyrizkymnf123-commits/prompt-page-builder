@@ -74,23 +74,11 @@ fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/></noscript>
 <!-- End Facebook Pixel Code -->`;
-    let result = html.includes('</head>') ? html.replace('</head>', pixelScript + '\n</head>') : pixelScript + html;
-    const btnEventScript = `<script>
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('a[href], button').forEach(function(el) {
-    el.addEventListener('click', function() {
-      if (typeof fbq === 'undefined') return;
-      fbq('track', 'AddToCart');
-      fbq('track', 'InitiateCheckout');
-      fbq('track', 'AddPaymentInfo');
-      fbq('track', 'Purchase', {value: 0, currency: 'IDR'});
-    });
-  });
-});
-</script>`;
-    result = result.includes('</body>') ? result.replace('</body>', btnEventScript + '\n</body>') : result + btnEventScript;
+    // Hanya inject PageView di <head> — event per tombol diatur manual via Edit Mode
+    const result = html.includes('</head>') ? html.replace('</head>', pixelScript + '\n</head>') : pixelScript + html;
     return result;
   };
+
 
   const getEditableHtml = () => {
     if (!previewHtml) return '';
@@ -257,14 +245,14 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 const FB_PIXEL_EVENTS = [
-  { value: '', label: '— Tidak ada (default dari global) —' },
-  { value: 'AddToCart', label: '🛒 Add to Cart' },
-  { value: 'InitiateCheckout', label: '💳 Initiate Checkout' },
-  { value: 'AddPaymentInfo', label: '💳 Add Payment Info' },
-  { value: 'Purchase', label: '✅ Purchase' },
-  { value: 'Lead', label: '📋 Lead' },
-  { value: 'ViewContent', label: '👁 View Content' },
-  { value: 'CompleteRegistration', label: '📝 Complete Registration' },
+  { value: '', label: '❌ Tidak ada event khusus' },
+  { value: 'AddToCart', label: '🛒 AddToCart — Klik tombol beli/keranjang' },
+  { value: 'InitiateCheckout', label: '💳 InitiateCheckout — Mulai proses checkout' },
+  { value: 'AddPaymentInfo', label: '💳 AddPaymentInfo — Isi info pembayaran' },
+  { value: 'Purchase', label: '✅ Purchase — Transaksi berhasil' },
+  { value: 'Lead', label: '📋 Lead — Submit form/lead' },
+  { value: 'ViewContent', label: '👁 ViewContent — Lihat konten/produk' },
+  { value: 'CompleteRegistration', label: '📝 CompleteRegistration — Daftar berhasil' },
 ];
 
 function AdminEditModal({
