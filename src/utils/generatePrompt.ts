@@ -27,7 +27,8 @@ export function generatePrompt(form: FormState): string {
   // Platform-specific output rules
   const platformOutputRules: Record<string, string> = {
     'Scalev': `## PLATFORM TARGET: Scalev
-Output HARUS berupa satu blok kode HTML dengan SEMUA CSS inline (atribut style di setiap elemen). Tidak ada <head>, tidak ada tag <style>, tidak ada CSS external. HTML akan diinjeksi ke dalam page builder Scalev. Gunakan hanya tag: div, section, span, h1-h6, p, a, img, ul, li. Semua gambar gunakan URL placeholder.`,
+Output HARUS berupa satu blok kode HTML dengan SEMUA CSS inline (atribut style di setiap elemen). Tidak ada <head>, tidak ada tag <style>, tidak ada CSS external. HTML akan diinjeksi ke dalam page builder Scalev. Gunakan hanya tag: div, section, span, h1-h6, p, a, img, ul, li. Semua gambar gunakan URL placeholder.
+LEBAR LANDING PAGE: Lebar konten maksimal adalah 688px (max-width: 688px; margin: 0 auto;). Setiap section dan wrapper utama WAJIB menggunakan max-width: 688px agar tampil optimal di Scalev.`,
 
     'Lynk.id': `## PLATFORM TARGET: Lynk.id
 Output HARUS berupa satu blok kode HTML dengan SEMUA CSS inline (atribut style di setiap elemen). Tidak ada <head>, tidak ada tag <style>, tidak ada CSS external. HTML akan diinjeksi ke dalam page builder Lynk.id. Gunakan hanya tag: div, section, span, h1-h6, p, a, img, ul, li. Semua gambar gunakan URL placeholder.`,
@@ -91,7 +92,7 @@ Setiap section konten WAJIB menggunakan layout 2 kolom (50/50 atau 60/40) dengan
 - Section GENAP (2, 4, 6, ...): Kolom KIRI = gambar placeholder  |  Kolom KANAN = teks/konten
 
 Contoh struktur HTML setiap section konten:
-<section style="display:flex;flex-wrap:wrap;align-items:center;gap:60px;padding:80px 5%;max-width:1200px;margin:0 auto;">
+<section style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;padding:60px 20px;max-width:688px;margin:0 auto;">
   <div style="flex:1;min-width:300px;"> [KONTEN TEKS: heading, paragraf, bullet points] </div>
   <div style="flex:1;min-width:300px;"> <img src="https://placehold.co/600x450/1a1a2e/ffffff?text=Nama+Section" alt="deskripsi" width="600" height="450" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);"> </div>
 </section>
