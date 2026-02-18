@@ -391,8 +391,11 @@ export default function Admin() {
                     <pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-3 bg-secondary rounded-lg">{promptText}</pre>
                   </ScrollArea>
                 </div>
-                <Button onClick={async () => { await navigator.clipboard.writeText(promptText); toast({ title: 'Prompt disalin!' }); setToolStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
+                <Button onClick={async () => { await navigator.clipboard.writeText(promptText); const encodedPrompt = encodeURIComponent(promptText); window.open(`https://chat.z.ai/?q=${encodedPrompt}`, '_blank'); toast({ title: 'Prompt disalin & dikirim!', description: 'Prompt otomatis dikirim ke chat.z.ai.' }); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
                   <ExternalLink className="h-4 w-4" /> Buat Landing Page
+                </Button>
+                <Button variant="outline" onClick={() => { setToolStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="w-full gap-2" size="lg">
+                  Lanjut ke Preview &amp; Edit HTML →
                 </Button>
                 <Button variant="outline" onClick={() => setToolStep(1)} className="w-full">← Kembali Edit Form</Button>
               </div>
