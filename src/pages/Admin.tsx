@@ -59,7 +59,7 @@ function AdminPreviewStep({ onBack }: { onBack: () => void }) {
   const [previewHtml, setPreviewHtml] = useState('');
   const [viewport, setViewport] = useState<'desktop'|'tablet'|'mobile'>('desktop');
   const [editMode, setEditMode] = useState(false);
-  const [editTarget, setEditTarget] = useState<{type:'text'|'img'|'link'; tag:string; value:string; href:string; index:number}|null>(null);
+  const [editTarget, setEditTarget] = useState<{type:'text'|'img'|'link'; tag:string; value:string; href:string; index:number; pixelEvent:string}|null>(null);
   const [fbPixelId, setFbPixelId] = useState('');
   const [pixelApplied, setPixelApplied] = useState(false);
   const viewportWidths = { desktop:'100%', tablet:'768px', mobile:'390px' };
@@ -96,14 +96,14 @@ fbq('track', 'PageView');
       });
     });
     const script = doc.createElement('script');
-    script.textContent = `document.addEventListener('click',function(e){const el=e.target.closest('[data-edit-idx]');if(!el)return;e.preventDefault();e.stopPropagation();const idx=el.getAttribute('data-edit-idx');const tag=el.getAttribute('data-edit-tag');const isImg=tag==='IMG';const isA=tag==='A';const value=isImg?(el.getAttribute('src')||''):(el.innerText||el.textContent||'');const href=isA?(el.getAttribute('data-edit-href')||el.getAttribute('href')||''):'';window.parent.postMessage({type:'EDIT_ELEMENT',idx:Number(idx),tag,value,href,isImg,isA},'*');});`;
+    script.textContent = `document.addEventListener('click',function(e){const el=e.target.closest('[data-edit-idx]');if(!el)return;e.preventDefault();e.stopPropagation();const idx=el.getAttribute('data-edit-idx');const tag=el.getAttribute('data-edit-tag');const isImg=tag==='IMG';const isA=tag==='A';const value=isImg?(el.getAttribute('src')||''):(el.innerText||el.textContent||'');const href=isA?(el.getAttribute('data-edit-href')||el.getAttribute('href')||''):'';const pixelEvent=el.getAttribute('data-pixel-event')||'';window.parent.postMessage({type:'EDIT_ELEMENT',idx:Number(idx),tag,value,href,isImg,isA,pixelEvent},'*');});`;
     doc.body.appendChild(script);
     return doc.documentElement.outerHTML;
   };
 
   useEffect(() => {
     const handler = (e: MessageEvent) => {
-      if (e.data?.type === 'EDIT_ELEMENT') setEditTarget({ type: e.data.isImg ? 'img' : e.data.isA ? 'link' : 'text', tag: e.data.tag, value: e.data.value, href: e.data.href || '', index: e.data.idx });
+      if (e.data?.type === 'EDIT_ELEMENT') setEditTarget({ type: e.data.isImg ? 'img' : e.data.isA ? 'link' : 'text', tag: e.data.tag, value: e.data.value, href: e.data.href || '', index: e.data.idx, pixelEvent: e.data.pixelEvent || '' });
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
@@ -129,13 +129,16 @@ fbq('track', 'PageView');
       } else if (editTarget.type === 'link') {
         el.textContent = newValue;
         if (newHref !== undefined) el.setAttribute('href', newHref);
-        // Inject specific pixel event for this button
+        // Inject specific pixel event — or remove if user cleared it
         if (pixelEvent) {
           const evScript = pixelEvent === 'Purchase'
             ? `if(typeof fbq!=='undefined'){fbq('track','${pixelEvent}',{value:0,currency:'IDR'});}`
             : `if(typeof fbq!=='undefined'){fbq('track','${pixelEvent}');}`;
           el.setAttribute('onclick', evScript);
           el.setAttribute('data-pixel-event', pixelEvent);
+        } else {
+          el.removeAttribute('onclick');
+          el.removeAttribute('data-pixel-event');
         }
       } else {
         el.textContent = newValue;
@@ -260,22 +263,22 @@ function AdminEditModal({
   onClose,
   onSave,
 }: {
-  editTarget: {type:'text'|'img'|'link'; tag:string; value:string; href:string; index:number};
+  editTarget: {type:'text'|'img'|'link'; tag:string; value:string; href:string; index:number; pixelEvent:string};
   onClose: () => void;
   onSave: (value: string, href?: string, pixelEvent?: string) => void;
 }) {
   const [textValue, setTextValue] = useState(editTarget.value);
   const [hrefValue, setHrefValue] = useState(editTarget.href);
   const [imgValue, setImgValue] = useState(editTarget.value);
-  const [pixelEvent, setPixelEvent] = useState('');
+  const [pixelEvent, setPixelEvent] = useState(editTarget.pixelEvent || '');
 
-  // Reset state setiap kali editTarget berubah (modal dibuka untuk elemen berbeda)
+  // Reset state setiap kali editTarget berubah — baca kembali pixelEvent yang sudah tersimpan
   useEffect(() => {
     setTextValue(editTarget.value);
     setHrefValue(editTarget.href);
     setImgValue(editTarget.value);
-    setPixelEvent('');
-  }, [editTarget.index, editTarget.value, editTarget.href]);
+    setPixelEvent(editTarget.pixelEvent || '');
+  }, [editTarget.index, editTarget.value, editTarget.href, editTarget.pixelEvent]);
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
