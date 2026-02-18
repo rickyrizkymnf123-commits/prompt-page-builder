@@ -22,7 +22,7 @@ export function generatePrompt(form: FormState): string {
     ? `Rp ${Number(form.hargaPromo).toLocaleString('id-ID')}`
     : '-';
 
-  const platformName = form.platformTarget || 'Copy HTML';
+  const platformName = form.platformTarget || 'Standalone';
 
   // Platform-specific output rules
   const platformOutputRules: Record<string, string> = {
@@ -32,27 +32,29 @@ Output MUST be a single HTML code block with ALL CSS inline (style attribute on 
     'Lynk.id': `## PLATFORM TARGET: Lynk.id
 Output MUST be a single HTML code block with ALL CSS inline (style attribute on each element). No <head>, no <style> tag, no external CSS. The HTML will be injected inside Lynk.id's page builder. Use only div, section, span, h1-h6, p, a, img, ul, li tags. All images use placeholder URLs.`,
 
-    'WordPress (Elementor/Divi)': `## PLATFORM TARGET: WordPress (Elementor/Divi)
+    'WordPress': `## PLATFORM TARGET: WordPress (Elementor/Divi)
 Output MUST be a single HTML code block. You may use <style> tags scoped within the HTML block. Use semantic HTML. All images use placeholder URLs. Avoid WordPress shortcodes. Structure compatible with Elementor HTML widget or Divi code module.`,
 
     'Shopify': `## PLATFORM TARGET: Shopify
 Output MUST be a single HTML code block with inline CSS. Avoid Liquid templating. Use only standard HTML tags. All images use placeholder URLs. Structure must be compatible with Shopify's custom HTML sections.`,
 
-    'Copy HTML': `## PLATFORM TARGET: Standalone HTML
+    'Standalone': `## PLATFORM TARGET: Standalone HTML
 Output MUST be a complete, self-contained single HTML file including <!DOCTYPE html>, <head> with meta tags, Google Fonts import, and <body>. Use <style> tags in <head> for CSS. All images use placeholder URLs from https://placehold.co/`,
   };
 
-  const outputRule = platformOutputRules[platformName] || platformOutputRules['Copy HTML'];
+  const outputRule = platformOutputRules[platformName] || platformOutputRules['Standalone'];
+  const isStandalone = platformName === 'Standalone';
 
-  const sectionsToInclude = [
-    'Hero Section',
-    ...activeElements,
-  ].join('\n- ');
+  const sectionsToInclude = activeElements.join('\n- ');
+
+  const referensiSection = (form.linkReferensi || form.inspirasiDesain)
+    ? `\n## REFERENSI DESAIN${form.linkReferensi ? `\n- URL Referensi: ${form.linkReferensi}` : ''}${form.inspirasiDesain ? `\n- Yang ingin ditiru: ${form.inspirasiDesain}` : ''}`
+    : '';
 
   return `Kamu adalah developer landing page expert dan copywriter yang fokus pada konversi.
 
 ## TUGAS
-Buatkan landing page yang high-converting dalam bentuk kode HTML${platformName === 'Copy HTML' ? ' lengkap (full HTML file)' : ' tunggal dengan inline CSS'}.
+Buatkan landing page yang high-converting dalam bentuk kode HTML${isStandalone ? ' lengkap (full HTML file)' : ' tunggal dengan inline CSS'}.
 
 ## FRAMEWORK COPYWRITING
 Gunakan framework **${form.framework || 'PAS'}** untuk menyusun copy.
@@ -76,14 +78,14 @@ Gunakan framework **${form.framework || 'PAS'}** untuk menyusun copy.
 
 ## DESAIN VISUAL
 - Gaya desain: **${form.gayaDesain || 'Bold & High Conversion'}**
-
+${referensiSection}
 ## SECTION YANG HARUS ADA
 - ${sectionsToInclude}
 
 ${outputRule}
 
 ## ATURAN PENTING
-1. SEMUA styling HARUS inline CSS (style="...") di setiap element${platformName === 'Copy HTML' ? ' atau dalam <style> tag di <head>' : ''}.
+1. SEMUA styling HARUS inline CSS (style="...") di setiap element${isStandalone ? ' atau dalam <style> tag di <head>' : ''}.
 2. TIDAK BOLEH ada file CSS external, TIDAK BOLEH pakai CDN CSS framework.
 3. Harus fully responsive dengan inline media queries jika diperlukan.
 4. Gunakan placeholder image profesional dari https://placehold.co/

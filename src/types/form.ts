@@ -13,6 +13,8 @@ export interface FormState {
   gayaDesain: string;
   elemenTambahan: Record<string, boolean>;
   platformTarget: string;
+  linkReferensi: string;
+  inspirasiDesain: string;
 }
 
 export const initialFormState: FormState = {
@@ -29,15 +31,22 @@ export const initialFormState: FormState = {
   ctaUtama: '',
   gayaDesain: '',
   elemenTambahan: {
+    'Hero Section': true,
     'Social Proof': true,
     'Testimonial': true,
     'FAQ': true,
-    'Bonus': true,
+    'Bonus Section': true,
     'Guarantee': true,
-    'Scarcity': true,
-    'Comparison': true,
+    'Scarcity / Timer': true,
+    'Pricing Table': true,
+    'Feature List': false,
+    'Video Section': true,
+    'Before-After': true,
+    'How It Works': true,
   },
   platformTarget: '',
+  linkReferensi: '',
+  inspirasiDesain: '',
 };
 
 export interface GroupedOption {
