@@ -209,7 +209,7 @@ fbq('track', 'PageView');
       )}
       {editMode && (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
-          <p className="text-xs text-muted-foreground">Upload gambar ke <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="text-primary underline">imgur.com/upload</a> lalu paste link-nya di dialog edit gambar.</p>
+          <p className="text-xs text-muted-foreground">Upload gambar ke <a href="https://uploadimgur.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">uploadimgur.com</a> lalu paste link-nya di dialog edit gambar.</p>
         </div>
       )}
 
@@ -298,7 +298,7 @@ function AdminEditModal({
           <div className="space-y-2">
             <label className="text-sm font-semibold uppercase tracking-wide text-foreground">URL Gambar</label>
             <input type="text" value={imgValue} onChange={(e) => setImgValue(e.target.value)} placeholder="https://..." className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary" />
-            <p className="text-xs text-muted-foreground">Upload di <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="text-primary underline">imgur.com/upload</a> lalu paste link-nya.</p>
+            <p className="text-xs text-muted-foreground">Upload di <a href="https://uploadimgur.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">uploadimgur.com</a> lalu paste link-nya.</p>
           </div>
         ) : editTarget.type === 'link' ? (
           <div className="space-y-3">
