@@ -13,10 +13,42 @@ import { Step8Reference } from "@/components/steps/Step8Reference";
 import { FormState, initialFormState } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, ExternalLink, ArrowRight, Eye } from "lucide-react";
+import { Zap, RotateCcw, Copy, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+// Shared Stepper component
+function Stepper({ current }: { current: number }) {
+  return (
+    <div className="flex items-center justify-center py-4">
+      {[1, 2, 3].map((s) => {
+        const done = s < current;
+        const active = s === current;
+        return (
+          <div key={s} className="flex items-center">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${
+              active
+                ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30'
+                : done
+                ? 'bg-transparent text-green-400 border-green-500'
+                : 'bg-transparent text-muted-foreground border-muted-foreground/30'
+            }`}>
+              {done ? (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : s}
+            </div>
+            {s < 3 && (
+              <div className={`w-16 h-0.5 transition-all ${done ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // Step 2: Prompt Preview Page
 function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack: () => void; onNext: () => void }) {
@@ -25,28 +57,15 @@ function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack
     toast({ title: 'Prompt disalin!', description: 'Prompt sudah ada di clipboard.' });
   };
 
-  const handleBuat = async () => {
+  const handleBuatLandingPage = async () => {
     await navigator.clipboard.writeText(promptText);
-    const encodedPrompt = encodeURIComponent(promptText);
-    window.open(`https://chat.z.ai/?q=${encodedPrompt}`, '_blank');
-    toast({ title: 'Prompt sudah disalin', description: 'Prompt otomatis dikirim ke chat.z.ai.' });
+    toast({ title: 'Prompt disalin!', description: 'Paste ke AI favorit kamu lalu paste HTML-nya di Step 3.' });
+    onNext();
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Stepper */}
-      <div className="flex items-center justify-center gap-3 py-4">
-        {[1,2,3].map((s) => (
-          <div key={s} className="flex items-center gap-2">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-              s === 2 ? 'bg-primary text-primary-foreground border-primary' :
-              s < 2 ? 'bg-primary/20 text-primary border-primary/50' :
-              'bg-muted text-muted-foreground border-border'
-            }`}>{s}</div>
-            {s < 3 && <div className={`w-12 h-0.5 ${s < 2 ? 'bg-primary' : 'bg-border'}`} />}
-          </div>
-        ))}
-      </div>
+      <Stepper current={2} />
       <p className="text-center text-sm text-muted-foreground">Copy prompt lalu buka AI favorit kamu untuk generate script HTML</p>
 
       {/* Prompt Box */}
@@ -64,18 +83,16 @@ function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack
         </ScrollArea>
       </div>
 
-      {/* CTA */}
-      <Button onClick={handleBuat} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
-        <ExternalLink className="h-4 w-4" /> Salin Prompt
+      {/* Main CTA → Step 3 */}
+      <Button
+        onClick={handleBuatLandingPage}
+        className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2"
+        size="lg"
+      >
+        <ExternalLink className="h-4 w-4" /> Buat Landing Page
       </Button>
 
-      {/* Step 3 nav */}
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onBack} className="flex-1">← Kembali Edit Form</Button>
-        <Button onClick={onNext} className="flex-1 gap-2">
-          <Eye className="h-4 w-4" /> Lanjut ke Preview HTML <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
+      <Button variant="outline" onClick={onBack} className="w-full">← Kembali Edit Form</Button>
     </div>
   );
 }
@@ -199,19 +216,9 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
-      {/* Stepper */}
-      <div className="flex items-center justify-center gap-3 py-4">
-        {[1,2,3].map((s) => (
-          <div key={s} className="flex items-center gap-2">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-              s === 3 ? 'bg-primary text-primary-foreground border-primary' :
-              'bg-primary/20 text-primary border-primary/50'
-            }`}>{s}</div>
-            {s < 3 && <div className="w-12 h-0.5 bg-primary" />}
-          </div>
-        ))}
-      </div>
+      <Stepper current={3} />
       <p className="text-center text-sm text-muted-foreground">Paste script HTML dari AI, preview, edit teks, dan export</p>
+
 
       {/* Paste HTML */}
       <div className="rounded-xl border border-border bg-card p-5 space-y-4">
