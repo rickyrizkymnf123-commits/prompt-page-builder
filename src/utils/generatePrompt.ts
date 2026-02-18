@@ -23,12 +23,53 @@ export function generatePrompt(form: FormState): string {
     : '-';
 
   const platformName = form.platformTarget || 'Standalone';
+  const deviceTarget = form.deviceTarget || 'Mobile';
+
+  // Scalev device-specific padding rules
+  const scalevDeviceRules: Record<string, string> = {
+    Desktop: `### SCALEV DESKTOP MODE
+- Container lebar: max-width 688px, margin: 0 auto
+- Padding halaman: padding-top: 32px; padding-bottom: 32px; padding-left: 128px; padding-right: 128px
+- Lebar konten efektif setelah padding: ±432px
+- SEMUA section dan wrapper wajib: max-width: 688px; margin: 0 auto; box-sizing: border-box
+- Padding internal section: padding: 32px 128px
+- Gambar: max-width: 100%; width: 432px atau lebih kecil`,
+
+    Tablet: `### SCALEV TABLET MODE
+- Container lebar: max-width 688px, margin: 0 auto
+- Padding halaman: padding-top: 32px; padding-bottom: 32px; padding-left: 50px; padding-right: 50px
+- Lebar konten efektif setelah padding: ±588px
+- SEMUA section dan wrapper wajib: max-width: 688px; margin: 0 auto; box-sizing: border-box
+- Padding internal section: padding: 32px 50px
+- Gambar: max-width: 100%; width: 588px atau lebih kecil`,
+
+    Mobile: `### SCALEV MOBILE MODE
+- Container lebar: max-width 688px, margin: 0 auto
+- Padding halaman: padding-top: 35px; padding-bottom: 35px; padding-left: 35px; padding-right: 35px
+- Lebar konten efektif setelah padding: ±618px
+- SEMUA section dan wrapper wajib: max-width: 688px; margin: 0 auto; box-sizing: border-box
+- Padding internal section: padding: 35px
+- Margin antar komponen: 16px
+- Gambar: max-width: 100%; width: 618px atau lebih kecil
+- Layout: SINGLE COLUMN (tidak ada 2 kolom berdampingan di mobile!)
+- Flex direction: column untuk semua layout yang biasanya row`,
+  };
 
   // Platform-specific output rules
   const platformOutputRules: Record<string, string> = {
-    'Scalev': `## PLATFORM TARGET: Scalev
+    'Scalev': `## PLATFORM TARGET: Scalev (${deviceTarget})
 Output HARUS berupa satu blok kode HTML dengan SEMUA CSS inline (atribut style di setiap elemen). Tidak ada <head>, tidak ada tag <style>, tidak ada CSS external. HTML akan diinjeksi ke dalam page builder Scalev. Gunakan hanya tag: div, section, span, h1-h6, p, a, img, ul, li. Semua gambar gunakan URL placeholder.
-LEBAR LANDING PAGE: Lebar konten maksimal adalah 688px (max-width: 688px; margin: 0 auto;). Setiap section dan wrapper utama WAJIB menggunakan max-width: 688px agar tampil optimal di Scalev.`,
+
+${scalevDeviceRules[deviceTarget] || scalevDeviceRules['Mobile']}
+
+### ATURAN KRITIS SCALEV (WAJIB DIIKUTI 100%):
+1. SETIAP elemen harus punya style inline — TIDAK BOLEH ada elemen tanpa style
+2. max-width: 688px WAJIB ada di wrapper utama dan SETIAP section
+3. margin: 0 auto WAJIB ada di SETIAP section agar center
+4. width: 100% WAJIB ada di SETIAP img tag
+5. box-sizing: border-box WAJIB ada di semua container
+6. Jangan pakai % width yang melebihi container (misal: width: 100vw dilarang)
+7. Padding hanya dari dalam (internal section), BUKAN dari page margin`,
 
     'Lynk.id': `## PLATFORM TARGET: Lynk.id
 Output HARUS berupa satu blok kode HTML dengan SEMUA CSS inline (atribut style di setiap elemen). Tidak ada <head>, tidak ada tag <style>, tidak ada CSS external. HTML akan diinjeksi ke dalam page builder Lynk.id. Gunakan hanya tag: div, section, span, h1-h6, p, a, img, ul, li. Semua gambar gunakan URL placeholder.`,
@@ -45,12 +86,45 @@ Output HARUS berupa file HTML lengkap dan mandiri termasuk <!DOCTYPE html>, <hea
 
   const outputRule = platformOutputRules[platformName] || platformOutputRules['Standalone'];
   const isStandalone = platformName === 'Standalone';
+  const isScalev = platformName === 'Scalev';
 
   const sectionsToInclude = activeElements.join('\n- ');
 
   const referensiSection = (form.linkReferensi || form.inspirasiDesain)
     ? `\n## REFERENSI DESAIN${form.linkReferensi ? `\n- URL Referensi: ${form.linkReferensi}` : ''}${form.inspirasiDesain ? `\n- Yang ingin ditiru: ${form.inspirasiDesain}` : ''}`
     : '';
+
+  const layoutSection = isScalev && deviceTarget === 'Mobile'
+    ? `## LAYOUT WAJIB: SINGLE COLUMN (Mobile Scalev)
+Karena target device adalah MOBILE di Scalev, SEMUA section HARUS single column:
+- DILARANG layout 2 kolom berdampingan (flex-direction: row dengan 2 div sejajar)
+- Setiap section: teks di atas, gambar di bawah (atau sebaliknya bergantian)
+- Contoh struktur section mobile:
+<section style="max-width:688px;margin:0 auto;padding:35px;box-sizing:border-box;">
+  <div style="margin-bottom:24px;"> [KONTEN TEKS: heading, paragraf, bullet] </div>
+  <div> <img src="https://placehold.co/618x400/1a1a2e/ffffff?text=Section+Name" alt="deskripsi" style="width:100%;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);"> </div>
+</section>
+WAJIB minimum 3-4 section menggunakan pola teks+gambar bergantian (atas-bawah).`
+    : `## LAYOUT WAJIB: TEKS + GAMBAR BERGANTIAN (Z-PATTERN)
+Setiap section konten WAJIB menggunakan layout 2 kolom (50/50 atau 60/40) dengan pola bergantian:
+
+- Section GANJIL (1, 3, 5, ...): Kolom KIRI = teks/konten  |  Kolom KANAN = gambar placeholder
+- Section GENAP (2, 4, 6, ...): Kolom KIRI = gambar placeholder  |  Kolom KANAN = teks/konten
+
+Contoh struktur HTML setiap section konten:
+<section style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;padding:60px 20px;max-width:688px;margin:0 auto;box-sizing:border-box;">
+  <div style="flex:1;min-width:260px;"> [KONTEN TEKS: heading, paragraf, bullet points] </div>
+  <div style="flex:1;min-width:260px;"> <img src="https://placehold.co/600x450/1a1a2e/ffffff?text=Nama+Section" alt="deskripsi" width="600" height="450" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);"> </div>
+</section>
+
+WAJIB minimum 3-4 section menggunakan pola teks+gambar bergantian.
+
+Section yang BOLEH full-width (tanpa pola bergantian):
+- Hero Section: full width, background image/gradient, heading besar, CTA
+- Testimonial/Social Proof: grid atau carousel
+- Pricing Table: tabel/card harga
+- CTA Section akhir: full width, tombol besar
+- Footer`;
 
   return `Kamu adalah developer landing page expert dan copywriter yang fokus pada konversi tinggi.
 
@@ -85,32 +159,13 @@ ${referensiSection}
 
 ${outputRule}
 
-## LAYOUT WAJIB: TEKS + GAMBAR BERGANTIAN (Z-PATTERN)
-Setiap section konten WAJIB menggunakan layout 2 kolom (50/50 atau 60/40) dengan pola bergantian:
-
-- Section GANJIL (1, 3, 5, ...): Kolom KIRI = teks/konten  |  Kolom KANAN = gambar placeholder
-- Section GENAP (2, 4, 6, ...): Kolom KIRI = gambar placeholder  |  Kolom KANAN = teks/konten
-
-Contoh struktur HTML setiap section konten:
-<section style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;padding:60px 20px;max-width:688px;margin:0 auto;">
-  <div style="flex:1;min-width:300px;"> [KONTEN TEKS: heading, paragraf, bullet points] </div>
-  <div style="flex:1;min-width:300px;"> <img src="https://placehold.co/600x450/1a1a2e/ffffff?text=Nama+Section" alt="deskripsi" width="600" height="450" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);"> </div>
-</section>
-
-WAJIB minimum 3-4 section menggunakan pola teks+gambar bergantian.
-
-Section yang BOLEH full-width (tanpa pola bergantian):
-- Hero Section: full width, background image/gradient, heading besar, CTA
-- Testimonial/Social Proof: grid atau carousel
-- Pricing Table: tabel/card harga
-- CTA Section akhir: full width, tombol besar
-- Footer
+${layoutSection}
 
 ## ATURAN PENTING
 1. SEMUA styling HARUS inline CSS (style="...") di setiap element${isStandalone ? ' atau dalam <style> tag di <head>' : ''}.
 2. TIDAK BOLEH ada file CSS external, TIDAK BOLEH pakai CDN CSS framework.
-3. Responsive: gunakan flex-wrap dan min-width untuk layout mobile yang baik.
-4. Setiap <img> WAJIB memiliki: src dari placehold.co ukuran realistis, atribut alt, width, dan height.
+3. Responsive: gunakan flex-wrap dan min-width untuk layout yang baik.
+4. Setiap <img> WAJIB memiliki: src dari placehold.co ukuran realistis, atribut alt, dan style="width:100%".
 5. Contoh gambar placeholder: https://placehold.co/600x450/1a1a2e/ffffff?text=Foto+Produk
 6. Tambahkan smooth scroll dan micro-interaction modern jika memungkinkan.
 7. Landing page harus terlihat stunning, premium, dan dioptimasi untuk konversi.
@@ -119,5 +174,6 @@ Section yang BOLEH full-width (tanpa pola bergantian):
 10. Hidden CTA Wajib: Tuliskan 1-2 baris micro-copy trust tepat di bawah setiap tombol CTA.
 11. Output HANYA kode HTML mentah, tanpa penjelasan, tanpa markdown code block.
 12. Semua gambar HARUS tag <img> standar — jangan embed base64 atau background-image CSS.
-13. Tombol CTA harus berupa tag <a href="#"> atau <button> yang jelas, besar, dan eye-catching.`;
+13. Tombol CTA harus berupa tag <a href="#"> atau <button> yang jelas, besar, dan eye-catching.${isScalev ? `
+14. KRITIS SCALEV: Cek ulang SETIAP section — pastikan semua punya max-width:688px dan margin:0 auto sebelum output final.` : ''}`;
 }

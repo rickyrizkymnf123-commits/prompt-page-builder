@@ -13,6 +13,7 @@ export interface FormState {
   gayaDesain: string;
   elemenTambahan: Record<string, boolean>;
   platformTarget: string;
+  deviceTarget: string;
   linkReferensi: string;
   inspirasiDesain: string;
 }
@@ -45,6 +46,7 @@ export const initialFormState: FormState = {
     'How It Works': true,
   },
   platformTarget: '',
+  deviceTarget: 'Mobile',
   linkReferensi: '',
   inspirasiDesain: '',
 };
