@@ -114,15 +114,33 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
   const [previewHtml, setPreviewHtml] = useState('');
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [editMode, setEditMode] = useState(false);
-  const [editTarget, setEditTarget] = useState<{ type: 'text' | 'img'; tag: string; value: string; index: number } | null>(null);
+  const [editTarget, setEditTarget] = useState<{ type: 'text' | 'img' | 'link'; tag: string; value: string; href: string; index: number } | null>(null);
   const [editedElements, setEditedElements] = useState<Record<number, string>>({});
+  const [fbPixelId, setFbPixelId] = useState('');
+  const [pixelApplied, setPixelApplied] = useState(false);
 
   const viewportWidths = { desktop: '100%', tablet: '768px', mobile: '390px' };
 
+  const injectPixel = (html: string, pixelId: string) => {
+    if (!pixelId.trim()) return html;
+    const pixelScript = `<!-- Facebook Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${pixelId}');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/></noscript>
+<!-- End Facebook Pixel Code -->`;
+    return html.replace('</head>', pixelScript + '\n</head>');
+  };
+
   const handleLoadPreview = () => {
-    setPreviewHtml(htmlCode);
+    let html = htmlCode;
+    if (fbPixelId.trim()) html = injectPixel(html, fbPixelId);
+    setPreviewHtml(html);
     setEditedElements({});
     setEditMode(false);
+    setPixelApplied(!!fbPixelId.trim());
   };
 
   const handleClear = () => {
@@ -145,7 +163,6 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
   // Inject edit mode click handlers into iframe
   const getEditableHtml = () => {
     if (!editMode || !previewHtml) return previewHtml;
-    // Parse and inject click attributes
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
     const editableTags = ['h1','h2','h3','h4','h5','h6','p','a','span','li','button','img'];
@@ -154,6 +171,7 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
       doc.querySelectorAll(tag).forEach((el) => {
         el.setAttribute('data-edit-idx', String(idx));
         el.setAttribute('data-edit-tag', tag.toUpperCase());
+        if (tag === 'a') el.setAttribute('data-edit-href', (el as HTMLAnchorElement).getAttribute('href') || '');
         const style = el.getAttribute('style') || '';
         el.setAttribute('style', style + ';cursor:pointer;outline:2px dashed rgba(59,130,246,0.5);outline-offset:2px;');
         idx++;
@@ -169,8 +187,10 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
         const idx = el.getAttribute('data-edit-idx');
         const tag = el.getAttribute('data-edit-tag');
         const isImg = tag === 'IMG';
+        const isA = tag === 'A';
         const value = isImg ? (el.getAttribute('src') || '') : (el.innerText || el.textContent || '');
-        window.parent.postMessage({ type: 'EDIT_ELEMENT', idx: Number(idx), tag, value, isImg }, '*');
+        const href = isA ? (el.getAttribute('data-edit-href') || el.getAttribute('href') || '') : '';
+        window.parent.postMessage({ type: 'EDIT_ELEMENT', idx: Number(idx), tag, value, href, isImg, isA }, '*');
       });
     `;
     doc.body.appendChild(script);
@@ -182,9 +202,10 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
     const handler = (e: MessageEvent) => {
       if (e.data?.type === 'EDIT_ELEMENT') {
         setEditTarget({
-          type: e.data.isImg ? 'img' : 'text',
+          type: e.data.isImg ? 'img' : e.data.isA ? 'link' : 'text',
           tag: e.data.tag,
           value: e.data.value,
+          href: e.data.href || '',
           index: e.data.idx,
         });
       }
@@ -193,22 +214,24 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
     return () => window.removeEventListener('message', handler);
   }, []);
 
-  const handleSaveEdit = (newValue: string) => {
+  const handleSaveEdit = (newValue: string, newHref?: string) => {
     if (!editTarget) return;
-    // Apply edit to previewHtml
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
     const el = doc.querySelector(`[data-edit-idx="${editTarget.index}"]`);
     if (el) {
       if (editTarget.type === 'img') {
         el.setAttribute('src', newValue);
+      } else if (editTarget.type === 'link') {
+        el.textContent = newValue;
+        if (newHref !== undefined) el.setAttribute('href', newHref);
       } else {
         el.textContent = newValue;
       }
-      // Remove edit attributes
       doc.querySelectorAll('[data-edit-idx]').forEach(e => {
         e.removeAttribute('data-edit-idx');
         e.removeAttribute('data-edit-tag');
+        e.removeAttribute('data-edit-href');
         const style = e.getAttribute('style') || '';
         e.setAttribute('style', style.replace(/;?cursor:pointer;outline:[^;]+;outline-offset:[^;]+;?/g, ''));
       });
@@ -219,17 +242,26 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
     setEditTarget(null);
   };
 
-  const iframeSrc = editMode
-    ? `data:text/html;charset=utf-8,${encodeURIComponent(getEditableHtml())}`
-    : previewHtml
-    ? `data:text/html;charset=utf-8,${encodeURIComponent(previewHtml)}`
-    : '';
-
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <Stepper current={3} />
-      <p className="text-center text-sm text-muted-foreground">Paste script HTML dari AI, preview, edit teks, dan export</p>
+      <p className="text-center text-sm text-muted-foreground">Paste script HTML dari AI, preview, edit teks/link/gambar, dan export</p>
 
+      {/* Facebook Pixel */}
+      <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+        <h2 className="text-base font-semibold text-foreground">🎯 Facebook Pixel (Opsional)</h2>
+        <div className="flex gap-3 items-center">
+          <input
+            type="text"
+            value={fbPixelId}
+            onChange={(e) => setFbPixelId(e.target.value)}
+            placeholder="Masukkan Pixel ID kamu... contoh: 1234567890"
+            className="flex-1 rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary"
+          />
+          {pixelApplied && <span className="text-xs text-green-500 font-medium whitespace-nowrap">✅ Pixel terpasang</span>}
+        </div>
+        <p className="text-xs text-muted-foreground">Pixel akan otomatis disuntikkan ke HTML saat kamu klik "Load Preview".</p>
+      </div>
 
       {/* Paste HTML */}
       <div className="rounded-xl border border-border bg-card p-5 space-y-4">
@@ -260,7 +292,7 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
         <div className="rounded-xl border border-border bg-card p-5 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <span className="text-destructive">👁</span> Live Preview
+              <span>👁</span> Live Preview
             </h2>
             <div className="flex items-center gap-2">
               {(['desktop','tablet','mobile'] as const).map((vp) => (
@@ -274,7 +306,7 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
                       : 'bg-secondary text-muted-foreground border-border'
                   }`}
                 >
-                  {vp === 'desktop' ? '🖥' : vp === 'tablet' ? '📱' : '📱'} {vp.charAt(0).toUpperCase() + vp.slice(1)}
+                  {vp === 'desktop' ? '🖥' : vp === 'tablet' ? '📟' : '📱'} {vp.charAt(0).toUpperCase() + vp.slice(1)}
                 </button>
               ))}
               <button
@@ -305,13 +337,12 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
 
           {editMode && (
             <div className="rounded-lg bg-accent/10 border border-accent/30 p-3 text-center">
-              <p className="text-sm text-accent font-medium">✏️ Edit Mode ON — klik elemen untuk mengedit</p>
+              <p className="text-sm text-accent font-medium">✏️ Edit Mode ON — klik teks, link, atau gambar untuk mengedit</p>
             </div>
           )}
         </div>
       )}
 
-      {/* Upload Gambar hint */}
       {editMode && (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
           <p className="text-sm font-medium text-foreground">🖼 Mau ganti gambar?</p>
@@ -321,62 +352,108 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
 
       <Button variant="outline" onClick={onBack} className="gap-2">← Kembali ke Prompt</Button>
 
-      {/* Edit Element Modal */}
       {editTarget && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-primary flex items-center gap-2">✏️ Edit Element</h3>
-            <div className="text-sm text-muted-foreground">
-              TAG: <span className="text-primary font-bold">{editTarget.tag}</span>
+        <EditModal
+          editTarget={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditModal({
+  editTarget,
+  onClose,
+  onSave,
+}: {
+  editTarget: { type: 'text' | 'img' | 'link'; tag: string; value: string; href: string; index: number };
+  onClose: () => void;
+  onSave: (value: string, href?: string) => void;
+}) {
+  const [textValue, setTextValue] = useState(editTarget.value);
+  const [hrefValue, setHrefValue] = useState(editTarget.href);
+  const [imgValue, setImgValue] = useState(editTarget.value);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4 shadow-2xl">
+        <h3 className="text-lg font-bold text-primary flex items-center gap-2">✏️ Edit Element</h3>
+        <div className="text-sm text-muted-foreground">
+          TAG: <span className="text-primary font-bold">{editTarget.tag}</span>
+        </div>
+
+        {editTarget.type === 'img' ? (
+          <div className="space-y-2">
+            <label className="text-sm font-semibold uppercase tracking-wide text-foreground">URL Gambar</label>
+            <input
+              type="text"
+              value={imgValue}
+              onChange={(e) => setImgValue(e.target.value)}
+              placeholder="https://..."
+              className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary"
+            />
+            <p className="text-xs text-muted-foreground">
+              Upload di <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="text-primary underline">imgur.com/upload</a> lalu paste link-nya.
+            </p>
+          </div>
+        ) : editTarget.type === 'link' ? (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold uppercase tracking-wide text-foreground">Teks Tombol / Link</label>
+              <textarea
+                value={textValue}
+                onChange={(e) => setTextValue(e.target.value)}
+                rows={2}
+                className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none"
+              />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold uppercase tracking-wide text-foreground">
-                {editTarget.type === 'img' ? 'URL Gambar' : 'Teks'}
-              </label>
-              {editTarget.type === 'img' ? (
-                <input
-                  type="text"
-                  defaultValue={editTarget.value}
-                  placeholder="https://..."
-                  className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary"
-                  id="edit-input"
-                />
-              ) : (
-                <textarea
-                  defaultValue={editTarget.value}
-                  rows={4}
-                  className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none"
-                  id="edit-input"
-                />
-              )}
-              {editTarget.type === 'img' && (
-                <p className="text-xs text-muted-foreground">
-                  Upload gambar di <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="text-primary underline">imgur.com/upload</a> lalu paste link-nya di sini.
-                </p>
-              )}
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setEditTarget(null)}
-                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-all"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const input = document.getElementById('edit-input') as HTMLInputElement | HTMLTextAreaElement;
-                  handleSaveEdit(input?.value || '');
-                }}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
-              >
-                💾 Simpan
-              </button>
+              <label className="text-sm font-semibold uppercase tracking-wide text-foreground">URL / Link (href)</label>
+              <input
+                type="text"
+                value={hrefValue}
+                onChange={(e) => setHrefValue(e.target.value)}
+                placeholder="https://wa.me/628xxx atau https://..."
+                className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary"
+              />
+              <p className="text-xs text-muted-foreground">Contoh: https://wa.me/6281234567890 untuk WhatsApp</p>
             </div>
           </div>
+        ) : (
+          <div className="space-y-2">
+            <label className="text-sm font-semibold uppercase tracking-wide text-foreground">Teks</label>
+            <textarea
+              value={textValue}
+              onChange={(e) => setTextValue(e.target.value)}
+              rows={4}
+              className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none"
+            />
+          </div>
+        )}
+
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-all"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (editTarget.type === 'img') onSave(imgValue);
+              else if (editTarget.type === 'link') onSave(textValue, hrefValue);
+              else onSave(textValue);
+            }}
+            className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
+          >
+            💾 Simpan
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
