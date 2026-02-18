@@ -68,11 +68,17 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center space-y-1">
+          <div className="flex justify-center mb-2">
+            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+              <LogIn className="h-6 w-6 text-primary-foreground" />
+            </div>
+          </div>
           <CardTitle className="text-2xl font-bold">
-            Landing Page <span className="text-primary">Engine</span>
+            Landing Page <span className="text-primary">Builder V.10</span>
           </CardTitle>
-          <p className="text-muted-foreground text-sm mt-1">Masuk ke akun Anda</p>
+          <p className="text-xs text-muted-foreground font-medium">By Digital Strategi</p>
+          <p className="text-muted-foreground text-sm pt-1">Masuk ke akun Anda</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
