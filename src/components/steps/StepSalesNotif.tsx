@@ -18,6 +18,15 @@ const ukuranOptions = [
 
 const emojiOptions = ['🔥', '⚡', '🛒', '💳', '🎉', '✅', '👀', '💰', '🚀', '❤️'];
 
+const colorPresets = [
+  { bg: '#ffffff', border: '#6c63ff', text: '#1a1a2e', label: 'Default' },
+  { bg: '#0f172a', border: '#38bdf8', text: '#f1f5f9', label: 'Dark' },
+  { bg: '#fefce8', border: '#eab308', text: '#713f12', label: 'Gold' },
+  { bg: '#f0fdf4', border: '#16a34a', text: '#14532d', label: 'Green' },
+  { bg: '#fff1f2', border: '#e11d48', text: '#881337', label: 'Red' },
+  { bg: '#f5f3ff', border: '#7c3aed', text: '#2e1065', label: 'Purple' },
+];
+
 interface Props {
   salesNotif: SalesNotifConfig;
   onChange: (config: SalesNotifConfig) => void;
@@ -207,9 +216,74 @@ export function StepSalesNotif({ salesNotif, onChange }: Props) {
               ))}
             </div>
           </div>
+
+          {/* Custom Warna */}
+          <div className="space-y-3">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+              🎨 Warna Notifikasi
+            </label>
+
+            {/* Color Presets */}
+            <div className="flex flex-wrap gap-2">
+              {colorPresets.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => {
+                    update('bgColor', preset.bg);
+                    onChange({ ...salesNotif, bgColor: preset.bg, borderColor: preset.border, textColor: preset.text });
+                  }}
+                  className="flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg border border-border hover:border-primary/50 transition-all bg-secondary"
+                  title={preset.label}
+                >
+                  <div
+                    className="w-8 h-5 rounded border border-border/50"
+                    style={{ background: preset.bg, borderLeftColor: preset.border, borderLeftWidth: 3 }}
+                  />
+                  <span className="text-[10px] text-muted-foreground">{preset.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Custom color inputs */}
+            <div className="grid grid-cols-3 gap-2">
+              <ColorField
+                label="Background"
+                value={salesNotif.bgColor}
+                onChange={(v) => update('bgColor', v)}
+              />
+              <ColorField
+                label="Border"
+                value={salesNotif.borderColor}
+                onChange={(v) => update('borderColor', v)}
+              />
+              <ColorField
+                label="Teks"
+                value={salesNotif.textColor}
+                onChange={(v) => update('textColor', v)}
+              />
+            </div>
+          </div>
         </div>
       )}
     </StepCard>
+  );
+}
+
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-1">
+      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{label}</label>
+      <div className="flex items-center gap-1.5 bg-secondary border border-border rounded-lg p-1.5">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent p-0"
+        />
+        <span className="text-[10px] text-muted-foreground font-mono truncate">{value}</span>
+      </div>
+    </div>
   );
 }
 
@@ -220,24 +294,27 @@ function NotifPreview({ config }: { config: SalesNotifConfig }) {
   const namaProduk = config.namaProdukNotif || 'produk ini';
 
   return (
-    <div className="relative rounded-lg bg-secondary border border-border p-3 overflow-hidden h-20">
+    <div className="relative rounded-lg bg-secondary border border-border p-3 overflow-hidden h-24">
       <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest">Preview</p>
       <div
-        className="absolute bg-card border border-border rounded-xl shadow-lg px-3 py-2.5 flex items-center gap-2.5"
+        className="absolute rounded-xl shadow-lg px-3 py-2.5 flex items-center gap-2.5"
         style={{
           width: Math.min(w, 300),
+          background: config.bgColor,
+          borderLeft: `4px solid ${config.borderColor}`,
           bottom: config.position.startsWith('bottom') ? 10 : undefined,
           top: config.position.startsWith('top') ? 10 : undefined,
           left: config.position.endsWith('left') ? 10 : undefined,
           right: config.position.endsWith('right') ? 10 : undefined,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
         }}
       >
         <span className="text-xl flex-shrink-0">{config.emoji}</span>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-foreground truncate">
+          <p className="text-xs font-semibold truncate" style={{ color: config.textColor }}>
             {namaPertama} {config.pesanNotif}
           </p>
-          <p className="text-[11px] text-primary truncate font-medium">{namaProduk}</p>
+          <p className="text-[11px] truncate font-medium" style={{ color: config.borderColor }}>{namaProduk}</p>
           <p className="text-[10px] text-muted-foreground">Baru saja · 2 menit lalu</p>
         </div>
       </div>

@@ -8,6 +8,9 @@ export interface SalesNotifConfig {
   durasi: number;     // detik notif tampil
   ukuran: 'small' | 'medium' | 'large';
   emoji: string;
+  bgColor: string;
+  borderColor: string;
+  textColor: string;
 }
 
 export interface FormState {
@@ -72,6 +75,9 @@ export const initialFormState: FormState = {
     durasi: 5,
     ukuran: 'medium',
     emoji: '🔥',
+    bgColor: '#ffffff',
+    borderColor: '#6c63ff',
+    textColor: '#1a1a2e',
   },
 };
 
