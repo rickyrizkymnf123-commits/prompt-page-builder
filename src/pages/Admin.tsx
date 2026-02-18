@@ -269,6 +269,14 @@ function AdminEditModal({
   const [imgValue, setImgValue] = useState(editTarget.value);
   const [pixelEvent, setPixelEvent] = useState('');
 
+  // Reset state setiap kali editTarget berubah (modal dibuka untuk elemen berbeda)
+  useEffect(() => {
+    setTextValue(editTarget.value);
+    setHrefValue(editTarget.href);
+    setImgValue(editTarget.value);
+    setPixelEvent('');
+  }, [editTarget.index, editTarget.value, editTarget.href]);
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4 shadow-2xl">
