@@ -66,6 +66,14 @@ function AdminPreviewStep({ onBack }: { onBack: () => void }) {
 
   const injectPixel = (html: string, pixelId: string) => {
     if (!pixelId.trim()) return html;
+    // Jika pixel sudah ada di HTML (dari inject sebelumnya atau dari AI), skip — hindari double PageView
+    if (
+      html.includes("fbq('init'") ||
+      html.includes('fbq("init"') ||
+      html.includes('connect.facebook.net/en_US/fbevents.js')
+    ) {
+      return html;
+    }
     const pixelScript = `<!-- Facebook Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
@@ -74,8 +82,9 @@ fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/></noscript>
 <!-- End Facebook Pixel Code -->`;
-    // Hanya inject PageView di <head> — event per tombol diatur manual via Edit Mode
-    const result = html.includes('</head>') ? html.replace('</head>', pixelScript + '\n</head>') : pixelScript + html;
+    const result = html.includes('</head>')
+      ? html.replace('</head>', pixelScript + '\n</head>')
+      : pixelScript + html;
     return result;
   };
 
