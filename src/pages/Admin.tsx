@@ -3,19 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   LogOut, Shield, CheckCircle, XCircle, Trash2, Clock, Users, FileText,
-  RefreshCw, KeyRound, Search, UserCheck, UserX, AlertTriangle, Moon, Sun, Rocket, Zap, RotateCcw,
+  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { Step1Framework } from "@/components/steps/Step1Framework";
 import { Step2Product } from "@/components/steps/Step2Product";
@@ -24,47 +22,156 @@ import { Step4Detail } from "@/components/steps/Step4Detail";
 import { Step5Design } from "@/components/steps/Step5Design";
 import { Step6Elements } from "@/components/steps/Step6Elements";
 import { Step7Platform } from "@/components/steps/Step7Platform";
-import { PromptPanel } from "@/components/PromptPanel";
+import { Step8Reference } from "@/components/steps/Step8Reference";
 import { FormState, initialFormState } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 
 // --- Types ---
 interface AdminUser {
-  id: string;
-  email: string;
-  name: string | null;
-  phone: string | null;
-  status: string;
-  entitlement_id: string | null;
-  product_code: string | null;
-  order_id: string | null;
-  role: string;
-  created_at: string;
-  last_sign_in: string | null;
+  id: string; email: string; name: string | null; phone: string | null;
+  status: string; entitlement_id: string | null; product_code: string | null;
+  order_id: string | null; role: string; created_at: string; last_sign_in: string | null;
 }
-
 interface ProvisionLog {
-  id: string;
-  order_id: string | null;
-  email: string | null;
-  status: string;
-  message: string | null;
-  created_at: string;
+  id: string; order_id: string | null; email: string | null;
+  status: string; message: string | null; created_at: string;
 }
 
-// --- Sub-components ---
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { bg: string; icon: React.ReactNode }> = {
-    active: { bg: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400", icon: <CheckCircle className="h-3 w-3" /> },
-    pending: { bg: "bg-amber-500/15 text-amber-700 dark:text-amber-400", icon: <Clock className="h-3 w-3" /> },
-    rejected: { bg: "bg-destructive/15 text-destructive", icon: <XCircle className="h-3 w-3" /> },
-    no_entitlement: { bg: "bg-muted text-muted-foreground", icon: <AlertTriangle className="h-3 w-3" /> },
+  const map: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
+    active:   { label: "Aktif",   className: "text-emerald-500 bg-emerald-500/10 border-emerald-500/30", icon: <CheckCircle className="h-3 w-3" /> },
+    pending:  { label: "Pending", className: "text-amber-500 bg-amber-500/10 border-amber-500/30",     icon: <Clock className="h-3 w-3" /> },
+    rejected: { label: "Ditolak", className: "text-destructive bg-destructive/10 border-destructive/30", icon: <XCircle className="h-3 w-3" /> },
+    success:  { label: "Success", className: "text-emerald-500 bg-emerald-500/10 border-emerald-500/30", icon: <CheckCircle className="h-3 w-3" /> },
+    error:    { label: "Error",   className: "text-destructive bg-destructive/10 border-destructive/30", icon: <XCircle className="h-3 w-3" /> },
   };
-  const c = config[status] || config.no_entitlement;
+  const s = map[status] || { label: status, className: "text-muted-foreground bg-muted border-border", icon: null };
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${c.bg}`}>
-      {c.icon} {status === "no_entitlement" ? "Tanpa Akses" : status}
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${s.className}`}>
+      {s.icon}{s.label}
     </span>
+  );
+}
+
+// Step 3 Preview for Admin
+function AdminPreviewStep({ onBack }: { onBack: () => void }) {
+  const [htmlCode, setHtmlCode] = useState('');
+  const [previewHtml, setPreviewHtml] = useState('');
+  const [viewport, setViewport] = useState<'desktop'|'tablet'|'mobile'>('desktop');
+  const [editMode, setEditMode] = useState(false);
+  const [editTarget, setEditTarget] = useState<{type:'text'|'img'; tag:string; value:string; index:number}|null>(null);
+  const viewportWidths = { desktop:'100%', tablet:'768px', mobile:'390px' };
+
+  const getEditableHtml = () => {
+    if (!previewHtml) return '';
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    let idx = 0;
+    ['h1','h2','h3','h4','h5','h6','p','a','span','li','img'].forEach(tag => {
+      doc.querySelectorAll(tag).forEach(el => {
+        el.setAttribute('data-edit-idx', String(idx));
+        el.setAttribute('data-edit-tag', tag.toUpperCase());
+        const style = el.getAttribute('style') || '';
+        el.setAttribute('style', style + ';cursor:pointer;outline:2px dashed rgba(59,130,246,0.5);outline-offset:2px;');
+        idx++;
+      });
+    });
+    const script = doc.createElement('script');
+    script.textContent = `document.addEventListener('click',function(e){const el=e.target.closest('[data-edit-idx]');if(!el)return;e.preventDefault();e.stopPropagation();const idx=el.getAttribute('data-edit-idx');const tag=el.getAttribute('data-edit-tag');const isImg=tag==='IMG';const value=isImg?(el.getAttribute('src')||''):(el.innerText||el.textContent||'');window.parent.postMessage({type:'EDIT_ELEMENT',idx:Number(idx),tag,value,isImg},'*');});`;
+    doc.body.appendChild(script);
+    return doc.documentElement.outerHTML;
+  };
+
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === 'EDIT_ELEMENT') setEditTarget({ type: e.data.isImg ? 'img' : 'text', tag: e.data.tag, value: e.data.value, index: e.data.idx });
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const handleSaveEdit = (newValue: string) => {
+    if (!editTarget) return;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    const el = doc.querySelector(`[data-edit-idx="${editTarget.index}"]`);
+    if (el) {
+      if (editTarget.type === 'img') el.setAttribute('src', newValue);
+      else el.textContent = newValue;
+      doc.querySelectorAll('[data-edit-idx]').forEach(e => {
+        e.removeAttribute('data-edit-idx'); e.removeAttribute('data-edit-tag');
+        const style = e.getAttribute('style') || '';
+        e.setAttribute('style', style.replace(/;?cursor:pointer;outline:[^;]+;outline-offset:[^;]+;?/g, ''));
+      });
+      setPreviewHtml(doc.documentElement.outerHTML);
+    }
+    setEditTarget(null);
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <h2 className="text-base font-semibold text-foreground">📄 Paste HTML Script</h2>
+        <textarea value={htmlCode} onChange={(e) => setHtmlCode(e.target.value)} placeholder="Paste kode HTML hasil dari AI di sini..." className="w-full h-48 rounded-lg bg-secondary text-foreground text-sm font-mono p-3 border border-border resize-y focus:outline-none focus:border-primary" />
+        <div className="flex gap-3">
+          <Button onClick={() => { setPreviewHtml(htmlCode); setEditMode(false); }} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">▶ Load Preview</Button>
+          <Button variant="outline" onClick={() => { setHtmlCode(''); setPreviewHtml(''); }}>🗑 Clear</Button>
+          {previewHtml && (
+            <Button variant="outline" onClick={() => { const blob = new Blob([previewHtml], {type:'text/html'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='landing-page.html'; a.click(); URL.revokeObjectURL(url); toast({title:'HTML diekspor!'}); }} className="gap-2 ml-auto">⬇ Export HTML</Button>
+          )}
+        </div>
+      </div>
+      {previewHtml && (
+        <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <h2 className="text-base font-semibold text-foreground">👁 Live Preview</h2>
+            <div className="flex items-center gap-2">
+              {(['desktop','tablet','mobile'] as const).map(vp => (
+                <button key={vp} type="button" onClick={() => setViewport(vp)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${viewport===vp?'bg-primary text-primary-foreground border-primary':'bg-secondary text-muted-foreground border-border'}`}>
+                  {vp.charAt(0).toUpperCase()+vp.slice(1)}
+                </button>
+              ))}
+              <button type="button" onClick={() => setEditMode(!editMode)} className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-all ml-2 ${editMode?'bg-destructive text-destructive-foreground border-destructive':'bg-secondary text-muted-foreground border-border'}`}>
+                {editMode ? '🔓 Lock Mode' : '✏️ Edit Mode'}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-center overflow-hidden">
+            <div style={{ width: viewportWidths[viewport], transition: 'width 0.3s ease' }} className="relative rounded-lg border border-border overflow-hidden">
+              <iframe srcDoc={editMode ? getEditableHtml() : previewHtml} className="w-full" style={{ height: '600px', border: 'none' }} title="Preview" sandbox="allow-scripts allow-same-origin" />
+            </div>
+          </div>
+          {editMode && <div className="rounded-lg bg-accent/10 border border-accent/30 p-3 text-center"><p className="text-sm text-accent font-medium">✏️ Edit Mode ON — klik elemen untuk mengedit</p></div>}
+        </div>
+      )}
+      {editMode && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
+          <p className="text-xs text-muted-foreground">Upload gambar ke <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="text-primary underline">imgur.com/upload</a> lalu paste link-nya di dialog edit gambar.</p>
+        </div>
+      )}
+      <Button variant="outline" onClick={onBack} className="gap-2">← Kembali ke Prompt</Button>
+      {editTarget && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-primary">✏️ Edit Element</h3>
+            <div className="text-sm text-muted-foreground">TAG: <span className="text-primary font-bold">{editTarget.tag}</span></div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold uppercase tracking-wide text-foreground">{editTarget.type === 'img' ? 'URL Gambar' : 'Teks'}</label>
+              {editTarget.type === 'img' ? (
+                <input type="text" defaultValue={editTarget.value} placeholder="https://..." className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary" id="edit-input" />
+              ) : (
+                <textarea defaultValue={editTarget.value} rows={4} className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none" id="edit-input" />
+              )}
+              {editTarget.type === 'img' && <p className="text-xs text-muted-foreground">Upload di <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="text-primary underline">imgur.com/upload</a> lalu paste link-nya.</p>}
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={() => setEditTarget(null)} className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-all">Batal</button>
+              <button type="button" onClick={() => { const input = document.getElementById('edit-input') as HTMLInputElement|HTMLTextAreaElement; handleSaveEdit(input?.value || ''); }} className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all">💾 Simpan</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -77,122 +184,108 @@ export default function Admin() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [resetDialog, setResetDialog] = useState<{ open: boolean; userId: string; email: string }>({
-    open: false, userId: "", email: "",
-  });
+  const [resetDialog, setResetDialog] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: "", email: "" });
   const [newPassword, setNewPassword] = useState("");
   const [darkMode, setDarkMode] = useState(true);
-
-  // Tools state
   const [form, setForm] = useState<FormState>({ ...initialFormState });
   const [promptText, setPromptText] = useState("");
-  const [hasGenerated, setHasGenerated] = useState(false);
+  const [toolStep, setToolStep] = useState(1);
   const [isDirty, setIsDirty] = useState(false);
 
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: showToast } = useToast();
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-  }, [darkMode]);
+  useEffect(() => { document.documentElement.classList.toggle("dark", darkMode); }, [darkMode]);
 
-  const fetchUsers = useCallback(async () => {
-    const res = await supabase.functions.invoke("admin-users", {
-      body: { action: "list" },
-    });
-    if (res.data?.users) setUsers(res.data.users);
-  }, []);
+  const fetchUsers = async () => {
+    const { data } = await supabase.from("entitlements").select("id, user_id, product_code, status, order_id").eq("product_code", "LPE");
+    if (!data) return;
+    const enriched = await Promise.all(data.map(async (ent) => {
+      const { data: profile } = await supabase.from("profiles").select("name, phone").eq("user_id", ent.user_id).maybeSingle();
+      const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", ent.user_id).maybeSingle();
+      return { id: ent.user_id, email: ent.user_id, name: profile?.name || null, phone: profile?.phone || null, status: ent.status, entitlement_id: ent.id, product_code: ent.product_code, order_id: ent.order_id, role: roleData?.role || "user", created_at: new Date().toISOString(), last_sign_in: null };
+    }));
+    setUsers(enriched);
+  };
 
-  const fetchLogs = useCallback(async () => {
-    const { data } = await supabase
-      .from("provision_logs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(100);
+  const fetchLogs = async () => {
+    const { data } = await supabase.from("provision_logs").select("*").order("created_at", { ascending: false }).limit(100);
     setLogs((data as ProvisionLog[]) || []);
-  }, []);
+  };
 
   useEffect(() => {
-    const checkAdmin = async () => {
+    const check = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
-      const { data: roles } = await supabase
-        .from("user_roles").select("role").eq("user_id", session.user.id);
-      if (!roles?.some((r) => r.role === "admin")) { navigate("/login"); return; }
+      const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).maybeSingle();
+      if (roleData?.role !== "admin") { navigate("/app"); return; }
       setAuthorized(true);
       await Promise.all([fetchUsers(), fetchLogs()]);
       setLoading(false);
     };
-    checkAdmin();
-  }, [navigate, fetchUsers, fetchLogs]);
+    check();
+  }, [navigate]);
 
-  // --- Admin actions ---
-  const invokeAction = async (action: string, body: Record<string, string>, loadingKey: string, successMsg: string) => {
-    setActionLoading(loadingKey);
-    const res = await supabase.functions.invoke("admin-users", { body: { action, ...body } });
-    if (res.error || res.data?.error) {
-      toast({ title: "Gagal", description: res.error?.message || res.data?.error, variant: "destructive" });
-    } else {
-      toast({ title: "Berhasil", description: successMsg });
-      await fetchUsers();
-    }
+  const handleApprove = async (entitlementId: string) => {
+    setActionLoading(entitlementId);
+    await supabase.from("entitlements").update({ status: "active" }).eq("id", entitlementId);
+    showToast({ title: "Berhasil", description: "User berhasil di-approve." });
+    await fetchUsers();
     setActionLoading(null);
   };
 
-  const handleApprove = (entId: string) => invokeAction("approve", { user_id: entId }, entId, "User telah disetujui.");
-  const handleReject = (entId: string) => invokeAction("reject", { user_id: entId }, entId, "User telah ditolak.");
-  const handleDelete = async (userId: string) => {
-    if (!confirm("Yakin ingin menghapus user ini secara permanen?")) return;
-    await invokeAction("delete", { user_id: userId }, userId, "User berhasil dihapus.");
+  const handleReject = async (entitlementId: string) => {
+    setActionLoading(entitlementId);
+    await supabase.from("entitlements").update({ status: "rejected" }).eq("id", entitlementId);
+    showToast({ title: "Berhasil", description: "User berhasil ditolak." });
+    await fetchUsers();
+    setActionLoading(null);
   };
+
+  const handleDelete = async (userId: string) => {
+    setActionLoading(userId);
+    await supabase.from("entitlements").delete().eq("user_id", userId);
+    showToast({ title: "Berhasil", description: "User dihapus." });
+    await fetchUsers();
+    setActionLoading(null);
+  };
+
   const handleResetPassword = async () => {
-    if (newPassword.length < 6) {
-      toast({ title: "Error", description: "Password minimal 6 karakter", variant: "destructive" });
-      return;
-    }
+    if (!newPassword || newPassword.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); return; }
     setActionLoading(resetDialog.userId);
-    const res = await supabase.functions.invoke("admin-users", {
-      body: { action: "reset_password", user_id: resetDialog.userId, password: newPassword },
-    });
-    if (res.error || res.data?.error) {
-      toast({ title: "Gagal", description: res.error?.message || res.data?.error, variant: "destructive" });
-    } else {
-      toast({ title: "Berhasil", description: `Password berhasil direset untuk ${resetDialog.email}` });
-    }
+    const { error } = await supabase.functions.invoke("admin-users", { body: { action: "reset_password", userId: resetDialog.userId, newPassword } });
+    if (error) { showToast({ title: "Gagal", description: error.message, variant: "destructive" }); }
+    else { showToast({ title: "Berhasil", description: `Password berhasil direset untuk ${resetDialog.email}` }); }
     setResetDialog({ open: false, userId: "", email: "" });
     setNewPassword("");
     setActionLoading(null);
   };
 
-  // --- Tools handlers ---
   const handleChange = useCallback((field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (hasGenerated) setIsDirty(true);
-  }, [hasGenerated]);
+    if (toolStep > 1) setIsDirty(true);
+  }, [toolStep]);
 
   const handleToggleElement = useCallback((element: string) => {
-    setForm((prev) => ({
-      ...prev,
-      elemenTambahan: { ...prev.elemenTambahan, [element]: !prev.elemenTambahan[element] },
-    }));
-    if (hasGenerated) setIsDirty(true);
-  }, [hasGenerated]);
+    setForm((prev) => ({ ...prev, elemenTambahan: { ...prev.elemenTambahan, [element]: !prev.elemenTambahan[element] } }));
+    if (toolStep > 1) setIsDirty(true);
+  }, [toolStep]);
 
   const handleGenerate = () => {
     const prompt = generatePrompt(form);
     setPromptText(prompt);
-    setHasGenerated(true);
     setIsDirty(false);
+    setToolStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleReset = () => {
     setForm({ ...initialFormState });
     setPromptText("");
-    setHasGenerated(false);
+    setToolStep(1);
     setIsDirty(false);
   };
 
-  // --- Derived ---
   const filteredUsers = users.filter((u) => {
     const matchSearch = !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.name?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "all" || u.status === filterStatus;
@@ -215,19 +308,14 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Unified Header */}
       <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
             <Rocket className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-foreground">
-              Landing Page <span className="text-primary">Engine</span>
-            </h1>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Shield className="h-3 w-3" /> Admin Panel
-            </span>
+            <h1 className="text-xl font-bold text-foreground">Landing Page <span className="text-primary">Engine</span></h1>
+            <span className="text-xs text-muted-foreground flex items-center gap-1"><Shield className="h-3 w-3" /> Admin Panel</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -243,78 +331,78 @@ export default function Admin() {
       <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full">
         <Tabs defaultValue="tools">
           <TabsList className="mb-6">
-            <TabsTrigger value="tools" className="gap-2">
-              <Zap className="h-4 w-4" /> Tools
-            </TabsTrigger>
+            <TabsTrigger value="tools" className="gap-2"><Zap className="h-4 w-4" /> Tools</TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" /> Manajemen User
-              {pendingCount > 0 && (
-                <span className="ml-1 bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {pendingCount}
-                </span>
-              )}
+              {pendingCount > 0 && <span className="ml-1 bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">{pendingCount}</span>}
             </TabsTrigger>
-            <TabsTrigger value="logs" className="gap-2">
-              <FileText className="h-4 w-4" /> Provision Logs
-            </TabsTrigger>
+            <TabsTrigger value="logs" className="gap-2"><FileText className="h-4 w-4" /> Provision Logs</TabsTrigger>
           </TabsList>
 
-          {/* ===== TOOLS TAB ===== */}
+          {/* TOOLS TAB */}
           <TabsContent value="tools">
-            {/* Hero */}
-            <section className="text-center py-12 px-6 mb-6 rounded-lg border border-border bg-card">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-6"
-              >
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                NEW V3.0 RELEASE
-              </motion.div>
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
-                className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight max-w-3xl mx-auto"
-              >
-                Buat Landing Page professional cuman dalam{" "}
-                <span className="text-primary">Hitungan menit</span> <Zap className="inline h-8 w-8 text-primary" />
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
-                className="mt-4 text-muted-foreground text-base md:text-lg max-w-2xl mx-auto"
-              >
-                Generate Landing Page dari format yang benar, karena landing page yang gagal biasanya bukan salah katanya, tapi salah strukturnya.
-              </motion.p>
-            </section>
+            {/* Stepper */}
+            {toolStep > 1 && (
+              <div className="flex items-center justify-center py-4 mb-4">
+                {[1,2,3].map((s) => {
+                  const done = s < toolStep; const active = s === toolStep;
+                  return (
+                    <div key={s} className="flex items-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${active ? 'bg-primary text-primary-foreground border-primary' : done ? 'bg-transparent text-green-400 border-green-500' : 'bg-transparent text-muted-foreground border-muted-foreground/30'}`}>
+                        {done ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> : s}
+                      </div>
+                      {s < 3 && <div className={`w-16 h-0.5 ${done ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6">
-              <div className="space-y-4 pb-6">
+            {toolStep === 1 && (
+              <div className="space-y-4 pb-6 max-w-3xl">
                 <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
                 <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
                 <Step3Target levelAwareness={form.levelAwareness} targetAudience={form.targetAudience} onChange={handleChange} />
-                <Step4Detail
-                  namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo}
-                  deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama} onChange={handleChange}
-                />
+                <Step4Detail namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo} deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama} onChange={handleChange} />
                 <Step5Design gayaDesain={form.gayaDesain} onChange={handleChange} />
                 <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
                 <Step7Platform platformTarget={form.platformTarget} onChange={handleChange} />
+                <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
                 <div className="flex gap-3 pt-2">
-                  <Button variant="outline" onClick={handleReset} className="gap-2">
-                    <RotateCcw className="h-4 w-4" /> Reset
-                  </Button>
+                  <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
                   <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
-                    <Zap className="h-4 w-4" /> {isDirty ? "Generate Ulang" : "Generate Prompt"}
+                    <Zap className="h-4 w-4" /> {isDirty ? "Generate Ulang" : "Generate Prompt ⚡"}
                   </Button>
                 </div>
               </div>
-              <div className="lg:sticky lg:top-6 lg:self-start">
-                <PromptPanel promptText={promptText} hasPrompt={hasGenerated} />
+            )}
+
+            {toolStep === 2 && (
+              <div className="max-w-4xl mx-auto space-y-6">
+                <p className="text-center text-sm text-muted-foreground">Copy prompt lalu buka AI favorit kamu untuk generate script HTML</p>
+                <div className="rounded-xl border border-border bg-card p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-semibold text-foreground">📋 Prompt Siap Digunakan</h2>
+                    <Button variant="outline" size="sm" onClick={async () => { await navigator.clipboard.writeText(promptText); toast({ title: 'Disalin!' }); }} className="gap-2">
+                      <Copy className="h-4 w-4" /> Copy
+                    </Button>
+                  </div>
+                  <ScrollArea className="h-64">
+                    <pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-3 bg-secondary rounded-lg">{promptText}</pre>
+                  </ScrollArea>
+                </div>
+                <Button onClick={async () => { await navigator.clipboard.writeText(promptText); toast({ title: 'Prompt disalin!' }); setToolStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
+                  <ExternalLink className="h-4 w-4" /> Buat Landing Page
+                </Button>
+                <Button variant="outline" onClick={() => setToolStep(1)} className="w-full">← Kembali Edit Form</Button>
               </div>
-            </div>
+            )}
+
+            {toolStep === 3 && <AdminPreviewStep onBack={() => setToolStep(2)} />}
           </TabsContent>
 
-          {/* ===== USERS TAB ===== */}
+          {/* USERS TAB */}
           <TabsContent value="users">
-            {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {[
                 { label: "Total User", count: users.length, icon: <Users className="h-8 w-8 text-primary" />, filter: "all" },
@@ -325,99 +413,63 @@ export default function Admin() {
                 <Card key={s.filter} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setFilterStatus(s.filter)}>
                   <CardContent className="p-4 flex items-center gap-3">
                     {s.icon}
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{s.count}</p>
-                      <p className="text-xs text-muted-foreground">{s.label}</p>
-                    </div>
+                    <div><p className="text-2xl font-bold text-foreground">{s.count}</p><p className="text-xs text-muted-foreground">{s.label}</p></div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-
             <Card>
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" /> Daftar User ({filteredUsers.length})
-                </CardTitle>
+                <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Daftar User ({filteredUsers.length})</CardTitle>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <div className="relative flex-1 sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Cari nama atau email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
                   </div>
-                  <Button variant="outline" size="icon" onClick={() => { fetchUsers(); fetchLogs(); }}>
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => { fetchUsers(); fetchLogs(); }}><RefreshCw className="h-4 w-4" /></Button>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2 mb-4 flex-wrap">
-                  {["all", "pending", "active", "rejected"].map((s) => (
-                    <Button key={s} size="sm" variant={filterStatus === s ? "default" : "outline"} onClick={() => setFilterStatus(s)} className="text-xs capitalize">
-                      {s === "all" ? "Semua" : s}
-                    </Button>
+                  {["all","pending","active","rejected"].map((s) => (
+                    <Button key={s} size="sm" variant={filterStatus===s?"default":"outline"} onClick={() => setFilterStatus(s)} className="text-xs capitalize">{s==="all"?"Semua":s}</Button>
                   ))}
                 </div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Nama</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Terdaftar</TableHead>
-                        <TableHead>Login Terakhir</TableHead>
+                        <TableHead>Nama</TableHead><TableHead>Email</TableHead><TableHead>Status</TableHead>
+                        <TableHead>Role</TableHead><TableHead>Terdaftar</TableHead><TableHead>Login Terakhir</TableHead>
                         <TableHead className="text-right">Aksi</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredUsers.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                            {search ? "Tidak ada user yang cocok." : "Belum ada user terdaftar."}
+                        <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{search ? "Tidak ada user yang cocok." : "Belum ada user terdaftar."}</TableCell></TableRow>
+                      ) : filteredUsers.map((u) => (
+                        <TableRow key={u.id} className={u.status==="pending"?"bg-amber-500/5":""}>
+                          <TableCell className="font-medium">{u.name||"-"}</TableCell>
+                          <TableCell className="text-sm">{u.email}</TableCell>
+                          <TableCell><StatusBadge status={u.status} /></TableCell>
+                          <TableCell><span className={`text-xs font-medium ${u.role==="admin"?"text-primary":"text-muted-foreground"}`}>{u.role}</span></TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString("id-ID")}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{u.last_sign_in ? new Date(u.last_sign_in).toLocaleString("id-ID") : "Belum pernah"}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {u.status==="pending" && u.entitlement_id && (<>
+                                <Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-300" onClick={() => handleApprove(u.entitlement_id!)} disabled={actionLoading===u.entitlement_id}><CheckCircle className="h-3 w-3" /> ACC</Button>
+                                <Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30" onClick={() => handleReject(u.entitlement_id!)} disabled={actionLoading===u.entitlement_id}><XCircle className="h-3 w-3" /> Tolak</Button>
+                              </>)}
+                              {u.status==="rejected" && u.entitlement_id && (
+                                <Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-300" onClick={() => handleApprove(u.entitlement_id!)} disabled={actionLoading===u.entitlement_id}><CheckCircle className="h-3 w-3" /> ACC</Button>
+                              )}
+                              <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setResetDialog({ open: true, userId: u.id, email: u.email })}><KeyRound className="h-3 w-3" /></Button>
+                              {u.role!=="admin" && <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDelete(u.id)} disabled={actionLoading===u.id}><Trash2 className="h-3 w-3" /></Button>}
+                            </div>
                           </TableCell>
                         </TableRow>
-                      ) : (
-                        filteredUsers.map((u) => (
-                          <TableRow key={u.id} className={u.status === "pending" ? "bg-amber-500/5" : ""}>
-                            <TableCell className="font-medium">{u.name || "-"}</TableCell>
-                            <TableCell className="text-sm">{u.email}</TableCell>
-                            <TableCell><StatusBadge status={u.status} /></TableCell>
-                            <TableCell>
-                              <span className={`text-xs font-medium ${u.role === "admin" ? "text-primary" : "text-muted-foreground"}`}>{u.role}</span>
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString("id-ID")}</TableCell>
-                            <TableCell className="text-xs text-muted-foreground">{u.last_sign_in ? new Date(u.last_sign_in).toLocaleString("id-ID") : "Belum pernah"}</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                {u.status === "pending" && u.entitlement_id && (
-                                  <>
-                                    <Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950" onClick={() => handleApprove(u.entitlement_id!)} disabled={actionLoading === u.entitlement_id}>
-                                      <CheckCircle className="h-3 w-3" /> ACC
-                                    </Button>
-                                    <Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/5" onClick={() => handleReject(u.entitlement_id!)} disabled={actionLoading === u.entitlement_id}>
-                                      <XCircle className="h-3 w-3" /> Tolak
-                                    </Button>
-                                  </>
-                                )}
-                                {u.status === "rejected" && u.entitlement_id && (
-                                  <Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950" onClick={() => handleApprove(u.entitlement_id!)} disabled={actionLoading === u.entitlement_id}>
-                                    <CheckCircle className="h-3 w-3" /> ACC
-                                  </Button>
-                                )}
-                                <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => setResetDialog({ open: true, userId: u.id, email: u.email })}>
-                                  <KeyRound className="h-3 w-3" />
-                                </Button>
-                                {u.role !== "admin" && (
-                                  <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDelete(u.id)} disabled={actionLoading === u.id}>
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
@@ -425,37 +477,26 @@ export default function Admin() {
             </Card>
           </TabsContent>
 
-          {/* ===== LOGS TAB ===== */}
+          {/* LOGS TAB */}
           <TabsContent value="logs">
             <Card>
               <CardHeader><CardTitle>Provision Logs</CardTitle></CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Message</TableHead>
-                      <TableHead>Tanggal</TableHead>
-                    </TableRow>
+                    <TableRow><TableHead>Order ID</TableHead><TableHead>Email</TableHead><TableHead>Status</TableHead><TableHead>Message</TableHead><TableHead>Tanggal</TableHead></TableRow>
                   </TableHeader>
                   <TableBody>
-                    {logs.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">Belum ada log.</TableCell>
+                    {logs.length===0 ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Belum ada log.</TableCell></TableRow>
+                    : logs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-mono text-xs">{log.order_id||"-"}</TableCell>
+                        <TableCell className="text-sm">{log.email||"-"}</TableCell>
+                        <TableCell><StatusBadge status={log.status} /></TableCell>
+                        <TableCell className="text-xs max-w-[300px] truncate">{log.message||"-"}</TableCell>
+                        <TableCell className="text-xs">{new Date(log.created_at).toLocaleString("id-ID")}</TableCell>
                       </TableRow>
-                    ) : (
-                      logs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-mono text-xs">{log.order_id || "-"}</TableCell>
-                          <TableCell className="text-sm">{log.email || "-"}</TableCell>
-                          <TableCell><StatusBadge status={log.status} /></TableCell>
-                          <TableCell className="text-xs max-w-[300px] truncate">{log.message || "-"}</TableCell>
-                          <TableCell className="text-xs">{new Date(log.created_at).toLocaleString("id-ID")}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    ))}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -464,7 +505,6 @@ export default function Admin() {
         </Tabs>
       </main>
 
-      {/* Reset Password Dialog */}
       <Dialog open={resetDialog.open} onOpenChange={(open) => { if (!open) setResetDialog({ open: false, userId: "", email: "" }); }}>
         <DialogContent>
           <DialogHeader>
@@ -476,8 +516,8 @@ export default function Admin() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setResetDialog({ open: false, userId: "", email: "" })}>Batal</Button>
-            <Button onClick={handleResetPassword} disabled={actionLoading === resetDialog.userId}>
-              {actionLoading === resetDialog.userId ? "Memproses..." : "Reset Password"}
+            <Button onClick={handleResetPassword} disabled={actionLoading===resetDialog.userId}>
+              {actionLoading===resetDialog.userId ? "Memproses..." : "Reset Password"}
             </Button>
           </DialogFooter>
         </DialogContent>
