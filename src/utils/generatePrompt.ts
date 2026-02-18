@@ -174,6 +174,22 @@ ${layoutSection}
 10. Hidden CTA Wajib: Tuliskan 1-2 baris micro-copy trust tepat di bawah setiap tombol CTA.
 11. Output HANYA kode HTML mentah, tanpa penjelasan, tanpa markdown code block.
 12. Semua gambar HARUS tag <img> standar — jangan embed base64 atau background-image CSS.
-13. Tombol CTA harus berupa tag <a href="#"> atau <button> yang jelas, besar, dan eye-catching.${isScalev ? `
-14. KRITIS SCALEV: Cek ulang SETIAP section — pastikan semua punya max-width:688px dan margin:0 auto sebelum output final.` : ''}`;
+13. Tombol CTA harus berupa tag <a href="#"> atau <button> yang jelas, besar, dan eye-catching.
+14. COUNTDOWN TIMER WAJIB BERGERAK: Jika ada section Scarcity/Timer, WAJIB gunakan JavaScript setInterval yang berjalan real-time setiap 1 detik. Buat elemen dengan id unik (cd-days, cd-hours, cd-minutes, cd-seconds) dan update angkanya secara otomatis. Contoh JS wajib:
+<script>
+(function() {
+  var deadline = new Date(Date.now() + 2*24*60*60*1000);
+  function tick() {
+    var d = deadline - Date.now();
+    if (d < 0) return;
+    document.getElementById('cd-days').textContent = String(Math.floor(d/86400000)).padStart(2,'0');
+    document.getElementById('cd-hours').textContent = String(Math.floor((d%86400000)/3600000)).padStart(2,'0');
+    document.getElementById('cd-minutes').textContent = String(Math.floor((d%3600000)/60000)).padStart(2,'0');
+    document.getElementById('cd-seconds').textContent = String(Math.floor((d%60000)/1000)).padStart(2,'0');
+  }
+  setInterval(tick, 1000); tick();
+})();
+</script>${isScalev ? `
+15. KRITIS SCALEV: Cek ulang SETIAP section — pastikan semua punya max-width:688px dan margin:0 auto sebelum output final.` : ''}`;
 }
+
