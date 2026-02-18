@@ -588,7 +588,7 @@ export default function Admin() {
                 <Step4Detail namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo} deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama} onChange={handleChange} />
                 <Step5Design gayaDesain={form.gayaDesain} onChange={handleChange} />
                 <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
-                <Step7Platform platformTarget={form.platformTarget} onChange={handleChange} />
+                <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
                 <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
                 <div className="flex gap-3 pt-2">
                   <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>

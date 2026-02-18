@@ -760,7 +760,7 @@ export default function AppPage() {
               />
               <Step5Design gayaDesain={form.gayaDesain} onChange={handleChange} />
               <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
-              <Step7Platform platformTarget={form.platformTarget} onChange={handleChange} />
+              <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
               <Step8Reference
                 linkReferensi={form.linkReferensi}
                 inspirasiDesain={form.inspirasiDesain}
