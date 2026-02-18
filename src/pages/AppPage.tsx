@@ -381,7 +381,41 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       )}
 
-      <Button variant="outline" onClick={onBack} className="gap-2">← Kembali ke Prompt</Button>
+      {/* Bottom Action Bar */}
+      <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-border py-4 flex gap-3 items-center">
+        <Button variant="outline" onClick={onBack} className="gap-2 px-5">
+          ← Kembali
+        </Button>
+        <Button
+          variant="outline"
+          onClick={async () => {
+            await navigator.clipboard.writeText(previewHtml || htmlCode);
+            toast({ title: '✅ Disalin!', description: 'Kode HTML sudah tersalin ke clipboard.' });
+          }}
+          disabled={!previewHtml && !htmlCode}
+          className="gap-2 px-5"
+        >
+          📋 Copy HTML
+        </Button>
+        <Button
+          onClick={() => {
+            const content = previewHtml || htmlCode;
+            if (!content) return;
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'landing-page.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            toast({ title: '⬇ Download berhasil!', description: 'File landing-page.html siap digunakan.' });
+          }}
+          disabled={!previewHtml && !htmlCode}
+          className="gap-2 px-6 bg-green-600 hover:bg-green-700 text-white font-bold ml-auto"
+        >
+          ⬇ Download HTML
+        </Button>
+      </div>
 
       {editTarget && (
         <EditModal
