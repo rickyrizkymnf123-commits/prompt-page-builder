@@ -5,20 +5,6 @@ export function generatePrompt(form: FormState): string {
     .filter(([, v]) => v)
     .map(([k]) => k);
 
-  const hargaSection = form.hargaNormal || form.hargaPromo
-    ? `\nPENAWARAN (OFFER):\n\n- Harga Normal: ${form.hargaNormal || '-'}\n- Harga Promo: ${form.hargaPromo || '-'}\n- CTA Utama: "${form.ctaUtama || '-'}"`
-    : '';
-
-  const platformInstructions: Record<string, string> = {
-    'Scalev': 'Scalev',
-    'Lynk.id': 'Lynk.id',
-    'WordPress (Elementor/Divi)': 'WordPress (Elementor/Divi)',
-    'Shopify': 'Shopify',
-    'Copy HTML': 'Copy HTML',
-  };
-
-  const platformName = platformInstructions[form.platformTarget] || 'Copy HTML';
-
   const awarenessMap: Record<string, string> = {
     'Unaware (Belum sadar)': 'Unaware',
     'Problem Aware (Tahu masalah)': 'Problem Aware',
@@ -29,58 +15,82 @@ export function generatePrompt(form: FormState): string {
 
   const awarenessLevel = awarenessMap[form.levelAwareness] || form.levelAwareness;
 
-  return `ANDA ADALAH: Senior Conversion Copywriter + UI/UX minded marketer yang sudah menciptakan ratusan landing page yang mengkonversi untuk penjualan di social media.
+  const hargaNormalFormatted = form.hargaNormal
+    ? `Rp ${Number(form.hargaNormal).toLocaleString('id-ID')}`
+    : '-';
+  const hargaPromoFormatted = form.hargaPromo
+    ? `Rp ${Number(form.hargaPromo).toLocaleString('id-ID')}`
+    : '-';
 
-TUGAS ANDA: Menulis Copywriting Landing Page (Sales Page) dengan struktur HTML yang rapi, persuasif, dan aman untuk kebijakan iklan (Meta/Google Ads Compliance).
+  const platformName = form.platformTarget || 'Copy HTML';
 
-ATURAN PENULISAN & LAYOUT (WAJIB DIPATUHI):
+  // Platform-specific output rules
+  const platformOutputRules: Record<string, string> = {
+    'Scalev': `## PLATFORM TARGET: Scalev
+Output MUST be a single HTML code block with ALL CSS inline (style attribute on each element). No <head>, no <style> tag, no external CSS. The HTML will be injected inside Scalev's page builder. Use only div, section, span, h1-h6, p, a, img, ul, li tags. All images use placeholder URLs.`,
 
-1. LAYOUT: Desain WAJIB menggunakan SATU KOLOM TUNGGAL (Single Column) di seluruh ukuran layar (Mobile, Tablet, Desktop). Jangan gunakan grid atau layout berkolom meskipun di desktop.
+    'Lynk.id': `## PLATFORM TARGET: Lynk.id
+Output MUST be a single HTML code block with ALL CSS inline (style attribute on each element). No <head>, no <style> tag, no external CSS. The HTML will be injected inside Lynk.id's page builder. Use only div, section, span, h1-h6, p, a, img, ul, li tags. All images use placeholder URLs.`,
 
-2. TEMA VISUAL: Wajib menggunakan latar belakang Dark Mode (Gelap) di seluruh bagian. Gunakan warna teks terang (putih/abu) untuk keterbacaan yang maksimal.
+    'WordPress (Elementor/Divi)': `## PLATFORM TARGET: WordPress (Elementor/Divi)
+Output MUST be a single HTML code block. You may use <style> tags scoped within the HTML block. Use semantic HTML. All images use placeholder URLs. Avoid WordPress shortcodes. Structure compatible with Elementor HTML widget or Divi code module.`,
 
-3. Skimming-friendly: Gunakan heading yang jelas dan bullet points.
+    'Shopify': `## PLATFORM TARGET: Shopify
+Output MUST be a single HTML code block with inline CSS. Avoid Liquid templating. Use only standard HTML tags. All images use placeholder URLs. Structure must be compatible with Shopify's custom HTML sections.`,
 
-4. Emoji hemat & relevan: Maksimal 1 emoji per bullet point atau heading. Jangan berlebihan.
+    'Copy HTML': `## PLATFORM TARGET: Standalone HTML
+Output MUST be a complete, self-contained single HTML file including <!DOCTYPE html>, <head> with meta tags, Google Fonts import, and <body>. Use <style> tags in <head> for CSS. All images use placeholder URLs from https://placehold.co/`,
+  };
 
-5. Headline Curiosity-First atau menyebut masalah spesifik. Hindari headline generik yang membosankan.
+  const outputRule = platformOutputRules[platformName] || platformOutputRules['Copy HTML'];
 
-6. Hidden CTA Wajib: Tuliskan 1–2 baris teks reassurance/trust (micro-copy) tepat di bawah setiap tombol CTA.
+  const sectionsToInclude = [
+    'Hero Section',
+    ...activeElements,
+  ].join('\n- ');
 
-7. Anti Overclaim: Jangan gunakan kata "pasti", "jamin", "100%", atau klaim medis/finansial yang tidak realistis agar aman dari banned iklan.
+  return `Kamu adalah developer landing page expert dan copywriter yang fokus pada konversi.
 
-8. Penyesuaian Awareness: Tulis copywriting dengan level awareness "${awarenessLevel}". Fokus pada "Sadar masalah, cari solusi".
+## TUGAS
+Buatkan landing page yang high-converting dalam bentuk kode HTML${platformName === 'Copy HTML' ? ' lengkap (full HTML file)' : ' tunggal dengan inline CSS'}.
 
-9. Tone: Gunakan gaya bahasa "${form.gayaBahasa}".
+## FRAMEWORK COPYWRITING
+Gunakan framework **${form.framework || 'PAS'}** untuk menyusun copy.
 
-PROFIL PRODUK & MARKET:
+## TONE & BAHASA
+- Gaya penulisan: **${form.gayaBahasa || 'Professional & Formal'}**
+- Bahasa: **Indonesia**
 
-- Nama Produk: ${form.namaProduk || '-'}
+## INFORMASI PRODUK
+- Tipe produk: ${form.tipeProduk || '-'}
+- Nama produk: ${form.namaProduk || '-'}
+- Deskripsi: ${form.deskripsiBenefit || '-'}
+- Harga normal: ${hargaNormalFormatted}
+- Harga promo: ${hargaPromoFormatted}
+- CTA utama: "${form.ctaUtama || 'Beli Sekarang'}"
 
-- Kategori: ${form.tipeProduk || '-'}
+## TARGET AUDIENCE
+- Tujuan utama: **${form.tujuanUtama || 'Sales / Beli Langsung'}**
+- Awareness level: **${awarenessLevel || 'Most Aware'}**
+- Target market: **${form.targetAudience || '-'}**
 
-- Deskripsi & Benefit: ${form.deskripsiBenefit || form.namaProduk || '-'}
+## DESAIN VISUAL
+- Gaya desain: **${form.gayaDesain || 'Bold & High Conversion'}**
 
-- Target Market: ${form.targetAudience || '-'}
+## SECTION YANG HARUS ADA
+- ${sectionsToInclude}
 
-- Tujuan Utama: ${form.tujuanUtama || '-'}
+${outputRule}
 
-- Framework Utama: ${form.framework || '-'}
-${hargaSection}
-
-STRUKTUR HALAMAN (PLATFORM: ${platformName}):
-
-1. HERO SECTION: Hook maut yang relevan dengan target audience.
-
-2. BODY CONTENT: Mengikuti alur framework ${form.framework || '-'}.
-
-3. ADDITIONAL SECTIONS: Wajib masukkan section tambahan berikut: ${activeElements.join(', ') || '-'}.
-
-4. TRUST ELEMENTS: Masukkan Social Proof dan Reassurance.
-
-5. CONVERSION BLOCK: Kontras harga dan urgensi yang masuk akal.
-
-6. HIDDEN CTA: Pastikan ada micro-copy trust di bawah tombol.
-
-OUTPUT: Generate kode HTML utuh (single file) dengan Tailwind CSS, visual premium sesuai gaya "${form.gayaDesain || 'Bold & High Conversion'}" dengan nuansa warna dominan "dark ungu", dan copywriting yang sangat persuasif namun aman secara regulasi.`;
+## ATURAN PENTING
+1. SEMUA styling HARUS inline CSS (style="...") di setiap element${platformName === 'Copy HTML' ? ' atau dalam <style> tag di <head>' : ''}.
+2. TIDAK BOLEH ada file CSS external, TIDAK BOLEH pakai CDN CSS framework.
+3. Harus fully responsive dengan inline media queries jika diperlukan.
+4. Gunakan placeholder image profesional dari https://placehold.co/
+5. Tambahkan smooth scroll dan micro-interaction modern jika memungkinkan.
+6. Landing page harus terlihat stunning, premium, dan dioptimasi untuk konversi.
+7. Gunakan Google Fonts via @import jika perlu (Inter atau sejenis).
+8. Anti Overclaim: Jangan gunakan kata "pasti", "jamin", "100%", atau klaim medis/finansial yang tidak realistis.
+9. Hidden CTA Wajib: Tuliskan 1–2 baris teks reassurance/trust (micro-copy) tepat di bawah setiap tombol CTA.
+10. Output HANYA kode HTML, tanpa penjelasan.`;
 }
