@@ -233,11 +233,10 @@ document.addEventListener('DOMContentLoaded', function() {
     return () => window.removeEventListener('message', handler);
   }, []);
 
-  const handleSaveEdit = (newValue: string, newHref?: string) => {
+  const handleSaveEdit = (newValue: string, newHref?: string, pixelEvent?: string) => {
     if (!editTarget) return;
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
-    // Find element by index across all editable tags
     const editableTags = ['h1','h2','h3','h4','h5','h6','p','a','span','li','button','img'];
     let idx = 0;
     let targetEl: Element | null = null;
@@ -254,13 +253,20 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (editTarget.type === 'link') {
         el.textContent = newValue;
         if (newHref !== undefined) el.setAttribute('href', newHref);
+        // Inject specific pixel event for this button
+        if (pixelEvent) {
+          const evScript = pixelEvent === 'Purchase'
+            ? `if(typeof fbq!=='undefined'){fbq('track','${pixelEvent}',{value:0,currency:'IDR'});}`
+            : `if(typeof fbq!=='undefined'){fbq('track','${pixelEvent}');}`;
+          el.setAttribute('onclick', evScript);
+          el.setAttribute('data-pixel-event', pixelEvent);
+        }
       } else {
         el.textContent = newValue;
       }
       const updatedHtml = doc.documentElement.outerHTML;
       setPreviewHtml(updatedHtml);
       setHtmlCode(updatedHtml);
-      // Force iframe re-render with updated content
       setEditMode(false);
       setTimeout(() => setEditMode(true), 50);
     }
@@ -388,6 +394,17 @@ document.addEventListener('DOMContentLoaded', function() {
   );
 }
 
+const FB_PIXEL_EVENTS = [
+  { value: '', label: '— Tidak ada (default dari global) —' },
+  { value: 'AddToCart', label: '🛒 Add to Cart' },
+  { value: 'InitiateCheckout', label: '💳 Initiate Checkout' },
+  { value: 'AddPaymentInfo', label: '💳 Add Payment Info' },
+  { value: 'Purchase', label: '✅ Purchase' },
+  { value: 'Lead', label: '📋 Lead' },
+  { value: 'ViewContent', label: '👁 View Content' },
+  { value: 'CompleteRegistration', label: '📝 Complete Registration' },
+];
+
 function EditModal({
   editTarget,
   onClose,
@@ -395,15 +412,16 @@ function EditModal({
 }: {
   editTarget: { type: 'text' | 'img' | 'link'; tag: string; value: string; href: string; index: number };
   onClose: () => void;
-  onSave: (value: string, href?: string) => void;
+  onSave: (value: string, href?: string, pixelEvent?: string) => void;
 }) {
   const [textValue, setTextValue] = useState(editTarget.value);
   const [hrefValue, setHrefValue] = useState(editTarget.href);
   const [imgValue, setImgValue] = useState(editTarget.value);
+  const [pixelEvent, setPixelEvent] = useState('');
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4 shadow-2xl">
+      <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-bold text-primary flex items-center gap-2">✏️ Edit Element</h3>
         <div className="text-sm text-muted-foreground">
           TAG: <span className="text-primary font-bold">{editTarget.tag}</span>
@@ -426,11 +444,11 @@ function EditModal({
         ) : editTarget.type === 'link' ? (
           <div className="space-y-3">
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-foreground">Teks</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-foreground">Teks Tombol</label>
               <textarea
                 value={textValue}
                 onChange={(e) => setTextValue(e.target.value)}
-                rows={3}
+                rows={2}
                 className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none"
               />
             </div>
@@ -440,10 +458,30 @@ function EditModal({
                 type="text"
                 value={hrefValue}
                 onChange={(e) => setHrefValue(e.target.value)}
-                placeholder="#"
+                placeholder="https://wa.me/62..."
                 className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary"
               />
               <p className="text-xs text-muted-foreground">Contoh: https://wa.me/6281234567890 untuk WhatsApp</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-foreground">🎯 Facebook Pixel Event</label>
+              <p className="text-xs text-muted-foreground">Pilih event yang di-track saat tombol ini diklik</p>
+              <div className="grid grid-cols-1 gap-1.5">
+                {FB_PIXEL_EVENTS.map((ev) => (
+                  <button
+                    key={ev.value}
+                    type="button"
+                    onClick={() => setPixelEvent(ev.value)}
+                    className={`text-left px-3 py-2 rounded-lg text-sm border transition-all ${
+                      pixelEvent === ev.value
+                        ? 'bg-primary/15 border-primary text-primary font-semibold'
+                        : 'bg-secondary border-border text-foreground hover:border-primary/50'
+                    }`}
+                  >
+                    {ev.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
@@ -470,7 +508,7 @@ function EditModal({
             type="button"
             onClick={() => {
               if (editTarget.type === 'img') onSave(imgValue);
-              else if (editTarget.type === 'link') onSave(textValue, hrefValue);
+              else if (editTarget.type === 'link') onSave(textValue, hrefValue, pixelEvent || undefined);
               else onSave(textValue);
             }}
             className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
