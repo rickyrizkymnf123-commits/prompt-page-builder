@@ -59,7 +59,7 @@ function AdminPreviewStep({ onBack }: { onBack: () => void }) {
   const [previewHtml, setPreviewHtml] = useState('');
   const [viewport, setViewport] = useState<'desktop'|'tablet'|'mobile'>('desktop');
   const [editMode, setEditMode] = useState(false);
-  const [editTarget, setEditTarget] = useState<{type:'text'|'img'|'link'; tag:string; value:string; href:string; index:number; pixelEvent:string}|null>(null);
+  const [editTarget, setEditTarget] = useState<{type:'text'|'img'|'link'|'video'; tag:string; value:string; href:string; index:number; pixelEvent:string; imgWidth?:number; imgHeight?:number}|null>(null);
   const [fbPixelId, setFbPixelId] = useState('');
   const [pixelApplied, setPixelApplied] = useState(false);
   const viewportWidths = { desktop:'100%', tablet:'768px', mobile:'390px' };
@@ -89,30 +89,51 @@ fbq('track', 'PageView');
   };
 
 
+  const toYoutubeEmbed = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (match) return `https://www.youtube.com/embed/${match[1]}`;
+    return url;
+  };
+
   const getEditableHtml = () => {
     if (!previewHtml) return '';
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
     let idx = 0;
-    ['h1','h2','h3','h4','h5','h6','p','a','span','li','button','img'].forEach(tag => {
+    ['h1','h2','h3','h4','h5','h6','p','a','span','li','button','img','iframe'].forEach(tag => {
       doc.querySelectorAll(tag).forEach(el => {
         el.setAttribute('data-edit-idx', String(idx));
         el.setAttribute('data-edit-tag', tag.toUpperCase());
         if (tag === 'a') el.setAttribute('data-edit-href', (el as HTMLAnchorElement).getAttribute('href') || '');
+        if (tag === 'iframe') {
+          const wrapper = doc.createElement('div');
+          wrapper.setAttribute('data-edit-idx', String(idx));
+          wrapper.setAttribute('data-edit-tag', 'IFRAME');
+          wrapper.setAttribute('data-edit-src', (el as HTMLIFrameElement).getAttribute('src') || '');
+          wrapper.setAttribute('style', 'position:relative;cursor:pointer;');
+          el.parentNode?.insertBefore(wrapper, el);
+          wrapper.appendChild(el);
+          const overlay = doc.createElement('div');
+          overlay.setAttribute('style', 'position:absolute;inset:0;background:rgba(59,130,246,0.15);border:2px dashed rgba(59,130,246,0.8);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;');
+          overlay.innerHTML = '<span style="background:rgba(59,130,246,0.9);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:bold;">🎬 Klik untuk edit video</span>';
+          wrapper.appendChild(overlay);
+          idx++;
+          return;
+        }
         const style = el.getAttribute('style') || '';
         el.setAttribute('style', style + ';cursor:pointer;outline:2px dashed rgba(59,130,246,0.5);outline-offset:2px;');
         idx++;
       });
     });
     const script = doc.createElement('script');
-    script.textContent = `document.addEventListener('click',function(e){const el=e.target.closest('[data-edit-idx]');if(!el)return;e.preventDefault();e.stopPropagation();const idx=el.getAttribute('data-edit-idx');const tag=el.getAttribute('data-edit-tag');const isImg=tag==='IMG';const isA=tag==='A';const value=isImg?(el.getAttribute('src')||''):(el.innerText||el.textContent||'');const href=isA?(el.getAttribute('data-edit-href')||el.getAttribute('href')||''):'';const pixelEvent=el.getAttribute('data-pixel-event')||'';window.parent.postMessage({type:'EDIT_ELEMENT',idx:Number(idx),tag,value,href,isImg,isA,pixelEvent},'*');});`;
+    script.textContent = `document.addEventListener('click',function(e){const el=e.target.closest('[data-edit-idx]');if(!el)return;e.preventDefault();e.stopPropagation();const idx=el.getAttribute('data-edit-idx');const tag=el.getAttribute('data-edit-tag');const isImg=tag==='IMG';const isA=tag==='A';const isIframe=tag==='IFRAME';const value=isImg?(el.getAttribute('src')||''):isIframe?(el.getAttribute('data-edit-src')||el.querySelector('iframe')?.getAttribute('src')||''):(el.innerText||el.textContent||'');const href=isA?(el.getAttribute('data-edit-href')||el.getAttribute('href')||''):'';const pixelEvent=el.getAttribute('data-pixel-event')||'';const imgWidth=isImg?(el.naturalWidth||el.getAttribute('width')||0):0;const imgHeight=isImg?(el.naturalHeight||el.getAttribute('height')||0):0;window.parent.postMessage({type:'EDIT_ELEMENT',idx:Number(idx),tag,value,href,isImg,isA,isIframe,pixelEvent,imgWidth,imgHeight},'*');});`;
     doc.body.appendChild(script);
     return doc.documentElement.outerHTML;
   };
 
   useEffect(() => {
     const handler = (e: MessageEvent) => {
-      if (e.data?.type === 'EDIT_ELEMENT') setEditTarget({ type: e.data.isImg ? 'img' : e.data.isA ? 'link' : 'text', tag: e.data.tag, value: e.data.value, href: e.data.href || '', index: e.data.idx, pixelEvent: e.data.pixelEvent || '' });
+      if (e.data?.type === 'EDIT_ELEMENT') setEditTarget({ type: e.data.isImg ? 'img' : e.data.isA ? 'link' : e.data.isIframe ? 'video' : 'text', tag: e.data.tag, value: e.data.value, href: e.data.href || '', index: e.data.idx, pixelEvent: e.data.pixelEvent || '', imgWidth: e.data.imgWidth || 0, imgHeight: e.data.imgHeight || 0 });
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
@@ -122,7 +143,7 @@ fbq('track', 'PageView');
     if (!editTarget) return;
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
-    const editableTags = ['h1','h2','h3','h4','h5','h6','p','a','span','li','button','img'];
+    const editableTags = ['h1','h2','h3','h4','h5','h6','p','a','span','li','button','img','iframe'];
     let idx = 0;
     let targetEl: Element | null = null;
     editableTags.forEach(tag => {
@@ -133,12 +154,13 @@ fbq('track', 'PageView');
     });
     if (targetEl) {
       const el = targetEl as Element;
-      if (editTarget.type === 'img') {
+      if (editTarget.type === 'video') {
+        el.setAttribute('src', toYoutubeEmbed(newValue));
+      } else if (editTarget.type === 'img') {
         el.setAttribute('src', newValue);
       } else if (editTarget.type === 'link') {
         el.textContent = newValue;
         if (newHref !== undefined) el.setAttribute('href', newHref);
-        // Inject specific pixel event — or remove if user cleared it
         if (pixelEvent) {
           const evScript = pixelEvent === 'Purchase'
             ? `if(typeof fbq!=='undefined'){fbq('track','${pixelEvent}',{value:0,currency:'IDR'});}`
@@ -272,32 +294,67 @@ function AdminEditModal({
   onClose,
   onSave,
 }: {
-  editTarget: {type:'text'|'img'|'link'; tag:string; value:string; href:string; index:number; pixelEvent:string};
+  editTarget: {type:'text'|'img'|'link'|'video'; tag:string; value:string; href:string; index:number; pixelEvent:string; imgWidth?:number; imgHeight?:number};
   onClose: () => void;
   onSave: (value: string, href?: string, pixelEvent?: string) => void;
 }) {
   const [textValue, setTextValue] = useState(editTarget.value);
   const [hrefValue, setHrefValue] = useState(editTarget.href);
   const [imgValue, setImgValue] = useState(editTarget.value);
+  const [videoValue, setVideoValue] = useState(editTarget.value);
   const [pixelEvent, setPixelEvent] = useState(editTarget.pixelEvent || '');
 
-  // Reset state setiap kali editTarget berubah — baca kembali pixelEvent yang sudah tersimpan
   useEffect(() => {
     setTextValue(editTarget.value);
     setHrefValue(editTarget.href);
     setImgValue(editTarget.value);
+    setVideoValue(editTarget.value);
     setPixelEvent(editTarget.pixelEvent || '');
   }, [editTarget.index, editTarget.value, editTarget.href, editTarget.pixelEvent]);
 
+  const toYoutubeEmbed = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (match) return `https://www.youtube.com/embed/${match[1]}`;
+    return url;
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4 shadow-2xl">
+      <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-bold text-primary">✏️ Edit Element</h3>
         <div className="text-sm text-muted-foreground">TAG: <span className="text-primary font-bold">{editTarget.tag}</span></div>
-        {editTarget.type === 'img' ? (
+
+        {editTarget.type === 'video' ? (
+          <div className="space-y-3">
+            <label className="text-sm font-semibold uppercase tracking-wide text-foreground">🎬 URL Video YouTube</label>
+            <input type="text" value={videoValue} onChange={(e) => setVideoValue(e.target.value)} placeholder="https://www.youtube.com/watch?v=... atau embed URL" className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary" />
+            <div className="rounded-lg bg-secondary/60 border border-border p-3 space-y-1">
+              <p className="text-xs text-muted-foreground font-semibold">Format yang diterima:</p>
+              <p className="text-xs text-muted-foreground">• https://www.youtube.com/watch?v=VIDEO_ID</p>
+              <p className="text-xs text-muted-foreground">• https://youtu.be/VIDEO_ID</p>
+              <p className="text-xs text-muted-foreground">• https://www.youtube.com/embed/VIDEO_ID</p>
+            </div>
+            {videoValue && (
+              <div className="rounded-lg overflow-hidden border border-border aspect-video">
+                <iframe src={toYoutubeEmbed(videoValue)} className="w-full h-full" allowFullScreen title="Video preview" />
+              </div>
+            )}
+          </div>
+        ) : editTarget.type === 'img' ? (
           <div className="space-y-2">
             <label className="text-sm font-semibold uppercase tracking-wide text-foreground">URL Gambar</label>
+            {(editTarget.imgWidth || editTarget.imgHeight) ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-secondary border border-border rounded px-2 py-1 text-muted-foreground font-mono">{editTarget.imgWidth} × {editTarget.imgHeight} px</span>
+                <span className="text-xs text-muted-foreground">— ukuran gambar saat ini</span>
+              </div>
+            ) : null}
             <input type="text" value={imgValue} onChange={(e) => setImgValue(e.target.value)} placeholder="https://..." className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary" />
+            {imgValue && (
+              <div className="rounded-lg overflow-hidden border border-border bg-secondary/40 flex items-center justify-center" style={{ minHeight: 80 }}>
+                <img src={imgValue} alt="preview" className="max-h-32 object-contain rounded" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">Upload di <a href="https://uploadimgur.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">uploadimgur.com</a> lalu paste link-nya.</p>
           </div>
         ) : editTarget.type === 'link' ? (
@@ -316,18 +373,7 @@ function AdminEditModal({
               <p className="text-xs text-muted-foreground">Pilih event yang di-track saat tombol ini diklik</p>
               <div className="grid grid-cols-1 gap-1.5">
                 {FB_PIXEL_EVENTS.map((ev) => (
-                  <button
-                    key={ev.value}
-                    type="button"
-                    onClick={() => setPixelEvent(ev.value)}
-                    className={`text-left px-3 py-2 rounded-lg text-sm border transition-all ${
-                      pixelEvent === ev.value
-                        ? 'bg-primary/15 border-primary text-primary font-semibold'
-                        : 'bg-secondary border-border text-foreground hover:border-primary/50'
-                    }`}
-                  >
-                    {ev.label}
-                  </button>
+                  <button key={ev.value} type="button" onClick={() => setPixelEvent(ev.value)} className={`text-left px-3 py-2 rounded-lg text-sm border transition-all ${pixelEvent === ev.value ? 'bg-primary/15 border-primary text-primary font-semibold' : 'bg-secondary border-border text-foreground hover:border-primary/50'}`}>{ev.label}</button>
                 ))}
               </div>
             </div>
@@ -338,10 +384,12 @@ function AdminEditModal({
             <textarea value={textValue} onChange={(e) => setTextValue(e.target.value)} rows={4} className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none" />
           </div>
         )}
+
         <div className="flex gap-3 pt-2">
           <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-all">Batal</button>
           <button type="button" onClick={() => {
-            if (editTarget.type === 'img') onSave(imgValue);
+            if (editTarget.type === 'video') onSave(toYoutubeEmbed(videoValue));
+            else if (editTarget.type === 'img') onSave(imgValue);
             else if (editTarget.type === 'link') onSave(textValue, hrefValue, pixelEvent || undefined);
             else onSave(textValue);
           }} className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all">💾 Simpan</button>
