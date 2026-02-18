@@ -126,6 +126,8 @@ Section yang BOLEH full-width (tanpa pola bergantian):
 - CTA Section akhir: full width, tombol besar
 - Footer`;
 
+  const salesNotifBlock = buildSalesNotifBlock(form);
+
   return `Kamu adalah developer landing page expert dan copywriter yang fokus pada konversi tinggi.
 
 ## TUGAS
@@ -190,6 +192,62 @@ ${layoutSection}
   setInterval(tick, 1000); tick();
 })();
 </script>${isScalev ? `
-15. KRITIS SCALEV: Cek ulang SETIAP section — pastikan semua punya max-width:688px dan margin:0 auto sebelum output final.` : ''}`;
+15. KRITIS SCALEV: Cek ulang SETIAP section — pastikan semua punya max-width:688px dan margin:0 auto sebelum output final.` : ''}${salesNotifBlock}`;
+}
+
+function buildSalesNotifBlock(form: FormState): string {
+  const n = form.salesNotif;
+  if (!n.enabled) return '';
+
+  const widths = { small: 280, medium: 320, large: 380 };
+  const w = widths[n.ukuran];
+  const posStyle: Record<string, string> = {
+    'bottom-left': 'bottom:24px;left:24px',
+    'bottom-right': 'bottom:24px;right:24px',
+    'top-left': 'top:24px;left:24px',
+    'top-right': 'top:24px;right:24px',
+  };
+  const pos = posStyle[n.position] || 'bottom:24px;left:24px';
+  const namaProduk = n.namaProdukNotif || form.namaProduk || 'produk ini';
+  const names = n.namaPembeli.split(',').map(s => s.trim()).filter(Boolean);
+  const namesJson = JSON.stringify(names);
+
+  return `
+
+## SALES NOTIFICATION (Social Proof Popup)
+Tambahkan kode berikut PERSIS APA ADANYA di bagian akhir <body>, SEBELUM </body>. Jangan modifikasi logika JS-nya, hanya boleh menyesuaikan style jika diperlukan agar sesuai desain:
+
+<div id="sn-popup" style="display:none;position:fixed;${pos};width:${w}px;background:#ffffff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:14px 16px;z-index:99999;font-family:sans-serif;align-items:center;gap:12px;border-left:4px solid #6c63ff;">
+  <span style="font-size:24px;">${n.emoji}</span>
+  <div>
+    <p id="sn-name" style="margin:0;font-size:13px;font-weight:700;color:#1a1a2e;"></p>
+    <p id="sn-product" style="margin:2px 0 0;font-size:12px;color:#6c63ff;font-weight:600;">${namaProduk}</p>
+    <p style="margin:3px 0 0;font-size:11px;color:#9ca3af;">Baru saja · beberapa menit lalu</p>
+  </div>
+</div>
+<script>
+(function(){
+  var names=${namesJson};
+  var msg="${n.pesanNotif}";
+  var interval=${n.interval * 1000};
+  var durasi=${n.durasi * 1000};
+  var idx=0;
+  var popup=document.getElementById('sn-popup');
+  function showNotif(){
+    var name=names[idx%names.length]; idx++;
+    document.getElementById('sn-name').textContent=name+' '+msg;
+    popup.style.display='flex';
+    popup.style.opacity='0';
+    popup.style.transform='translateY(10px)';
+    popup.style.transition='opacity 0.4s,transform 0.4s';
+    setTimeout(function(){popup.style.opacity='1';popup.style.transform='translateY(0)';},50);
+    setTimeout(function(){
+      popup.style.opacity='0';popup.style.transform='translateY(10px)';
+      setTimeout(function(){popup.style.display='none';},400);
+    },durasi);
+  }
+  setTimeout(function(){showNotif();setInterval(showNotif,interval+durasi);},2000);
+})();
+</script>`;
 }
 

@@ -1,3 +1,15 @@
+export interface SalesNotifConfig {
+  enabled: boolean;
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  namaPembeli: string;
+  pesanNotif: string;
+  namaProdukNotif: string;
+  interval: number;   // detik antar notif
+  durasi: number;     // detik notif tampil
+  ukuran: 'small' | 'medium' | 'large';
+  emoji: string;
+}
+
 export interface FormState {
   framework: string;
   gayaBahasa: string;
@@ -16,6 +28,7 @@ export interface FormState {
   deviceTarget: string;
   linkReferensi: string;
   inspirasiDesain: string;
+  salesNotif: SalesNotifConfig;
 }
 
 export const initialFormState: FormState = {
@@ -49,6 +62,17 @@ export const initialFormState: FormState = {
   deviceTarget: 'Mobile',
   linkReferensi: '',
   inspirasiDesain: '',
+  salesNotif: {
+    enabled: false,
+    position: 'bottom-left',
+    namaPembeli: 'Seseorang dari Jakarta',
+    pesanNotif: 'baru saja membeli',
+    namaProdukNotif: '',
+    interval: 8,
+    durasi: 5,
+    ukuran: 'medium',
+    emoji: '🔥',
+  },
 };
 
 export interface GroupedOption {

@@ -10,7 +10,8 @@ import { Step5Design } from "@/components/steps/Step5Design";
 import { Step6Elements } from "@/components/steps/Step6Elements";
 import { Step7Platform } from "@/components/steps/Step7Platform";
 import { Step8Reference } from "@/components/steps/Step8Reference";
-import { FormState, initialFormState } from "@/types/form";
+import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
+import { FormState, initialFormState, SalesNotifConfig } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
 import { Zap, RotateCcw, Copy, ExternalLink } from "lucide-react";
@@ -676,6 +677,11 @@ export default function AppPage() {
     if (currentStep > 1) setIsDirty(true);
   }, [currentStep]);
 
+  const handleSalesNotifChange = useCallback((config: SalesNotifConfig) => {
+    setForm((prev) => ({ ...prev, salesNotif: config }));
+    if (currentStep > 1) setIsDirty(true);
+  }, [currentStep]);
+
   const handleToggleElement = useCallback((element: string) => {
     setForm((prev) => ({
       ...prev,
@@ -766,6 +772,7 @@ export default function AppPage() {
                 inspirasiDesain={form.inspirasiDesain}
                 onChange={handleChange}
               />
+              <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" onClick={handleReset} className="gap-2">
                   <RotateCcw className="h-4 w-4" /> Reset
