@@ -337,19 +337,24 @@ export const gayaDesainOptions: GroupedOption[] = [
 ];
 
 export const elemenTambahanOptions: string[] = [
+  'Hero Section',
   'Social Proof',
   'Testimonial',
   'FAQ',
-  'Bonus',
+  'Bonus Section',
   'Guarantee',
-  'Scarcity',
-  'Comparison',
+  'Scarcity / Timer',
+  'Pricing Table',
+  'Feature List',
+  'Video Section',
+  'Before-After',
+  'How It Works',
 ];
 
 export const platformTargetOptions: string[] = [
   'Scalev',
+  'WordPress',
   'Lynk.id',
-  'WordPress (Elementor/Divi)',
   'Shopify',
-  'Copy HTML',
+  'Standalone',
 ];
