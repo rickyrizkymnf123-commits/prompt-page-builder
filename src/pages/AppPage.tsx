@@ -114,7 +114,7 @@ function PreviewStep({ onBack }: { onBack: () => void }) {
   const [previewHtml, setPreviewHtml] = useState('');
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [editMode, setEditMode] = useState(false);
-  const [editTarget, setEditTarget] = useState<{ type: 'text' | 'img' | 'link'; tag: string; value: string; href: string; index: number } | null>(null);
+  const [editTarget, setEditTarget] = useState<{ type: 'text' | 'img' | 'link'; tag: string; value: string; href: string; index: number; pixelEvent: string } | null>(null);
   const [editedElements, setEditedElements] = useState<Record<number, string>>({});
   const [fbPixelId, setFbPixelId] = useState('');
   const [pixelApplied, setPixelApplied] = useState(false);
@@ -193,7 +193,8 @@ fbq('track', 'PageView');
         const isA = tag === 'A';
         const value = isImg ? (el.getAttribute('src') || '') : (el.innerText || el.textContent || '');
         const href = isA ? (el.getAttribute('data-edit-href') || el.getAttribute('href') || '') : '';
-        window.parent.postMessage({ type: 'EDIT_ELEMENT', idx: Number(idx), tag, value, href, isImg, isA }, '*');
+        const pixelEvent = el.getAttribute('data-pixel-event') || '';
+        window.parent.postMessage({ type: 'EDIT_ELEMENT', idx: Number(idx), tag, value, href, isImg, isA, pixelEvent }, '*');
       });
     `;
     doc.body.appendChild(script);
@@ -210,6 +211,7 @@ fbq('track', 'PageView');
           value: e.data.value,
           href: e.data.href || '',
           index: e.data.idx,
+          pixelEvent: e.data.pixelEvent || '',
         });
       }
     };
@@ -237,13 +239,16 @@ fbq('track', 'PageView');
       } else if (editTarget.type === 'link') {
         el.textContent = newValue;
         if (newHref !== undefined) el.setAttribute('href', newHref);
-        // Inject specific pixel event for this button
+        // Inject specific pixel event — or remove if user cleared it
         if (pixelEvent) {
           const evScript = pixelEvent === 'Purchase'
             ? `if(typeof fbq!=='undefined'){fbq('track','${pixelEvent}',{value:0,currency:'IDR'});}`
             : `if(typeof fbq!=='undefined'){fbq('track','${pixelEvent}');}`;
           el.setAttribute('onclick', evScript);
           el.setAttribute('data-pixel-event', pixelEvent);
+        } else {
+          el.removeAttribute('onclick');
+          el.removeAttribute('data-pixel-event');
         }
       } else {
         el.textContent = newValue;
@@ -258,7 +263,7 @@ fbq('track', 'PageView');
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       <Stepper current={3} />
       <p className="text-center text-sm text-muted-foreground">Paste script HTML dari AI, preview, edit teks/link/gambar, dan export</p>
 
@@ -428,22 +433,22 @@ function EditModal({
   onClose,
   onSave,
 }: {
-  editTarget: { type: 'text' | 'img' | 'link'; tag: string; value: string; href: string; index: number };
+  editTarget: { type: 'text' | 'img' | 'link'; tag: string; value: string; href: string; index: number; pixelEvent: string };
   onClose: () => void;
   onSave: (value: string, href?: string, pixelEvent?: string) => void;
 }) {
   const [textValue, setTextValue] = useState(editTarget.value);
   const [hrefValue, setHrefValue] = useState(editTarget.href);
   const [imgValue, setImgValue] = useState(editTarget.value);
-  const [pixelEvent, setPixelEvent] = useState('');
+  const [pixelEvent, setPixelEvent] = useState(editTarget.pixelEvent || '');
 
-  // Reset state setiap kali editTarget berubah (modal dibuka untuk elemen berbeda)
+  // Reset state setiap kali editTarget berubah — baca kembali pixelEvent yang sudah tersimpan
   useEffect(() => {
     setTextValue(editTarget.value);
     setHrefValue(editTarget.href);
     setImgValue(editTarget.value);
-    setPixelEvent('');
-  }, [editTarget.index, editTarget.value, editTarget.href]);
+    setPixelEvent(editTarget.pixelEvent || '');
+  }, [editTarget.index, editTarget.value, editTarget.href, editTarget.pixelEvent]);
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
