@@ -542,8 +542,8 @@ export default function Admin() {
             <Rocket className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-foreground">Landing Page <span className="text-primary">Engine</span></h1>
-            <span className="text-xs text-muted-foreground flex items-center gap-1"><Shield className="h-3 w-3" /> Admin Panel</span>
+            <h1 className="text-xl font-bold text-foreground">Landing Page <span className="text-primary">Builder V.10</span></h1>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">By Digital Strategi · <Shield className="h-3 w-3" /> Admin Panel</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
