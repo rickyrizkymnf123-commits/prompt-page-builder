@@ -177,8 +177,8 @@ ${layoutSection}
 11. Output HANYA kode HTML mentah, tanpa penjelasan, tanpa markdown code block.
 12. Semua gambar HARUS tag <img> standar — jangan embed base64 atau background-image CSS.
 13. Tombol CTA harus berupa tag <a href="#"> atau <button> yang jelas, besar, dan eye-catching.
-14. COUNTDOWN TIMER WAJIB BERGERAK: Jika ada section Scarcity/Timer, WAJIB gunakan JavaScript setInterval yang berjalan real-time setiap 1 detik. Buat elemen dengan id unik (cd-days, cd-hours, cd-minutes, cd-seconds) dan update angkanya secara otomatis. Contoh JS wajib:
-<script>
+14. COUNTDOWN TIMER WAJIB BERGERAK: Jika ada section Scarcity/Timer, WAJIB gunakan JavaScript setInterval yang berjalan real-time setiap 1 detik. Buat elemen dengan id unik (cd-days, cd-hours, cd-minutes, cd-seconds) dan atribut data-edit-id="countdown-deadline" pada container timer agar bisa diedit. Contoh JS wajib:
+\`\`\`
 (function() {
   var deadline = new Date(Date.now() + 2*24*60*60*1000);
   function tick() {
@@ -191,7 +191,9 @@ ${layoutSection}
   }
   setInterval(tick, 1000); tick();
 })();
-</script>${isScalev ? `
+\`\`\`
+Struktur HTML timer (WAJIB gunakan id dan data-edit-id ini):
+div id="countdown-container" data-edit-id="countdown-deadline" berisi: span id="cd-days", span id="cd-hours", span id="cd-minutes", span id="cd-seconds"${isScalev ? `
 15. KRITIS SCALEV: Cek ulang SETIAP section — pastikan semua punya max-width:688px dan margin:0 auto sebelum output final.` : ''}${salesNotifBlock}`;
 }
 
@@ -212,16 +214,22 @@ function buildSalesNotifBlock(form: FormState): string {
   const names = n.namaPembeli.split(',').map(s => s.trim()).filter(Boolean);
   const namesJson = JSON.stringify(names);
 
+  // Use custom colors from config (with fallback defaults)
+  const bgColor = n.bgColor || '#ffffff';
+  const borderColor = n.borderColor || '#6c63ff';
+  const textColor = n.textColor || '#1a1a2e';
+
   return `
 
 ## SALES NOTIFICATION (Social Proof Popup)
-Tambahkan kode berikut PERSIS APA ADANYA di bagian akhir <body>, SEBELUM </body>. Jangan modifikasi logika JS-nya, hanya boleh menyesuaikan style jika diperlukan agar sesuai desain:
+Tambahkan kode berikut PERSIS APA ADANYA di bagian akhir <body>, SEBELUM </body>. Jangan modifikasi logika JS-nya, hanya boleh menyesuaikan style jika diperlukan agar sesuai desain.
+PENTING: Elemen berikut harus punya id yang tepat agar bisa diedit di Edit Mode: sn-popup, sn-name, sn-product.
 
-<div id="sn-popup" style="display:none;position:fixed;${pos};width:${w}px;background:#ffffff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:14px 16px;z-index:99999;font-family:sans-serif;align-items:center;gap:12px;border-left:4px solid #6c63ff;">
+<div id="sn-popup" style="display:none;position:fixed;${pos};width:${w}px;background:${bgColor};border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:14px 16px;z-index:99999;font-family:sans-serif;align-items:center;gap:12px;border-left:4px solid ${borderColor};">
   <span style="font-size:24px;">${n.emoji}</span>
   <div>
-    <p id="sn-name" style="margin:0;font-size:13px;font-weight:700;color:#1a1a2e;"></p>
-    <p id="sn-product" style="margin:2px 0 0;font-size:12px;color:#6c63ff;font-weight:600;">${namaProduk}</p>
+    <p id="sn-name" style="margin:0;font-size:13px;font-weight:700;color:${textColor};"></p>
+    <p id="sn-product" style="margin:2px 0 0;font-size:12px;color:${borderColor};font-weight:600;">${namaProduk}</p>
     <p style="margin:3px 0 0;font-size:11px;color:#9ca3af;">Baru saja · beberapa menit lalu</p>
   </div>
 </div>
