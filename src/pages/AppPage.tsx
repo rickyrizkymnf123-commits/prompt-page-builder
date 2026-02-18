@@ -372,7 +372,7 @@ fbq('track', 'PageView');
       {editMode && (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
           <p className="text-sm font-medium text-foreground">🖼 Mau ganti gambar?</p>
-          <p className="text-xs text-muted-foreground">Upload gambar ke <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="text-primary underline">imgur.com/upload</a>, ambil link-nya, lalu paste di dialog edit gambar.</p>
+          <p className="text-xs text-muted-foreground">Upload gambar ke <a href="https://uploadimgur.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">uploadimgur.com</a>, ambil link-nya, lalu paste di dialog edit gambar.</p>
         </div>
       )}
 
@@ -475,7 +475,7 @@ function EditModal({
               className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary"
             />
             <p className="text-xs text-muted-foreground">
-              Upload di <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="text-primary underline">imgur.com/upload</a> lalu paste link-nya.
+              Upload di <a href="https://uploadimgur.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">uploadimgur.com</a> lalu paste link-nya.
             </p>
           </div>
         ) : editTarget.type === 'link' ? (
