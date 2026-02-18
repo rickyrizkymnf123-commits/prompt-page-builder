@@ -375,14 +375,11 @@ export default function Admin() {
   useEffect(() => { document.documentElement.classList.toggle("dark", darkMode); }, [darkMode]);
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from("entitlements").select("id, user_id, product_code, status, order_id").eq("product_code", "LPE");
-    if (!data) return;
-    const enriched = await Promise.all(data.map(async (ent) => {
-      const { data: profile } = await supabase.from("profiles").select("name, phone").eq("user_id", ent.user_id).maybeSingle();
-      const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", ent.user_id).maybeSingle();
-      return { id: ent.user_id, email: ent.user_id, name: profile?.name || null, phone: profile?.phone || null, status: ent.status, entitlement_id: ent.id, product_code: ent.product_code, order_id: ent.order_id, role: roleData?.role || "user", created_at: new Date().toISOString(), last_sign_in: null };
-    }));
-    setUsers(enriched);
+    const { data, error } = await supabase.functions.invoke("admin-users", {
+      body: { action: "list" },
+    });
+    if (error || !data?.users) return;
+    setUsers(data.users);
   };
 
   const fetchLogs = async () => {
