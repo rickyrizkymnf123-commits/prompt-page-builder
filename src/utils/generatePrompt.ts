@@ -57,7 +57,7 @@ Output MUST be a complete, self-contained single HTML file including <!DOCTYPE h
 Buatkan landing page yang high-converting dalam bentuk kode HTML${isStandalone ? ' lengkap (full HTML file)' : ' tunggal dengan inline CSS'}.
 
 ## FRAMEWORK COPYWRITING
-Gunakan framework **${form.framework || 'PAS'}** untuk menyusun copy.
+Gunakan framework **${form.framework || 'PAS'}** untuk menyusun copy. Susun alur konten mengikuti formula ini secara ketat.
 
 ## TONE & BAHASA
 - Gaya penulisan: **${form.gayaBahasa || 'Professional & Formal'}**
@@ -84,15 +84,25 @@ ${referensiSection}
 
 ${outputRule}
 
+## STRUKTUR LAYOUT (WAJIB)
+Gunakan pola layout **TEKS + GAMBAR secara bergantian** di setiap section konten:
+- Section ganjil: konten teks di kiri, gambar placeholder di kanan
+- Section genap: gambar placeholder di kiri, konten teks di kanan
+- Setiap gambar wajib menggunakan tag <img> dengan src dari https://placehold.co/ ukuran realistis (misal: 600x400, 800x500)
+- Minimal 3–4 section yang menggunakan pola ini (selain Hero dan CTA)
+- Hero section boleh full-width dengan gambar latar/background
+- Semua elemen <img> WAJIB memiliki atribut src, alt, dan width/height yang tepat
+
 ## ATURAN PENTING
 1. SEMUA styling HARUS inline CSS (style="...") di setiap element${isStandalone ? ' atau dalam <style> tag di <head>' : ''}.
 2. TIDAK BOLEH ada file CSS external, TIDAK BOLEH pakai CDN CSS framework.
 3. Harus fully responsive dengan inline media queries jika diperlukan.
-4. Gunakan placeholder image profesional dari https://placehold.co/
+4. Gunakan placeholder image profesional dari https://placehold.co/ — contoh: https://placehold.co/600x400/1a1a2e/ffffff?text=Produk+Foto
 5. Tambahkan smooth scroll dan micro-interaction modern jika memungkinkan.
 6. Landing page harus terlihat stunning, premium, dan dioptimasi untuk konversi.
 7. Gunakan Google Fonts via @import jika perlu (Inter atau sejenis).
 8. Anti Overclaim: Jangan gunakan kata "pasti", "jamin", "100%", atau klaim medis/finansial yang tidak realistis.
 9. Hidden CTA Wajib: Tuliskan 1–2 baris teks reassurance/trust (micro-copy) tepat di bawah setiap tombol CTA.
-10. Output HANYA kode HTML, tanpa penjelasan.`;
+10. Output HANYA kode HTML, tanpa penjelasan.
+11. Setiap gambar placeholder HARUS bisa diganti — jangan embed base64 atau background-image CSS, gunakan tag <img> standar.`;
 }

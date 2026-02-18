@@ -131,13 +131,32 @@ fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/></noscript>
 <!-- End Facebook Pixel Code -->`;
-    return html.replace('</head>', pixelScript + '\n</head>');
+    // Inject pixel script into <head>
+    let result = html.includes('</head>') ? html.replace('</head>', pixelScript + '\n</head>') : pixelScript + html;
+    // Inject FB pixel events on all CTA buttons/links
+    const btnEventScript = `<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var ctaSelectors = 'a[href], button';
+  document.querySelectorAll(ctaSelectors).forEach(function(el) {
+    el.addEventListener('click', function() {
+      if (typeof fbq === 'undefined') return;
+      fbq('track', 'AddToCart');
+      fbq('track', 'InitiateCheckout');
+      fbq('track', 'AddPaymentInfo');
+      fbq('track', 'Purchase', {value: 0, currency: 'IDR'});
+    });
+  });
+});
+</script>`;
+    result = result.includes('</body>') ? result.replace('</body>', btnEventScript + '\n</body>') : result + btnEventScript;
+    return result;
   };
 
   const handleLoadPreview = () => {
     let html = htmlCode;
     if (fbPixelId.trim()) html = injectPixel(html, fbPixelId);
     setPreviewHtml(html);
+    setHtmlCode(html);
     setEditedElements({});
     setEditMode(false);
     setPixelApplied(!!fbPixelId.trim());
@@ -237,7 +256,9 @@ fbq('track', 'PageView');
       });
       const scripts = doc.querySelectorAll('script[data-injected]');
       scripts.forEach(s => s.remove());
-      setPreviewHtml(doc.documentElement.outerHTML);
+      const updatedHtml = doc.documentElement.outerHTML;
+      setPreviewHtml(updatedHtml);
+      setHtmlCode(updatedHtml); // sync textarea with edited result
     }
     setEditTarget(null);
   };
@@ -401,21 +422,21 @@ function EditModal({
         ) : editTarget.type === 'link' ? (
           <div className="space-y-3">
             <div className="space-y-2">
-              <label className="text-sm font-semibold uppercase tracking-wide text-foreground">Teks Tombol / Link</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-foreground">Teks</label>
               <textarea
                 value={textValue}
                 onChange={(e) => setTextValue(e.target.value)}
-                rows={2}
+                rows={3}
                 className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold uppercase tracking-wide text-foreground">URL / Link (href)</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-foreground">URL Tombol / Link</label>
               <input
                 type="text"
                 value={hrefValue}
                 onChange={(e) => setHrefValue(e.target.value)}
-                placeholder="https://wa.me/628xxx atau https://..."
+                placeholder="#"
                 className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary"
               />
               <p className="text-xs text-muted-foreground">Contoh: https://wa.me/6281234567890 untuk WhatsApp</p>
@@ -423,7 +444,7 @@ function EditModal({
           </div>
         ) : (
           <div className="space-y-2">
-            <label className="text-sm font-semibold uppercase tracking-wide text-foreground">Teks</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-foreground">Teks</label>
             <textarea
               value={textValue}
               onChange={(e) => setTextValue(e.target.value)}

@@ -74,7 +74,22 @@ fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/></noscript>
 <!-- End Facebook Pixel Code -->`;
-    return html.replace('</head>', pixelScript + '\n</head>');
+    let result = html.includes('</head>') ? html.replace('</head>', pixelScript + '\n</head>') : pixelScript + html;
+    const btnEventScript = `<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('a[href], button').forEach(function(el) {
+    el.addEventListener('click', function() {
+      if (typeof fbq === 'undefined') return;
+      fbq('track', 'AddToCart');
+      fbq('track', 'InitiateCheckout');
+      fbq('track', 'AddPaymentInfo');
+      fbq('track', 'Purchase', {value: 0, currency: 'IDR'});
+    });
+  });
+});
+</script>`;
+    result = result.includes('</body>') ? result.replace('</body>', btnEventScript + '\n</body>') : result + btnEventScript;
+    return result;
   };
 
   const getEditableHtml = () => {
@@ -120,7 +135,9 @@ fbq('track', 'PageView');
         const style = e.getAttribute('style') || '';
         e.setAttribute('style', style.replace(/;?cursor:pointer;outline:[^;]+;outline-offset:[^;]+;?/g, ''));
       });
-      setPreviewHtml(doc.documentElement.outerHTML);
+      const updatedHtml = doc.documentElement.outerHTML;
+      setPreviewHtml(updatedHtml);
+      setHtmlCode(updatedHtml); // sync textarea
     }
     setEditTarget(null);
   };
@@ -141,7 +158,7 @@ fbq('track', 'PageView');
         <h2 className="text-base font-semibold text-foreground">📄 Paste HTML Script</h2>
         <textarea value={htmlCode} onChange={(e) => setHtmlCode(e.target.value)} placeholder="Paste kode HTML hasil dari AI di sini..." className="w-full h-48 rounded-lg bg-secondary text-foreground text-sm font-mono p-3 border border-border resize-y focus:outline-none focus:border-primary" />
         <div className="flex gap-3">
-          <Button onClick={() => { let html = htmlCode; if (fbPixelId.trim()) html = injectPixel(html, fbPixelId); setPreviewHtml(html); setEditMode(false); setPixelApplied(!!fbPixelId.trim()); }} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">▶ Load Preview</Button>
+          <Button onClick={() => { let html = htmlCode; if (fbPixelId.trim()) html = injectPixel(html, fbPixelId); setPreviewHtml(html); setHtmlCode(html); setEditMode(false); setPixelApplied(!!fbPixelId.trim()); }} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">▶ Load Preview</Button>
           <Button variant="outline" onClick={() => { setHtmlCode(''); setPreviewHtml(''); setPixelApplied(false); }}>🗑 Clear</Button>
           {previewHtml && (
             <Button variant="outline" onClick={() => { const blob = new Blob([previewHtml], {type:'text/html'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='landing-page.html'; a.click(); URL.revokeObjectURL(url); toast({title:'HTML diekspor!'}); }} className="gap-2 ml-auto">⬇ Export HTML</Button>
@@ -211,18 +228,18 @@ function AdminEditModal({
         ) : editTarget.type === 'link' ? (
           <div className="space-y-3">
             <div className="space-y-2">
-              <label className="text-sm font-semibold uppercase tracking-wide text-foreground">Teks Tombol / Link</label>
-              <textarea value={textValue} onChange={(e) => setTextValue(e.target.value)} rows={2} className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none" />
+              <label className="text-xs font-bold uppercase tracking-widest text-foreground">Teks</label>
+              <textarea value={textValue} onChange={(e) => setTextValue(e.target.value)} rows={3} className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold uppercase tracking-wide text-foreground">URL / Link (href)</label>
-              <input type="text" value={hrefValue} onChange={(e) => setHrefValue(e.target.value)} placeholder="https://wa.me/628xxx atau https://..." className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary" />
+              <label className="text-xs font-bold uppercase tracking-widest text-foreground">URL Tombol / Link</label>
+              <input type="text" value={hrefValue} onChange={(e) => setHrefValue(e.target.value)} placeholder="#" className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary" />
               <p className="text-xs text-muted-foreground">Contoh: https://wa.me/6281234567890 untuk WhatsApp</p>
             </div>
           </div>
         ) : (
           <div className="space-y-2">
-            <label className="text-sm font-semibold uppercase tracking-wide text-foreground">Teks</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-foreground">Teks</label>
             <textarea value={textValue} onChange={(e) => setTextValue(e.target.value)} rows={4} className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary resize-none" />
           </div>
         )}
