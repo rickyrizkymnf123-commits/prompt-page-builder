@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -124,20 +124,34 @@ document.addEventListener('DOMContentLoaded', function() {
   const handleSaveEdit = (newValue: string, newHref?: string) => {
     if (!editTarget) return;
     const parser = new DOMParser();
+    // Always parse from the base previewHtml (without edit overlays)
     const doc = parser.parseFromString(previewHtml, 'text/html');
-    const el = doc.querySelector(`[data-edit-idx="${editTarget.index}"]`);
-    if (el) {
-      if (editTarget.type === 'img') el.setAttribute('src', newValue);
-      else if (editTarget.type === 'link') { el.textContent = newValue; if (newHref !== undefined) el.setAttribute('href', newHref); }
-      else el.textContent = newValue;
-      doc.querySelectorAll('[data-edit-idx]').forEach(e => {
-        e.removeAttribute('data-edit-idx'); e.removeAttribute('data-edit-tag'); e.removeAttribute('data-edit-href');
-        const style = e.getAttribute('style') || '';
-        e.setAttribute('style', style.replace(/;?cursor:pointer;outline:[^;]+;outline-offset:[^;]+;?/g, ''));
+    // Find element by idx - need to re-inject idx temporarily to find it
+    const editableTags = ['h1','h2','h3','h4','h5','h6','p','a','span','li','button','img'];
+    let idx = 0;
+    let targetEl: Element | null = null;
+    editableTags.forEach(tag => {
+      doc.querySelectorAll(tag).forEach(el => {
+        if (idx === editTarget.index) targetEl = el;
+        idx++;
       });
+    });
+    if (targetEl) {
+      const el = targetEl as Element;
+      if (editTarget.type === 'img') {
+        el.setAttribute('src', newValue);
+      } else if (editTarget.type === 'link') {
+        el.textContent = newValue;
+        if (newHref !== undefined) el.setAttribute('href', newHref);
+      } else {
+        el.textContent = newValue;
+      }
       const updatedHtml = doc.documentElement.outerHTML;
       setPreviewHtml(updatedHtml);
       setHtmlCode(updatedHtml); // sync textarea
+      // Briefly toggle edit mode to force iframe re-render with fresh data
+      setEditMode(false);
+      setTimeout(() => setEditMode(true), 50);
     }
     setEditTarget(null);
   };

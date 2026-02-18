@@ -237,8 +237,18 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!editTarget) return;
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
-    const el = doc.querySelector(`[data-edit-idx="${editTarget.index}"]`);
-    if (el) {
+    // Find element by index across all editable tags
+    const editableTags = ['h1','h2','h3','h4','h5','h6','p','a','span','li','button','img'];
+    let idx = 0;
+    let targetEl: Element | null = null;
+    editableTags.forEach(tag => {
+      doc.querySelectorAll(tag).forEach(el => {
+        if (idx === editTarget.index) targetEl = el;
+        idx++;
+      });
+    });
+    if (targetEl) {
+      const el = targetEl as Element;
       if (editTarget.type === 'img') {
         el.setAttribute('src', newValue);
       } else if (editTarget.type === 'link') {
@@ -247,18 +257,12 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         el.textContent = newValue;
       }
-      doc.querySelectorAll('[data-edit-idx]').forEach(e => {
-        e.removeAttribute('data-edit-idx');
-        e.removeAttribute('data-edit-tag');
-        e.removeAttribute('data-edit-href');
-        const style = e.getAttribute('style') || '';
-        e.setAttribute('style', style.replace(/;?cursor:pointer;outline:[^;]+;outline-offset:[^;]+;?/g, ''));
-      });
-      const scripts = doc.querySelectorAll('script[data-injected]');
-      scripts.forEach(s => s.remove());
       const updatedHtml = doc.documentElement.outerHTML;
       setPreviewHtml(updatedHtml);
-      setHtmlCode(updatedHtml); // sync textarea with edited result
+      setHtmlCode(updatedHtml);
+      // Force iframe re-render with updated content
+      setEditMode(false);
+      setTimeout(() => setEditMode(true), 50);
     }
     setEditTarget(null);
   };
