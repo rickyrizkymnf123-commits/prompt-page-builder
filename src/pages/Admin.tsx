@@ -24,6 +24,7 @@ import { Step6Elements } from "@/components/steps/Step6Elements";
 import { Step7Platform } from "@/components/steps/Step7Platform";
 import { Step8Reference } from "@/components/steps/Step8Reference";
 import { FormState, initialFormState } from "@/types/form";
+import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
 import { generatePrompt } from "@/utils/generatePrompt";
 
 // --- Types ---
@@ -488,6 +489,11 @@ export default function Admin() {
     if (toolStep > 1) setIsDirty(true);
   }, [toolStep]);
 
+  const handleSalesNotifChange = useCallback((config: import('@/types/form').SalesNotifConfig) => {
+    setForm((prev) => ({ ...prev, salesNotif: config }));
+    if (toolStep > 1) setIsDirty(true);
+  }, [toolStep]);
+
   const handleToggleElement = useCallback((element: string) => {
     setForm((prev) => ({ ...prev, elemenTambahan: { ...prev.elemenTambahan, [element]: !prev.elemenTambahan[element] } }));
     if (toolStep > 1) setIsDirty(true);
@@ -590,6 +596,7 @@ export default function Admin() {
                 <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
                 <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
                 <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
+                <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
                 <div className="flex gap-3 pt-2">
                   <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
                   <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
