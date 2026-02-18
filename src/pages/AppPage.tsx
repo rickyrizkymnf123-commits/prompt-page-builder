@@ -131,24 +131,8 @@ fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/></noscript>
 <!-- End Facebook Pixel Code -->`;
-    // Inject pixel script into <head>
-    let result = html.includes('</head>') ? html.replace('</head>', pixelScript + '\n</head>') : pixelScript + html;
-    // Inject FB pixel events on all CTA buttons/links
-    const btnEventScript = `<script>
-document.addEventListener('DOMContentLoaded', function() {
-  var ctaSelectors = 'a[href], button';
-  document.querySelectorAll(ctaSelectors).forEach(function(el) {
-    el.addEventListener('click', function() {
-      if (typeof fbq === 'undefined') return;
-      fbq('track', 'AddToCart');
-      fbq('track', 'InitiateCheckout');
-      fbq('track', 'AddPaymentInfo');
-      fbq('track', 'Purchase', {value: 0, currency: 'IDR'});
-    });
-  });
-});
-</script>`;
-    result = result.includes('</body>') ? result.replace('</body>', btnEventScript + '\n</body>') : result + btnEventScript;
+    // Hanya inject PageView di <head> — event per tombol diatur manual via Edit Mode
+    const result = html.includes('</head>') ? html.replace('</head>', pixelScript + '\n</head>') : pixelScript + html;
     return result;
   };
 
@@ -429,14 +413,14 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 const FB_PIXEL_EVENTS = [
-  { value: '', label: '— Tidak ada (default dari global) —' },
-  { value: 'AddToCart', label: '🛒 Add to Cart' },
-  { value: 'InitiateCheckout', label: '💳 Initiate Checkout' },
-  { value: 'AddPaymentInfo', label: '💳 Add Payment Info' },
-  { value: 'Purchase', label: '✅ Purchase' },
-  { value: 'Lead', label: '📋 Lead' },
-  { value: 'ViewContent', label: '👁 View Content' },
-  { value: 'CompleteRegistration', label: '📝 Complete Registration' },
+  { value: '', label: '❌ Tidak ada event khusus' },
+  { value: 'AddToCart', label: '🛒 AddToCart — Klik tombol beli/keranjang' },
+  { value: 'InitiateCheckout', label: '💳 InitiateCheckout — Mulai proses checkout' },
+  { value: 'AddPaymentInfo', label: '💳 AddPaymentInfo — Isi info pembayaran' },
+  { value: 'Purchase', label: '✅ Purchase — Transaksi berhasil' },
+  { value: 'Lead', label: '📋 Lead — Submit form/lead' },
+  { value: 'ViewContent', label: '👁 ViewContent — Lihat konten/produk' },
+  { value: 'CompleteRegistration', label: '📝 CompleteRegistration — Daftar berhasil' },
 ];
 
 function EditModal({
@@ -498,20 +482,23 @@ function EditModal({
               <p className="text-xs text-muted-foreground">Contoh: https://wa.me/6281234567890 untuk WhatsApp</p>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-foreground">🎯 Facebook Pixel Event</label>
-              <p className="text-xs text-muted-foreground">Pilih event yang di-track saat tombol ini diklik</p>
-              <div className="grid grid-cols-1 gap-1.5">
+              <label className="text-xs font-bold uppercase tracking-widest text-foreground">🎯 Facebook Pixel Event (pilih satu)</label>
+              <p className="text-xs text-muted-foreground">
+                Default: <span className="text-green-500 font-semibold">PageView</span> otomatis saat halaman dibuka. Pilih event tambahan saat tombol ini diklik:
+              </p>
+              <div className="grid grid-cols-1 gap-1.5 max-h-52 overflow-y-auto pr-1">
                 {FB_PIXEL_EVENTS.map((ev) => (
                   <button
                     key={ev.value}
                     type="button"
                     onClick={() => setPixelEvent(ev.value)}
-                    className={`text-left px-3 py-2 rounded-lg text-sm border transition-all ${
+                    className={`text-left px-3 py-2.5 rounded-lg text-sm border transition-all flex items-center gap-2 ${
                       pixelEvent === ev.value
-                        ? 'bg-primary/15 border-primary text-primary font-semibold'
-                        : 'bg-secondary border-border text-foreground hover:border-primary/50'
+                        ? 'bg-primary/15 border-primary text-primary font-semibold ring-1 ring-primary'
+                        : 'bg-secondary border-border text-foreground hover:border-primary/40'
                     }`}
                   >
+                    <span className={`w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 transition-all ${pixelEvent === ev.value ? 'bg-primary border-primary' : 'border-muted-foreground/40'}`} />
                     {ev.label}
                   </button>
                 ))}
@@ -529,6 +516,7 @@ function EditModal({
             />
           </div>
         )}
+
 
         <div className="flex gap-3 pt-2">
           <button
