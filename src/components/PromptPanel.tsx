@@ -15,11 +15,16 @@ export function PromptPanel({ promptText, hasPrompt }: Props) {
   };
 
   const handleBuat = async () => {
-    await navigator.clipboard.writeText(promptText);
-    window.open('https://chat.z.ai/', '_blank');
+    try {
+      await navigator.clipboard.writeText(promptText);
+    } catch {
+      // fallback: silently fail clipboard, still open tab
+    }
+    // Buka chat.z.ai tanpa query param agar tidak ada error 414
+    window.open('https://chat.z.ai/', '_blank', 'noopener,noreferrer');
     toast({
-      title: 'Prompt sudah disalin!',
-      description: 'Paste prompt di chat.z.ai lalu tekan Enter/Run.',
+      title: '✅ Prompt sudah disalin!',
+      description: 'Halaman chat.z.ai sudah terbuka. Paste prompt (Ctrl+V / Cmd+V) lalu tekan Enter.',
     });
   };
 
