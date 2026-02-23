@@ -480,7 +480,7 @@ export default function Admin() {
   const handleResetPassword = async () => {
     if (!newPassword || newPassword.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); return; }
     setActionLoading(resetDialog.userId);
-    const { error } = await supabase.functions.invoke("admin-users", { body: { action: "reset_password", userId: resetDialog.userId, newPassword } });
+    const { error } = await supabase.functions.invoke("admin-users", { body: { action: "reset_password", user_id: resetDialog.userId, password: newPassword } });
     if (error) { showToast({ title: "Gagal", description: error.message, variant: "destructive" }); }
     else { showToast({ title: "Berhasil", description: `Password berhasil direset untuk ${resetDialog.email}` }); }
     setResetDialog({ open: false, userId: "", email: "" });
