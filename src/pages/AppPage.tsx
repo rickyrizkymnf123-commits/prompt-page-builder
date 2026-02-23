@@ -745,7 +745,7 @@ export default function AppPage() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-6"
             >
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              NEW V3.0 RELEASE
+              V10
             </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
@@ -762,8 +762,7 @@ export default function AppPage() {
             </motion.p>
           </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6">
-            <div className="space-y-4 pb-6">
+          <div className="space-y-4 pb-6">
               <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
               <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
               <Step3Target levelAwareness={form.levelAwareness} targetAudience={form.targetAudience} onChange={handleChange} />
@@ -789,18 +788,6 @@ export default function AppPage() {
                   <Zap className="h-4 w-4" /> {isDirty ? "Generate Ulang" : "Generate Prompt ⚡"}
                 </Button>
               </div>
-            </div>
-            {/* Right panel - prompt preview */}
-            <div className="lg:sticky lg:top-6 lg:self-start">
-              <div className="rounded-xl border border-border bg-card p-5 flex flex-col">
-                <h2 className="text-lg font-semibold text-foreground mb-3">🤖 AI Prompt Output</h2>
-                <div className="rounded-lg bg-secondary p-4 min-h-[200px]">
-                  <p className="text-muted-foreground text-sm italic">
-                    Prompt akan muncul setelah kamu klik "Generate Prompt ⚡"
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}
