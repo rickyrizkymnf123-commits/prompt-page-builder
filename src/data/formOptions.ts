@@ -353,6 +353,7 @@ export const elemenTambahanOptions: string[] = [
 
 export const platformTargetOptions: string[] = [
   'Scalev',
+  'Berdu',
   'WordPress',
   'Lynk.id',
   'Shopify',

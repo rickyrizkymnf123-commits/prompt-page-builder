@@ -11,7 +11,8 @@ import { Step6Elements } from "@/components/steps/Step6Elements";
 import { Step7Platform } from "@/components/steps/Step7Platform";
 import { Step8Reference } from "@/components/steps/Step8Reference";
 import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
-import { FormState, initialFormState, SalesNotifConfig } from "@/types/form";
+import { StepCountdown } from "@/components/steps/StepCountdown";
+import { FormState, initialFormState, SalesNotifConfig, CountdownConfig } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
 import { Zap, RotateCcw, Copy, ExternalLink } from "lucide-react";
@@ -59,10 +60,11 @@ function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack
   };
 
   const handleBuatLandingPage = async () => {
-    await navigator.clipboard.writeText(promptText);
-    const encodedPrompt = encodeURIComponent(promptText);
-    window.open(`https://chat.z.ai/?q=${encodedPrompt}`, '_blank');
-    toast({ title: 'Prompt disalin & dikirim!', description: 'Prompt otomatis dikirim ke chat.z.ai.' });
+    try {
+      await navigator.clipboard.writeText(promptText);
+    } catch {}
+    window.open('https://chat.z.ai/', '_blank', 'noopener,noreferrer');
+    toast({ title: '✅ Prompt sudah disalin!', description: 'Halaman chat.z.ai sudah terbuka. Paste prompt (Ctrl+V / Cmd+V) lalu tekan Enter.' });
   };
 
   return (
@@ -682,6 +684,11 @@ export default function AppPage() {
     if (currentStep > 1) setIsDirty(true);
   }, [currentStep]);
 
+  const handleCountdownChange = useCallback((config: CountdownConfig) => {
+    setForm((prev) => ({ ...prev, countdown: config }));
+    if (currentStep > 1) setIsDirty(true);
+  }, [currentStep]);
+
   const handleToggleElement = useCallback((element: string) => {
     setForm((prev) => ({
       ...prev,
@@ -773,6 +780,7 @@ export default function AppPage() {
                 onChange={handleChange}
               />
               <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
+              <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" onClick={handleReset} className="gap-2">
                   <RotateCcw className="h-4 w-4" /> Reset

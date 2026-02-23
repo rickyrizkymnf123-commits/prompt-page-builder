@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   LogOut, Shield, CheckCircle, XCircle, Trash2, Clock, Users, FileText,
-  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink,
+  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink, UserPlus,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "@/hooks/use-toast";
@@ -25,6 +25,7 @@ import { Step7Platform } from "@/components/steps/Step7Platform";
 import { Step8Reference } from "@/components/steps/Step8Reference";
 import { FormState, initialFormState } from "@/types/form";
 import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
+import { StepCountdown } from "@/components/steps/StepCountdown";
 import { generatePrompt } from "@/utils/generatePrompt";
 
 // --- Types ---
@@ -412,6 +413,9 @@ export default function Admin() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [resetDialog, setResetDialog] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: "", email: "" });
   const [newPassword, setNewPassword] = useState("");
+  const [addMemberDialog, setAddMemberDialog] = useState(false);
+  const [addMemberForm, setAddMemberForm] = useState({ email: '', password: '', name: '', role: 'user' });
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const [form, setForm] = useState<FormState>({ ...initialFormState });
   const [promptText, setPromptText] = useState("");
@@ -484,6 +488,36 @@ export default function Admin() {
     setActionLoading(null);
   };
 
+  const handleAddMember = async () => {
+    if (!addMemberForm.email || !addMemberForm.password) {
+      showToast({ title: "Error", description: "Email dan password wajib diisi.", variant: "destructive" });
+      return;
+    }
+    if (addMemberForm.password.length < 6) {
+      showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" });
+      return;
+    }
+    setAddMemberLoading(true);
+    const { data, error } = await supabase.functions.invoke("admin-users", {
+      body: {
+        action: "add_member",
+        email: addMemberForm.email,
+        password: addMemberForm.password,
+        name: addMemberForm.name,
+        role: addMemberForm.role,
+      },
+    });
+    if (error || data?.error) {
+      showToast({ title: "Gagal", description: data?.error || error?.message || "Gagal menambah member.", variant: "destructive" });
+    } else {
+      showToast({ title: "Berhasil", description: `Member ${addMemberForm.email} berhasil ditambahkan.` });
+      setAddMemberDialog(false);
+      setAddMemberForm({ email: '', password: '', name: '', role: 'user' });
+      await fetchUsers();
+    }
+    setAddMemberLoading(false);
+  };
+
   const handleChange = useCallback((field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (toolStep > 1) setIsDirty(true);
@@ -491,6 +525,11 @@ export default function Admin() {
 
   const handleSalesNotifChange = useCallback((config: import('@/types/form').SalesNotifConfig) => {
     setForm((prev) => ({ ...prev, salesNotif: config }));
+    if (toolStep > 1) setIsDirty(true);
+  }, [toolStep]);
+
+  const handleCountdownChange = useCallback((config: import('@/types/form').CountdownConfig) => {
+    setForm((prev) => ({ ...prev, countdown: config }));
     if (toolStep > 1) setIsDirty(true);
   }, [toolStep]);
 
@@ -597,6 +636,7 @@ export default function Admin() {
                 <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
                 <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
                 <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
+                <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
                 <div className="flex gap-3 pt-2">
                   <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
                   <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
@@ -620,7 +660,7 @@ export default function Admin() {
                     <pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-3 bg-secondary rounded-lg">{promptText}</pre>
                   </ScrollArea>
                 </div>
-                <Button onClick={async () => { await navigator.clipboard.writeText(promptText); const encodedPrompt = encodeURIComponent(promptText); window.open(`https://chat.z.ai/?q=${encodedPrompt}`, '_blank'); toast({ title: 'Prompt disalin & dikirim!', description: 'Prompt otomatis dikirim ke chat.z.ai.' }); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
+                <Button onClick={async () => { try { await navigator.clipboard.writeText(promptText); } catch {} window.open('https://chat.z.ai/', '_blank', 'noopener,noreferrer'); toast({ title: '✅ Prompt sudah disalin!', description: 'Paste prompt (Ctrl+V / Cmd+V) lalu tekan Enter.' }); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
                   <ExternalLink className="h-4 w-4" /> Buat Landing Page
                 </Button>
                 <Button variant="outline" onClick={() => { setToolStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="w-full gap-2" size="lg">
@@ -658,6 +698,7 @@ export default function Admin() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Cari nama atau email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
                   </div>
+                  <Button variant="outline" size="sm" className="gap-1" onClick={() => setAddMemberDialog(true)}><UserPlus className="h-4 w-4" /> Add Member</Button>
                   <Button variant="outline" size="icon" onClick={() => { fetchUsers(); fetchLogs(); }}><RefreshCw className="h-4 w-4" /></Button>
                 </div>
               </CardHeader>
@@ -750,6 +791,55 @@ export default function Admin() {
             <Button variant="outline" onClick={() => setResetDialog({ open: false, userId: "", email: "" })}>Batal</Button>
             <Button onClick={handleResetPassword} disabled={actionLoading===resetDialog.userId}>
               {actionLoading===resetDialog.userId ? "Memproses..." : "Reset Password"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Member Dialog */}
+      <Dialog open={addMemberDialog} onOpenChange={setAddMemberDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5" /> Tambah Member Manual</DialogTitle>
+            <DialogDescription>Tambahkan member baru secara manual tanpa melalui webhook.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1 block">Nama</label>
+              <Input placeholder="Nama lengkap" value={addMemberForm.name} onChange={(e) => setAddMemberForm(prev => ({ ...prev, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1 block">Email *</label>
+              <Input type="email" placeholder="email@contoh.com" value={addMemberForm.email} onChange={(e) => setAddMemberForm(prev => ({ ...prev, email: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1 block">Password *</label>
+              <Input type="password" placeholder="Min. 6 karakter" value={addMemberForm.password} onChange={(e) => setAddMemberForm(prev => ({ ...prev, password: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1 block">Role</label>
+              <div className="flex gap-2">
+                {['user', 'admin'].map(r => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setAddMemberForm(prev => ({ ...prev, role: r }))}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                      addMemberForm.role === r
+                        ? 'bg-primary/10 text-primary border-primary'
+                        : 'bg-secondary text-muted-foreground border-border'
+                    }`}
+                  >
+                    {r === 'admin' ? '👑 Admin' : '👤 User'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddMemberDialog(false)}>Batal</Button>
+            <Button onClick={handleAddMember} disabled={addMemberLoading}>
+              {addMemberLoading ? "Memproses..." : "Tambah Member"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -13,6 +13,18 @@ export interface SalesNotifConfig {
   textColor: string;
 }
 
+export interface CountdownConfig {
+  enabled: boolean;
+  hari: number;
+  jam: number;
+  menit: number;
+  detik: number;
+  labelAtas: string;
+  bgColor: string;
+  textColor: string;
+  accentColor: string;
+}
+
 export interface FormState {
   framework: string;
   gayaBahasa: string;
@@ -32,6 +44,7 @@ export interface FormState {
   linkReferensi: string;
   inspirasiDesain: string;
   salesNotif: SalesNotifConfig;
+  countdown: CountdownConfig;
 }
 
 export const initialFormState: FormState = {
@@ -78,6 +91,17 @@ export const initialFormState: FormState = {
     bgColor: '#ffffff',
     borderColor: '#6c63ff',
     textColor: '#1a1a2e',
+  },
+  countdown: {
+    enabled: true,
+    hari: 2,
+    jam: 0,
+    menit: 0,
+    detik: 0,
+    labelAtas: '⏰ PROMO BERAKHIR DALAM',
+    bgColor: '#1a1a2e',
+    textColor: '#ffffff',
+    accentColor: '#ff4757',
   },
 };
 
