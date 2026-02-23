@@ -131,6 +131,45 @@ Deno.serve(async (req) => {
         });
       }
 
+      // --- ADD MEMBER (manual) ---
+      if (action === "add_member") {
+        if (!email || !password) {
+          return new Response(JSON.stringify({ error: "email and password required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const { data: newMember, error: createErr } = await adminClient.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { name: name || '' },
+        });
+        if (createErr || !newMember.user) {
+          return new Response(JSON.stringify({ error: createErr?.message || "Failed to create user" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        // Add entitlement with status based on request
+        await adminClient.from("entitlements").insert({
+          user_id: newMember.user.id,
+          status: "active",
+          order_id: `MANUAL_${Date.now()}`,
+          product_code: "LPE",
+        });
+        // Add role if specified
+        if (role && role === "admin") {
+          await adminClient.from("user_roles").insert({
+            user_id: newMember.user.id,
+            role: "admin",
+          });
+        }
+        return new Response(JSON.stringify({ success: true, user_id: newMember.user.id }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       return new Response(JSON.stringify({ error: "Unknown action" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

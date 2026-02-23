@@ -71,6 +71,9 @@ ${scalevDeviceRules[deviceTarget] || scalevDeviceRules['Mobile']}
 6. Jangan pakai % width yang melebihi container (misal: width: 100vw dilarang)
 7. Padding hanya dari dalam (internal section), BUKAN dari page margin`,
 
+    'Berdu': `## PLATFORM TARGET: Berdu
+Output HARUS berupa satu blok kode HTML dengan SEMUA CSS inline (atribut style di setiap elemen). Tidak ada <head>, tidak ada tag <style>, tidak ada CSS external. HTML akan diinjeksi ke dalam page builder Berdu. Gunakan hanya tag: div, section, span, h1-h6, p, a, img, ul, li. Semua gambar gunakan URL placeholder. Berdu menggunakan container max-width: 780px.`,
+
     'Lynk.id': `## PLATFORM TARGET: Lynk.id
 Output HARUS berupa satu blok kode HTML dengan SEMUA CSS inline (atribut style di setiap elemen). Tidak ada <head>, tidak ada tag <style>, tidak ada CSS external. HTML akan diinjeksi ke dalam page builder Lynk.id. Gunakan hanya tag: div, section, span, h1-h6, p, a, img, ul, li. Semua gambar gunakan URL placeholder.`,
 
@@ -128,56 +131,20 @@ Section yang BOLEH full-width (tanpa pola bergantian):
 
   const salesNotifBlock = buildSalesNotifBlock(form);
 
+  const countdownBlock = buildCountdownBlock(form);
+
   return `Kamu adalah developer landing page expert dan copywriter yang fokus pada konversi tinggi.
-
-## TUGAS
-Buatkan landing page yang high-converting dalam bentuk kode HTML${isStandalone ? ' lengkap (full HTML file)' : ' tunggal dengan inline CSS'}.
-
-## FRAMEWORK COPYWRITING
-Gunakan framework **${form.framework || 'PAS'}** untuk menyusun copy. Susun alur konten mengikuti formula ini secara ketat dari atas ke bawah.
-
-## TONE & BAHASA
-- Gaya penulisan: **${form.gayaBahasa || 'Professional & Formal'}**
-- Bahasa: **Indonesia**
-
-## INFORMASI PRODUK
-- Tipe produk: ${form.tipeProduk || '-'}
-- Nama produk: ${form.namaProduk || '-'}
-- Deskripsi: ${form.deskripsiBenefit || '-'}
-- Harga normal: ${hargaNormalFormatted}
-- Harga promo: ${hargaPromoFormatted}
-- CTA utama: "${form.ctaUtama || 'Beli Sekarang'}"
-
-## TARGET AUDIENCE
-- Tujuan utama: **${form.tujuanUtama || 'Sales / Beli Langsung'}**
-- Awareness level: **${awarenessLevel || 'Most Aware'}**
-- Target market: **${form.targetAudience || '-'}**
-
-## DESAIN VISUAL
-- Gaya desain: **${form.gayaDesain || 'Bold & High Conversion'}**
-${referensiSection}
-## SECTION YANG HARUS ADA
-- ${sectionsToInclude}
-
-${outputRule}
-
-${layoutSection}
-
-## ATURAN PENTING
-1. SEMUA styling HARUS inline CSS (style="...") di setiap element${isStandalone ? ' atau dalam <style> tag di <head>' : ''}.
-2. TIDAK BOLEH ada file CSS external, TIDAK BOLEH pakai CDN CSS framework.
-3. Responsive: gunakan flex-wrap dan min-width untuk layout yang baik.
-4. Setiap <img> WAJIB memiliki: src dari placehold.co ukuran realistis, atribut alt, dan style="width:100%".
-5. Contoh gambar placeholder: https://placehold.co/600x450/1a1a2e/ffffff?text=Foto+Produk
-6. Tambahkan smooth scroll dan micro-interaction modern jika memungkinkan.
-7. Landing page harus terlihat stunning, premium, dan dioptimasi untuk konversi.
-8. Gunakan Google Fonts via @import (Inter, Poppins, atau sejenis).
-9. Anti Overclaim: Jangan gunakan kata "pasti", "jamin", "100%", atau klaim medis/finansial tidak realistis.
-10. Hidden CTA Wajib: Tuliskan 1-2 baris micro-copy trust tepat di bawah setiap tombol CTA.
-11. Output HANYA kode HTML mentah, tanpa penjelasan, tanpa markdown code block.
+...
 12. Semua gambar HARUS tag <img> standar — jangan embed base64 atau background-image CSS.
 13. Tombol CTA harus berupa tag <a href="#"> atau <button> yang jelas, besar, dan eye-catching.
-14. COUNTDOWN TIMER WAJIB BERGERAK: Jika ada section Scarcity/Timer, WAJIB gunakan JavaScript setInterval yang berjalan real-time setiap 1 detik. Buat elemen dengan id unik (cd-days, cd-hours, cd-minutes, cd-seconds) dan atribut data-edit-id="countdown-deadline" pada container timer agar bisa diedit. Contoh JS wajib:
+14. COUNTDOWN TIMER WAJIB BERGERAK: Jika ada section Scarcity/Timer, WAJIB gunakan JavaScript setInterval yang berjalan real-time setiap 1 detik. Buat elemen dengan id unik (cd-days, cd-hours, cd-minutes, cd-seconds) dan atribut data-edit-id="countdown-deadline" pada container timer agar bisa diedit.${countdownBlock}${isScalev ? `
+15. KRITIS SCALEV: Cek ulang SETIAP section — pastikan semua punya max-width:688px dan margin:0 auto sebelum output final.` : ''}${salesNotifBlock}`;
+}
+
+function buildCountdownBlock(form: FormState): string {
+  const c = form.countdown;
+  if (!c?.enabled) return `
+Contoh JS countdown wajib:
 \`\`\`
 (function() {
   var deadline = new Date(Date.now() + 2*24*60*60*1000);
@@ -193,9 +160,39 @@ ${layoutSection}
 })();
 \`\`\`
 Struktur HTML timer (WAJIB gunakan id dan data-edit-id ini):
-div id="countdown-container" data-edit-id="countdown-deadline" berisi: span id="cd-days", span id="cd-hours", span id="cd-minutes", span id="cd-seconds"${isScalev ? `
-15. KRITIS SCALEV: Cek ulang SETIAP section — pastikan semua punya max-width:688px dan margin:0 auto sebelum output final.` : ''}${salesNotifBlock}`;
+div id="countdown-container" data-edit-id="countdown-deadline" berisi: span id="cd-days", span id="cd-hours", span id="cd-minutes", span id="cd-seconds"`;
+
+  const totalMs = (c.hari * 86400000) + (c.jam * 3600000) + (c.menit * 60000) + (c.detik * 1000);
+
+  return `
+### COUNTDOWN TIMER CUSTOM CONFIG:
+- Label: "${c.labelAtas}"
+- Durasi: ${c.hari} hari, ${c.jam} jam, ${c.menit} menit, ${c.detik} detik
+- Background: ${c.bgColor}
+- Warna teks: ${c.textColor}
+- Warna accent/angka: ${c.accentColor}
+
+Gunakan konfigurasi warna di atas untuk styling countdown section. JS wajib:
+\`\`\`
+(function() {
+  var deadline = new Date(Date.now() + ${totalMs});
+  function tick() {
+    var d = deadline - Date.now();
+    if (d < 0) return;
+    document.getElementById('cd-days').textContent = String(Math.floor(d/86400000)).padStart(2,'0');
+    document.getElementById('cd-hours').textContent = String(Math.floor((d%86400000)/3600000)).padStart(2,'0');
+    document.getElementById('cd-minutes').textContent = String(Math.floor((d%3600000)/60000)).padStart(2,'0');
+    document.getElementById('cd-seconds').textContent = String(Math.floor((d%60000)/1000)).padStart(2,'0');
+  }
+  setInterval(tick, 1000); tick();
+})();
+\`\`\`
+Struktur HTML timer (WAJIB):
+- Container: div id="countdown-container" data-edit-id="countdown-deadline" style="background:${c.bgColor};color:${c.textColor};..."
+- Label: p style="color:${c.accentColor};..." → "${c.labelAtas}"
+- Angka: span id="cd-days/hours/minutes/seconds" style="background:${c.accentColor};color:${c.textColor};..."`;
 }
+
 
 function buildSalesNotifBlock(form: FormState): string {
   const n = form.salesNotif;

@@ -3,6 +3,7 @@ import { platformTargetOptions } from '@/data/formOptions';
 
 const platformIcons: Record<string, string> = {
   'Scalev': '🚀',
+  'Berdu': '🏪',
   'WordPress': '🌐',
   'Lynk.id': '🔗',
   'Shopify': '🛒',
