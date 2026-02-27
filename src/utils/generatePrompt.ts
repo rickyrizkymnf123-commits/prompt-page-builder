@@ -27,10 +27,7 @@ export function generatePrompt(form: FormState): string {
   const isScalev = platformName === 'Scalev';
   const isStandalone = platformName === 'Standalone';
 
-  const sectionsToInclude = activeElements.length > 0
-    ? activeElements.map((s, i) => `${i + 1}. ${s}`).join('\n')
-    : '1. Hero Section\n2. Benefit\n3. CTA';
-
+  const sectionsToInclude = buildSectionList(activeElements);
   const platformBlock = buildPlatformBlock(platformName, deviceTarget);
   const designBlock = buildDesignBlock(form);
   const copywritingBlock = buildCopywritingBlock(form, awarenessLevel);
@@ -38,24 +35,25 @@ export function generatePrompt(form: FormState): string {
   const countdownBlock = buildCountdownBlock(form);
   const salesNotifBlock = buildSalesNotifBlock(form);
   const referensiBlock = buildReferensiBlock(form);
+  const checklistBlock = buildChecklistBlock(platformName, isScalev);
 
-  return `# 🔥 MASTER PROMPT LANDING PAGE (UNIFIED VERSION)
+  return `# 🔥 MASTER PROMPT LANDING PAGE
 
-Anda adalah **Senior Conversion Copywriter + Landing Page Developer Expert** yang berpengalaman menciptakan ratusan landing page high-converting untuk social media ads dan direct sales.
+Anda adalah **Senior Conversion Copywriter + Landing Page Developer Expert** yang telah membuat ratusan landing page high-converting untuk social media ads & direct sales.
 
-Anda memiliki mindset:
-* Conversion-focused
-* UI/UX minded
-* Paham compliance Meta & Google Ads
-* Menguasai struktur persuasion modern
+Mindset:
+- Conversion-focused
+- UI/UX minded
+- Paham compliance Meta & Google Ads
+- Menguasai struktur persuasion modern
 
 ---
 
 ## 🎯 TUGAS UTAMA
 
-Buatkan **Landing Page High-Converting** dalam bentuk **kode HTML tunggal (single file)** untuk platform **${platformName}**, dengan desain premium, fokus konversi, dan aman regulasi iklan.
+Buat **Landing Page High-Converting** dalam bentuk **kode HTML tunggal (single file)** untuk platform **${platformName}**, desain premium, fokus konversi, aman regulasi iklan.
 
-Output harus **langsung berupa HTML**, tanpa penjelasan tambahan.
+Output HARUS **langsung berupa HTML saja** (tanpa penjelasan, tanpa teks di luar HTML).
 
 ---
 
@@ -75,7 +73,7 @@ ${productBlock}
 
 ---
 
-## 🧱 SECTION WAJIB ADA
+## 🧱 SECTION WAJIB ADA (URUTKAN DENGAN LOGIS)
 
 ${sectionsToInclude}
 ${referensiBlock}
@@ -93,122 +91,190 @@ ${salesNotifBlock}
 
 ## 💰 CONVERSION RULES
 
-* Harga normal dicoret: ${hargaNormalFormatted}
-* Harga promo ditonjolkan: ${hargaPromoFormatted}
-* Tambahkan urgency wajar
-* Setiap CTA WAJIB ada micro-copy trust 1–2 baris di bawah tombol
+- Harga normal dicoret: **${hargaNormalFormatted}**
+- Harga promo ditonjolkan: **${hargaPromoFormatted}**
+- Tambahkan urgency wajar (tanpa overclaim)
+- Setiap CTA WAJIB ada micro-copy trust 1–2 baris di bawah tombol
 
 CTA harus:
-* \`<a href="#">\` atau \`<button>\`
-* Besar
-* Kontras
-* Centered
-* Teks CTA: "${form.ctaUtama || 'Beli Sekarang'}"
+- \`<a href="#">\` atau \`<button>\`
+- Besar, kontras, centered
+- Teks: **"${form.ctaUtama || 'Beli Sekarang'}"**
 
 ---
 
 ## 🔐 TRUST & REASSURANCE
 
-Tambahkan:
-* Social proof angka/logis
-* Testimoni realistis
-* FAQ anti keberatan
-* Garansi yang masuk akal (tanpa overclaim)
+Wajib ada:
+- Social proof angka/logis
+- Testimoni realistis (tidak overclaim)
+- FAQ anti keberatan
+- Garansi masuk akal
 
 ---
 
-## 📦 OUTPUT FINAL
+${checklistBlock}`;
+}
 
-Output HARUS:
-* 1 file HTML tunggal
-* Semua CSS inline${isStandalone ? ' (boleh pakai <style> di <head>)' : ''}
-* JS countdown aktif
-* Layout single column
-* Siap inject ke ${platformName}
-* Tidak ada penjelasan tambahan
-* Tidak ada teks di luar HTML${isScalev ? `
-* KRITIS: Cek ulang SETIAP section — pastikan semua punya max-width:688px dan margin:0 auto sebelum output final` : ''}`;
+function buildSectionList(activeElements: string[]): string {
+  // Urutan logis sesuai master prompt final
+  const orderedSections = [
+    'Hero Section',
+    'Social Proof',
+    'Problem Section',
+    'Before-After',
+    'Video Section',
+    'Feature List',
+    'Bonus Section',
+    'How It Works',
+    'Pricing Table',
+    'Guarantee',
+    'FAQ',
+    'Final CTA',
+    'Testimonial',
+    'Scarcity / Timer',
+  ];
+
+  const selected = activeElements.length > 0 ? activeElements : [
+    'Hero Section', 'Social Proof', 'Problem Section', 'Before-After',
+    'Video Section', 'Feature List', 'Bonus Section', 'How It Works',
+    'Pricing Table', 'Guarantee', 'FAQ',
+  ];
+
+  // Sort by logical order, unknown items go to end
+  const sorted = [...selected].sort((a, b) => {
+    const ia = orderedSections.indexOf(a);
+    const ib = orderedSections.indexOf(b);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+
+  const descriptions: Record<string, string> = {
+    'Hero Section': 'hook + value + CTA',
+    'Social Proof': 'angka/logis',
+    'Problem Section': 'problem aware',
+    'Before-After': '',
+    'Video Section': 'pakai img placeholder "Video Preview"',
+    'Feature List': 'benefit jelas',
+    'Bonus Section': '',
+    'How It Works': '',
+    'Pricing Table': 'harga normal dicoret, promo ditonjolkan',
+    'Guarantee': 'masuk akal',
+    'FAQ': '',
+    'Final CTA': 'closing',
+    'Testimonial': 'realistis',
+    'Scarcity / Timer': 'countdown aktif',
+  };
+
+  return sorted.map((s, i) => {
+    const desc = descriptions[s];
+    return `${i + 1}) ${s}${desc ? ` (${desc})` : ''}`;
+  }).join('\n');
 }
 
 function buildPlatformBlock(platformName: string, deviceTarget: string): string {
   const scalevDeviceRules: Record<string, string> = {
-    Desktop: `* Padding halaman: 32px vertikal, 128px horizontal
-* Lebar konten efektif: ±432px
-* Padding internal section: 32px 128px`,
-    Tablet: `* Padding halaman: 32px vertikal, 50px horizontal
-* Lebar konten efektif: ±588px
-* Padding internal section: 32px 50px`,
-    Mobile: `* Padding halaman: 35px semua sisi
-* Lebar konten efektif: ±618px
-* Padding internal section: 35px
-* Margin antar komponen: 16px
-* Layout: SINGLE COLUMN (tidak ada 2 kolom berdampingan!)
-* Flex direction: column untuk semua layout`,
+    Desktop: `- Padding halaman: 32px vertikal, 128px horizontal
+- Lebar konten efektif: ±432px
+- Padding internal section: 32px 128px`,
+    Tablet: `- Padding halaman: 32px vertikal, 50px horizontal
+- Lebar konten efektif: ±588px
+- Padding internal section: 32px 50px`,
+    Mobile: `- Padding halaman: 35px semua sisi
+- Lebar konten efektif: ±618px
+- Padding internal section: 35px
+- Margin antar komponen: 16px
+- Layout: SINGLE COLUMN (tidak ada 2 kolom berdampingan!)
+- Flex direction: column untuk semua layout`,
   };
 
   const platformRules: Record<string, string> = {
     'Scalev': `# 📐 ATURAN STRUKTUR & LAYOUT — SCALEV (${deviceTarget})
 
-1. Layout WAJIB **single column** di semua ukuran layar.
-2. Setiap section WAJIB memiliki:
-   * \`max-width:688px\`
-   * \`margin:0 auto\`
-   * \`box-sizing:border-box\`
-3. Tidak boleh menggunakan grid atau multi-column layout.
-4. Semua styling WAJIB inline CSS (\`style=""\`).
-5. Tidak boleh menggunakan:
-   * CDN CSS framework
-   * External CSS file
-   * \`<style>\` tag
-6. Hanya boleh menggunakan tag:
+0) WAJIB ada wrapper root agar background tidak ke-override oleh Scalev:
+   - Buat elemen paling luar:
+     \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;">\`
+   - Semua konten landing page WAJIB berada di dalam \`#lp-root\`
+   - Jangan mengandalkan background di \`<body>\` saja.
+
+1) Layout WAJIB **single column** di semua ukuran layar.
+
+2) Setiap SECTION WAJIB memiliki:
+   - \`max-width:688px\`
+   - \`margin:0 auto\`
+   - \`box-sizing:border-box\`
+   - \`padding:35px\`
+
+3) Tidak boleh menggunakan grid atau multi-column layout.
+
+4) Boleh menggunakan flex HANYA jika:
+   - Untuk layout utama WAJIB \`flex-direction:column\`
+   - Tidak boleh ada 2 kolom konten berdampingan (row layout untuk konten utama dilarang)
+   - Pengecualian: countdown angka boleh row/wrap untuk 4 kotak angka.
+
+5) Semua styling WAJIB inline CSS (\`style=""\`) pada elemen-elemen utama.
+   - Elemen WAJIB inline style: wrapper root, semua section, container penting, heading, paragraf utama, CTA, pricing box, countdown container, testimonial card, FAQ box.
+   - Elemen minor boleh inherit (tidak wajib 100% semua tag punya style).
+
+6) Tidak boleh menggunakan:
+   - CDN CSS framework
+   - External CSS file
+   - \`<style>\` tag
+
+7) Hanya boleh menggunakan tag:
    \`div, section, span, h1-h6, p, a, img, ul, li\`
-7. Semua gambar WAJIB:
-   * \`<img>\` standar
-   * Menggunakan placeholder: https://placehold.co/
-   * Tidak boleh base64
-   * Tidak boleh background-image CSS
-8. SETIAP elemen harus punya style inline — TIDAK BOLEH ada elemen tanpa style
-9. width: 100% WAJIB ada di SETIAP img tag
+
+8) Semua gambar WAJIB:
+   - \`<img>\` standar
+   - Placeholder: https://placehold.co/
+   - \`width:100%\` WAJIB di setiap img
+   - Tidak boleh base64
+   - Tidak boleh background-image CSS
 
 ### Device Rules (${deviceTarget}):
 ${scalevDeviceRules[deviceTarget] || scalevDeviceRules['Mobile']}`,
 
     'Berdu': `# 📐 ATURAN STRUKTUR & LAYOUT — BERDU
 
-1. Layout single column, max-width: 780px, margin: 0 auto.
-2. Semua styling WAJIB inline CSS.
-3. Tidak boleh: CDN, external CSS, \`<style>\` tag.
-4. Tag yang boleh: div, section, span, h1-h6, p, a, img, ul, li.
-5. Gambar: \`<img>\` standar, placeholder https://placehold.co/, no base64.`,
+0) WAJIB ada wrapper root:
+   \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;">\`
+
+1) Layout single column, max-width: 780px, margin: 0 auto, padding: 35px.
+2) Semua styling WAJIB inline CSS pada elemen utama. Elemen minor boleh inherit.
+3) Tidak boleh: CDN, external CSS, \`<style>\` tag.
+4) Tag yang boleh: div, section, span, h1-h6, p, a, img, ul, li.
+5) Gambar: \`<img>\` standar, placeholder https://placehold.co/, width:100%, no base64.`,
 
     'Lynk.id': `# 📐 ATURAN STRUKTUR & LAYOUT — LYNK.ID
 
-1. Layout single column, inline CSS only.
-2. Tidak boleh: CDN, external CSS, \`<style>\` tag.
-3. Tag yang boleh: div, section, span, h1-h6, p, a, img, ul, li.
-4. Gambar: \`<img>\` standar, placeholder https://placehold.co/, no base64.`,
+0) WAJIB ada wrapper root:
+   \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;">\`
+
+1) Layout single column, inline CSS pada elemen utama. Elemen minor boleh inherit.
+2) Tidak boleh: CDN, external CSS, \`<style>\` tag.
+3) Tag yang boleh: div, section, span, h1-h6, p, a, img, ul, li.
+4) Gambar: \`<img>\` standar, placeholder https://placehold.co/, width:100%, no base64.`,
 
     'WordPress': `# 📐 ATURAN STRUKTUR & LAYOUT — WORDPRESS
 
-1. Output HTML tunggal, boleh menggunakan \`<style>\` tag scoped.
-2. HTML semantik, kompatibel Elementor HTML widget / Divi code module.
-3. Gambar: \`<img>\` standar, placeholder https://placehold.co/.
-4. Hindari shortcode WordPress.`,
+1) Output HTML tunggal, boleh menggunakan \`<style>\` tag scoped.
+2) HTML semantik, kompatibel Elementor HTML widget / Divi code module.
+3) Gambar: \`<img>\` standar, placeholder https://placehold.co/, width:100%.
+4) Hindari shortcode WordPress.`,
 
     'Shopify': `# 📐 ATURAN STRUKTUR & LAYOUT — SHOPIFY
 
-1. Output HTML tunggal dengan CSS inline.
-2. Hindari Liquid templating.
-3. Tag HTML standar saja.
-4. Gambar: \`<img>\` standar, placeholder https://placehold.co/.
-5. Kompatibel Shopify custom HTML sections.`,
+1) Output HTML tunggal dengan CSS inline pada elemen utama.
+2) Hindari Liquid templating.
+3) Tag HTML standar saja.
+4) Gambar: \`<img>\` standar, placeholder https://placehold.co/, width:100%.
+5) Kompatibel Shopify custom HTML sections.`,
 
     'Standalone': `# 📐 ATURAN STRUKTUR & LAYOUT — STANDALONE HTML
 
-1. File HTML lengkap: \`<!DOCTYPE html>\`, \`<head>\`, \`<body>\`.
-2. Boleh \`<style>\` di \`<head>\` + import Google Fonts.
-3. Layout single column, responsive.
-4. Gambar: \`<img>\` standar, placeholder https://placehold.co/.`,
+1) File HTML lengkap: \`<!DOCTYPE html>\`, \`<head>\`, \`<body>\`.
+2) Boleh \`<style>\` di \`<head>\` + import Google Fonts.
+3) Layout single column, responsive.
+4) Gambar: \`<img>\` standar, placeholder https://placehold.co/, width:100%.`,
   };
 
   return platformRules[platformName] || platformRules['Standalone'];
@@ -217,61 +283,59 @@ ${scalevDeviceRules[deviceTarget] || scalevDeviceRules['Mobile']}`,
 function buildDesignBlock(form: FormState): string {
   return `# 🎨 DESAIN VISUAL
 
-* Gaya Desain: ${form.gayaDesain || 'Modern Minimalis'}
-* Tema: **DARK MODE WAJIB** — sesuaikan dengan gaya "${form.gayaDesain || 'Modern Minimalis'}"
-* **KRITIS:** Background TIDAK BOLEH putih/terang. Setiap section dan container WAJIB punya background gelap via inline style.
-* Warna background utama: \`#0f0d1a\` atau \`#1a1a2e\` (dark purple/navy)
-* Warna background section bergantian: gunakan variasi gelap seperti \`#13111c\`, \`#1a1a2e\`, \`#0f0d1a\`, \`#16132b\`
-* Warna teks utama: \`#ffffff\` atau \`#f0f0f0\`
-* Warna teks sekunder: \`#b0b0b0\` atau \`#9ca3af\`
-* Warna aksen/CTA: sesuaikan gaya desain (default: \`#7C3AED\` purple atau \`#ff4757\` merah)
-* **SETIAP elemen div/section WAJIB punya style="background-color:..." yang gelap** — jangan biarkan ada elemen tanpa background karena Scalev default putih
-* CTA harus besar, kontras, eye-catching
-* Skimming friendly (heading jelas + bullet points)
-* Maksimal 1 emoji per heading/bullet
-* Gunakan font modern (sans-serif sebagai fallback)
-* Visual hierarchy: heading besar → subheading → body text → CTA
-* Setiap section punya background kontras bergantian (tetap dalam range warna gelap)`;
+- Gaya: ${form.gayaDesain || 'Modern Minimalis'} (Premium)
+- Tema: **Dark Mode** (background gelap, teks terang)
+- **KRITIS:** Background TIDAK BOLEH putih/terang. Wrapper root dan setiap section WAJIB punya background gelap.
+- Warna background utama: \`#0a0a12\` (wrapper root)
+- Warna background section bergantian: variasi gelap seperti \`#0f0d1a\`, \`#13111c\`, \`#1a1a2e\`, \`#16132b\`
+- Warna teks utama: \`#e8e8f0\` atau \`#ffffff\`
+- Warna teks sekunder: \`#b0b0b0\` atau \`#9ca3af\`
+- Warna aksen/CTA: sesuaikan gaya desain (default: \`#7C3AED\` purple atau \`#ff4757\` merah)
+- Visual hierarchy jelas: heading besar → subheading → body → CTA
+- Skimming friendly (heading jelas + bullet points)
+- Maksimal 1 emoji per heading/bullet
+- CTA besar, kontras, eye-catching, centered
+- Setiap section punya background kontras bergantian (dark shade berbeda)`;
 }
 
 function buildCopywritingBlock(form: FormState, awarenessLevel: string): string {
   return `# ✍️ COPYWRITING FRAMEWORK
 
-Gunakan framework: **${form.framework || 'PAS'}** secara natural dengan struktur persuasi:
+Gunakan framework **${form.framework || 'PAS'}** secara natural:
 
-1. Attention → Hook kuat & curiosity-based
-2. Interest → Problem spesifik target market
-3. Desire → Agitasi + dampak jika tidak diatasi
-4. Conviction → Solusi + Social Proof
-5. Action → CTA kuat + urgency
+1) Attention → Hook kuat & curiosity-based
+2) Interest → Problem spesifik target market
+3) Desire → Agitasi + dampak jika tidak diatasi
+4) Conviction → Solusi + Social Proof
+5) Action → CTA kuat + urgency wajar
 
-Awareness level: **${awarenessLevel}**
-Gaya Bahasa: **${form.gayaBahasa || 'Profesional'}** — konsisten di seluruh halaman.
+Awareness: **${awarenessLevel}**
+Gaya bahasa: **${form.gayaBahasa || 'Profesional'}** (konsisten)
 
 Hindari:
-* Klaim "pasti", "jamin", "100%"
-* Overclaim medis/finansial
-* Janji tidak realistis`;
+- Klaim "pasti", "jamin", "100%"
+- Overclaim medis/finansial
+- Janji tidak realistis`;
 }
 
 function buildProductBlock(form: FormState, hargaNormal: string, hargaPromo: string): string {
   return `# 📦 PROFIL PRODUK
 
-* **Nama Produk:** ${form.namaProduk || '[Nama Produk]'}
-* **Tipe:** ${form.tipeProduk || '-'}
-* **Tujuan:** ${form.tujuanUtama || '-'}
-* **Harga Normal:** ${hargaNormal}
-* **Harga Promo:** ${hargaPromo}
-* **Deskripsi/Benefit:** ${form.deskripsiBenefit || '-'}
-* **CTA Utama:** ${form.ctaUtama || 'Beli Sekarang'}
-* **Target Audience:** ${form.targetAudience || '-'}`;
+- Nama Produk: **${form.namaProduk || '[Nama Produk]'}**
+- Tipe: ${form.tipeProduk || '-'}
+- Tujuan: ${form.tujuanUtama || '-'}
+- Harga Normal: **${hargaNormal}**
+- Harga Promo: **${hargaPromo}**
+- CTA Utama: **${form.ctaUtama || 'Beli Sekarang'}**
+- Target Audience: **${form.targetAudience || '-'}**
+${form.deskripsiBenefit ? `- Deskripsi/Benefit: ${form.deskripsiBenefit}` : ''}`;
 }
 
 function buildReferensiBlock(form: FormState): string {
   if (!form.linkReferensi && !form.inspirasiDesain) return '';
   let block = '\n\n## 🔗 REFERENSI DESAIN';
-  if (form.linkReferensi) block += `\n* URL Referensi: ${form.linkReferensi}`;
-  if (form.inspirasiDesain) block += `\n* Yang ingin ditiru: ${form.inspirasiDesain}`;
+  if (form.linkReferensi) block += `\n- URL Referensi: ${form.linkReferensi}`;
+  if (form.inspirasiDesain) block += `\n- Yang ingin ditiru: ${form.inspirasiDesain}`;
   return block;
 }
 
@@ -292,8 +356,10 @@ function buildCountdownBlock(form: FormState): string {
   return `## ⏳ COUNTDOWN TIMER (WAJIB BERGERAK)
 
 Durasi: ${durasi}
-Label: "${label}"
-Background: ${bg} | Text: ${text} | Accent angka: ${accent}
+Label: **"${label}"**
+Background container: **${bg}**
+Text: **${text}**
+Accent angka: **${accent}**
 
 Gunakan JavaScript berikut tanpa modifikasi logika:
 
@@ -313,9 +379,16 @@ Gunakan JavaScript berikut tanpa modifikasi logika:
 \`\`\`
 
 Struktur HTML WAJIB:
-* Container: \`id="countdown-container"\` \`data-edit-id="countdown-deadline"\` \`style="background:${bg};color:${text};..."\`
-* Label: \`p style="color:${accent};..."\` → "${label}"
-* Angka: \`span id="cd-days/hours/minutes/seconds"\` \`style="background:${accent};color:${text};..."\``;
+- Container:
+  \`div id="countdown-container" data-edit-id="countdown-deadline" style="background:${bg};color:${text};..."\`
+- Label:
+  \`p style="color:${accent};..."\` → "${label}"
+- Angka:
+  \`span id="cd-days" ...\`
+  \`span id="cd-hours" ...\`
+  \`span id="cd-minutes" ...\`
+  \`span id="cd-seconds" ...\`
+  Semua angka WAJIB style: \`background:${accent};color:${text};...\``;
 }
 
 function buildSalesNotifBlock(form: FormState): string {
@@ -339,8 +412,8 @@ function buildSalesNotifBlock(form: FormState): string {
   const borderColor = n.borderColor || '#6c63ff';
   const textColor = n.textColor || '#1a1a2e';
 
-  return `Tambahkan kode berikut PERSIS sebelum \`</body>\` tanpa mengubah logic JS.
-ID WAJIB ADA: sn-popup, sn-name, sn-product
+  return `Tambahkan kode berikut **PERSIS** sebelum \`</body>\` tanpa mengubah logic JS.
+ID WAJIB ADA: \`sn-popup\`, \`sn-name\`, \`sn-product\`
 
 \`\`\`html
 <div id="sn-popup" style="display:none;position:fixed;${pos};width:${w}px;background:${bgColor};border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:14px 16px;z-index:99999;font-family:sans-serif;align-items:center;gap:12px;border-left:4px solid ${borderColor};">
@@ -376,4 +449,24 @@ ID WAJIB ADA: sn-popup, sn-name, sn-product
 })();
 </script>
 \`\`\``;
+}
+
+function buildChecklistBlock(platformName: string, isScalev: boolean): string {
+  const scalevChecks = isScalev ? `
+- Semua konten berada di dalam \`#lp-root\`
+- Semua section memenuhi: max-width 688px + margin auto + padding 35px + box-sizing border-box
+- Semua gambar \`<img>\` + \`width:100%\` + placeholder placehold.co` : '';
+
+  return `## ✅ OUTPUT FINAL (CEK TERAKHIR)
+
+Output HARUS:
+- 1 file HTML tunggal${scalevChecks}
+- Semua CSS inline pada elemen utama
+- Layout single column
+- Countdown berjalan real-time
+- Sales notification dipasang persis sebelum \`</body>\`
+- Siap inject ke ${platformName}
+- Tidak ada penjelasan tambahan
+- Tidak ada teks di luar HTML${isScalev ? `
+- **KRITIS:** Cek ulang SETIAP section — pastikan semua punya max-width:688px, margin:0 auto, dan berada di dalam #lp-root` : ''}`;
 }
