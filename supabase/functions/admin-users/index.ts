@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
       const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-      const { action, user_id, email, password, name, role } = await req.json();
+      const { action, user_id, email, password, name, role, tier } = await req.json();
 
       // Check admin role (skip for initial setup)
       const { data: roles } = await adminClient
@@ -117,6 +117,36 @@ Deno.serve(async (req) => {
         });
       }
 
+      // --- CHANGE TIER ---
+      if (action === "change_tier") {
+        if (!user_id) {
+          return new Response(JSON.stringify({ error: "user_id required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const newProductCode = role === "paid" ? "LPE" : "LPE_FREE";
+        const { data: existing } = await adminClient
+          .from("entitlements")
+          .select("id")
+          .eq("user_id", user_id)
+          .maybeSingle();
+        
+        if (existing) {
+          await adminClient.from("entitlements").update({ product_code: newProductCode, status: "active" }).eq("id", existing.id);
+        } else {
+          await adminClient.from("entitlements").insert({
+            user_id: user_id,
+            product_code: newProductCode,
+            status: "active",
+            order_id: `MANUAL_${Date.now()}`,
+          });
+        }
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // --- RESET PASSWORD ---
       if (action === "reset_password") {
         if (!user_id || !password) {
@@ -156,7 +186,7 @@ Deno.serve(async (req) => {
           user_id: newMember.user.id,
           status: "active",
           order_id: `MANUAL_${Date.now()}`,
-          product_code: "LPE",
+          product_code: tier === "free" ? "LPE_FREE" : "LPE",
         });
         // Add role if specified
         if (role && role === "admin") {

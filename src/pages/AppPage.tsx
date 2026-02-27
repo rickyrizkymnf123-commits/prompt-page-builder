@@ -17,7 +17,7 @@ import { TemplateGallery } from "@/components/templates/TemplateGallery";
 import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, BonusItem } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, ExternalLink } from "lucide-react";
+import { Zap, RotateCcw, Copy, ExternalLink, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -82,14 +82,31 @@ export default function AppPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [mode, setMode] = useState<'manual' | 'template'>('manual');
   const [templateHtml, setTemplateHtml] = useState('');
+  const [userTier, setUserTier] = useState<'free' | 'paid'>('free');
+  const [orderUrl, setOrderUrl] = useState('');
   const navigate = useNavigate();
+
+  const isPaid = userTier === 'paid';
 
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
-      const { data: entitlements } = await supabase.from("entitlements").select("id").eq("product_code", "LPE").eq("status", "active");
+      const { data: entitlements } = await supabase
+        .from("entitlements")
+        .select("id, product_code")
+        .in("product_code", ["LPE", "LPE_FREE"])
+        .eq("status", "active");
       if (!entitlements || entitlements.length === 0) { await supabase.auth.signOut(); navigate("/login"); return; }
+      const hasPaid = entitlements.some((e: any) => e.product_code === 'LPE');
+      setUserTier(hasPaid ? 'paid' : 'free');
+      
+      // Fetch order URL
+      try {
+        const { data: settings } = await (supabase as any).from('app_settings').select('value').eq('key', 'scalev_order_url').maybeSingle();
+        if (settings?.value) setOrderUrl(settings.value);
+      } catch {}
+      
       setLoading(false);
     };
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -147,6 +164,7 @@ export default function AppPage() {
   };
 
   const handleSelectTemplate = (html: string) => {
+    if (!isPaid) return;
     setTemplateHtml(html);
     setMode('template');
     setCurrentStep(3);
@@ -161,6 +179,23 @@ export default function AppPage() {
     <div className="min-h-screen bg-background">
       <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} />
 
+      {/* Upgrade banner for free users */}
+      {!isPaid && currentStep === 1 && (
+        <div className="max-w-[1440px] mx-auto px-6 pt-4">
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-sm font-semibold text-foreground">🆓 Mode Gratis — Fitur terbatas</p>
+              <p className="text-xs text-muted-foreground">Upgrade untuk akses Template, Edit Mode, Countdown, dan Sales Notification</p>
+            </div>
+            {orderUrl && (
+              <Button size="sm" onClick={() => window.open(orderUrl, '_blank')} className="gap-1">
+                ⭐ Upgrade Sekarang
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Tab Navigation for mode */}
       {currentStep === 1 && (
         <div className="max-w-[1440px] mx-auto px-6 pt-6">
@@ -169,7 +204,7 @@ export default function AppPage() {
               ⚡ Buat Manual
             </button>
             <button type="button" onClick={() => setMode('template')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all ${mode === 'template' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border-border hover:border-primary/40'}`}>
-              📋 Gunakan Template
+              📋 Gunakan Template {!isPaid && <Lock className="h-3 w-3" />}
             </button>
           </div>
         </div>
@@ -184,12 +219,13 @@ export default function AppPage() {
             else setCurrentStep(2);
           }}
           initialHtml={mode === 'template' ? templateHtml : undefined}
+          isPaid={isPaid}
         />
       )}
 
       {currentStep === 1 && mode === 'template' && (
         <div className="max-w-[1440px] mx-auto px-6 pb-12">
-          <TemplateGallery onSelectTemplate={handleSelectTemplate} />
+          <TemplateGallery onSelectTemplate={handleSelectTemplate} isPaid={isPaid} />
         </div>
       )}
 
@@ -222,8 +258,29 @@ export default function AppPage() {
             <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
             <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
             <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
-            <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
-            <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
+            
+            {/* Sales Notif & Countdown - locked for free users */}
+            {isPaid ? (
+              <>
+                <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
+                <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
+              </>
+            ) : (
+              <div className="rounded-xl border border-border bg-card p-5 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-semibold text-muted-foreground">Sales Notification & Countdown Timer</span>
+                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">PREMIUM</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Fitur ini hanya tersedia untuk pengguna berbayar.</p>
+                {orderUrl && (
+                  <Button size="sm" variant="outline" onClick={() => window.open(orderUrl, '_blank')} className="gap-1 mt-1">
+                    ⭐ Upgrade untuk Unlock
+                  </Button>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-3 pt-2">
               <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
               <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
