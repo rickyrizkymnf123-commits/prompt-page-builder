@@ -138,9 +138,33 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
     // Add drag-and-drop styles
     const dragStyle = doc.createElement('style');
     dragStyle.textContent = `
-      [data-edit-idx][draggable="true"]:hover { outline: 2px solid rgba(124,58,237,0.8) !important; outline-offset: 2px; }
-      [data-edit-idx].dragging { opacity: 0.3 !important; }
-      .drop-indicator { outline: 3px solid #ff4757 !important; outline-offset: 0px; background: rgba(255,71,87,0.08) !important; }
+      [data-edit-idx][draggable="true"] { transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
+      [data-edit-idx][draggable="true"]:hover { outline: 2px solid rgba(124,58,237,0.8) !important; outline-offset: 2px; cursor: grab; }
+      [data-edit-idx].dragging { opacity: 0.25 !important; transform: scale(0.96) !important; outline: 2px dashed rgba(124,58,237,0.4) !important; }
+      .drop-indicator { 
+        outline: none !important;
+        position: relative;
+      }
+      .drop-indicator::before {
+        content: '';
+        position: absolute;
+        left: 0; right: 0; top: -3px;
+        height: 4px;
+        background: linear-gradient(90deg, #7C3AED, #ff4757, #7C3AED);
+        border-radius: 4px;
+        animation: dropPulse 0.8s ease-in-out infinite;
+        z-index: 9999;
+        pointer-events: none;
+      }
+      .drop-indicator-after::before { top: auto !important; bottom: -3px !important; }
+      @keyframes dropPulse {
+        0%, 100% { opacity: 0.6; transform: scaleX(0.95); }
+        50% { opacity: 1; transform: scaleX(1); }
+      }
+      @keyframes ghostFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-2px); }
+      }
     `;
     doc.head.appendChild(dragStyle);
 
@@ -162,37 +186,69 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
         el.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', el.getAttribute('data-edit-idx'));
+
+        // Create custom ghost with styling
+        var ghost = el.cloneNode(true);
+        ghost.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0.85;transform:scale(0.9) rotate(-1deg);border-radius:8px;box-shadow:0 12px 40px rgba(124,58,237,0.35);pointer-events:none;max-width:300px;overflow:hidden;z-index:99999;';
+        document.body.appendChild(ghost);
+        e.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, 20);
+        setTimeout(function() { document.body.removeChild(ghost); }, 0);
       }, true);
 
       document.addEventListener('dragover', function(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
-        document.querySelectorAll('.drop-indicator').forEach(function(x) { x.classList.remove('drop-indicator'); });
+        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { 
+          x.classList.remove('drop-indicator'); 
+          x.classList.remove('drop-indicator-after'); 
+        });
         if (target && target !== dragSrc) {
-          target.classList.add('drop-indicator');
+          // Determine if dropping above or below based on mouse position
+          var rect = target.getBoundingClientRect();
+          var midY = rect.top + rect.height / 2;
+          if (e.clientY > midY) {
+            target.classList.add('drop-indicator');
+            target.classList.add('drop-indicator-after');
+          } else {
+            target.classList.add('drop-indicator');
+          }
         }
       }, true);
 
       document.addEventListener('dragleave', function(e) {
         var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
-        if (target) target.classList.remove('drop-indicator');
+        if (target) { target.classList.remove('drop-indicator'); target.classList.remove('drop-indicator-after'); }
       }, true);
 
       document.addEventListener('drop', function(e) {
         e.preventDefault();
-        document.querySelectorAll('.drop-indicator').forEach(function(x) { x.classList.remove('drop-indicator'); });
+        var isAfter = false;
+        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { 
+          if (x.classList.contains('drop-indicator-after')) isAfter = true;
+          x.classList.remove('drop-indicator'); 
+          x.classList.remove('drop-indicator-after'); 
+        });
         if (!dragSrc) return;
         dragSrc.classList.remove('dragging');
         var dropTarget = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
         if (!dropTarget || dropTarget === dragSrc) { dragSrc = null; return; }
 
-        // Insert dragSrc before dropTarget
-        dropTarget.parentNode.insertBefore(dragSrc, dropTarget);
-        dragSrc = null;
+        // Insert before or after based on position
+        if (isAfter && dropTarget.nextSibling) {
+          dropTarget.parentNode.insertBefore(dragSrc, dropTarget.nextSibling);
+        } else if (isAfter) {
+          dropTarget.parentNode.appendChild(dragSrc);
+        } else {
+          dropTarget.parentNode.insertBefore(dragSrc, dropTarget);
+        }
+
+        // Brief flash animation on moved element
+        dragSrc.style.transition = 'background 0.4s ease';
+        dragSrc.style.background = 'rgba(124,58,237,0.15)';
+        setTimeout(function() { dragSrc.style.background = ''; dragSrc = null; }, 500);
 
         // Send updated HTML back to parent
-        // Clean up edit attributes before sending
         var clone = document.documentElement.cloneNode(true);
         clone.querySelectorAll('[data-edit-idx]').forEach(function(el) {
           el.removeAttribute('data-edit-idx');
@@ -201,12 +257,11 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
           el.removeAttribute('draggable');
           el.classList.remove('dragging');
           el.classList.remove('drop-indicator');
-          // Remove the edit outline from style
+          el.classList.remove('drop-indicator-after');
           var s = el.getAttribute('style') || '';
           s = s.replace(/;?cursor:pointer;?/g, '').replace(/;?outline:2px dashed rgba\\(59,130,246,0\\.5\\);?/g, '').replace(/;?outline-offset:2px;?/g, '');
           if (s.trim()) el.setAttribute('style', s); else el.removeAttribute('style');
         });
-        // Remove injected scripts and styles
         clone.querySelectorAll('script').forEach(function(s) { s.remove(); });
         clone.querySelectorAll('style').forEach(function(s) {
           if ((s.textContent || '').indexOf('drop-indicator') !== -1) s.remove();
@@ -216,7 +271,10 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
 
       document.addEventListener('dragend', function(e) {
         if (dragSrc) dragSrc.classList.remove('dragging');
-        document.querySelectorAll('.drop-indicator').forEach(function(x) { x.classList.remove('drop-indicator'); });
+        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { 
+          x.classList.remove('drop-indicator'); 
+          x.classList.remove('drop-indicator-after'); 
+        });
         dragSrc = null;
       }, true);
 
