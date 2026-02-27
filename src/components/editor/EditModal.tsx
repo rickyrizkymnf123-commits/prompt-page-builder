@@ -28,9 +28,10 @@ interface Props {
   editTarget: EditTarget;
   onClose: () => void;
   onSave: (value: string, href?: string, pixelEvent?: string, styles?: { bgColor?: string; textColor?: string }) => void;
+  onDelete?: () => void;
 }
 
-export function EditModal({ editTarget, onClose, onSave }: Props) {
+export function EditModal({ editTarget, onClose, onSave, onDelete }: Props) {
   const [textValue, setTextValue] = useState(editTarget.value);
   const [hrefValue, setHrefValue] = useState(editTarget.href);
   const [imgValue, setImgValue] = useState(editTarget.value);
@@ -149,6 +150,9 @@ export function EditModal({ editTarget, onClose, onSave }: Props) {
         </div>
 
         <div className="flex gap-3 pt-2">
+          {onDelete && (
+            <button type="button" onClick={() => { onDelete(); onClose(); }} className="px-4 py-2.5 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-sm font-semibold hover:bg-destructive/20 transition-all">🗑</button>
+          )}
           <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-all">Batal</button>
           <button type="button" onClick={handleSave} className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2">💾 Simpan</button>
         </div>

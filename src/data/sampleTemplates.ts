@@ -7,7 +7,7 @@ export interface LpTemplate {
   html_content: string;
 }
 
-export const sampleTemplates: LpTemplate[] = [
+const rawTemplates: LpTemplate[] = [
   {
     id: 'tpl-ebook-1',
     title: 'Ebook / Digital Product',
@@ -917,3 +917,29 @@ export const sampleTemplates: LpTemplate[] = [
 </div></body></html>`
   }
 ];
+
+const IMAGE_GALLERY = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;text-align:center;"><h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 24px;">📸 Galeri</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><img src="https://placehold.co/320x200/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+1" alt="Foto 1" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+2" alt="Foto 2" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+3" alt="Foto 3" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+4" alt="Foto 4" style="width:100%;border-radius:12px;" /></div></section>`;
+
+const galleryMap: Record<string, [string, string, string]> = {
+  'tpl-ebook-1': ['#0f0d1a', '#1a1a2e', '#7C3AED'],
+  'tpl-jasa-1': ['#0f0d1a', '#1a1a2e', '#38bdf8'],
+  'tpl-produk-1': ['#13111c', '#1a1a2e', '#f59e0b'],
+  'tpl-webinar-1': ['#080818', '#0f172a', '#10b981'],
+  'tpl-saas-1': ['#0a0a24', '#111133', '#818cf8'],
+  'tpl-fitness-1': ['#111111', '#1a1a1a', '#ef4444'],
+  'tpl-course-1': ['#0c0a09', '#1c1917', '#f97316'],
+  'tpl-fnb-1': ['#121008', '#1c1917', '#eab308'],
+  'tpl-property-1': ['#110f08', '#1c1917', '#d4a017'],
+  'tpl-travel-1': ['#052a28', '#0c3835', '#14b8a6'],
+  'tpl-coaching-1': ['#100a1e', '#1e1535', '#a855f7'],
+  'tpl-membership-1': ['#0a1025', '#0f1a38', '#3b82f6'],
+  'tpl-healthcare-1': ['#061a24', '#0c2836', '#22d3ee'],
+  'tpl-undangan-1': ['#0e0b18', '#150f24', '#c084fc'],
+};
+
+export const sampleTemplates: LpTemplate[] = rawTemplates.map(t => {
+  const cfg = galleryMap[t.id];
+  if (!cfg) return t;
+  return { ...t, html_content: t.html_content.replace('</div></body></html>', IMAGE_GALLERY(cfg[0], cfg[1], cfg[2]) + '</div></body></html>') };
+});

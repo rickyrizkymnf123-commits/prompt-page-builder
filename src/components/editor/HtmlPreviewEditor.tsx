@@ -25,9 +25,12 @@ const SECTION_TEMPLATES: Record<string, string> = {
   'Feature List': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#0f0d1a;box-sizing:border-box;"><h2 style="font-size:24px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">✨ Apa yang Kamu Dapat</h2><ul style="list-style:none;padding:0;margin:0;"><li style="padding:12px 16px;background:#1a1a2e;border-radius:8px;margin-bottom:8px;color:#e8e8f0;font-size:14px;">✅ Fitur utama pertama</li><li style="padding:12px 16px;background:#1a1a2e;border-radius:8px;margin-bottom:8px;color:#e8e8f0;font-size:14px;">✅ Fitur utama kedua</li><li style="padding:12px 16px;background:#1a1a2e;border-radius:8px;color:#e8e8f0;font-size:14px;">✅ Fitur utama ketiga</li></ul></section>`,
   'Bonus Section': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#13111c;box-sizing:border-box;"><h2 style="font-size:24px;font-weight:700;color:#ff4757;text-align:center;margin:0 0 24px;">🎁 BONUS YANG AKAN KAMU DAPATKAN</h2><div style="padding:16px;background:#1a1a2e;border-radius:12px;margin-bottom:12px;border-left:4px solid #ff4757;"><p style="color:#ffffff;font-weight:600;margin:0 0 4px;">✅ Bonus 1 — Template Premium</p><p style="color:#9ca3af;font-size:13px;margin:0;">Harga normal: <span style="text-decoration:line-through;color:#ff4757;">Rp 199.000</span></p></div><div style="padding:16px;background:#1a1a2e;border-radius:12px;border-left:4px solid #ff4757;"><p style="color:#ffffff;font-weight:600;margin:0 0 4px;">✅ Bonus 2 — Akses Komunitas</p><p style="color:#9ca3af;font-size:13px;margin:0;">Harga normal: <span style="text-decoration:line-through;color:#ff4757;">Rp 299.000</span></p></div></section>`,
   'Image Gallery': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#0f0d1a;box-sizing:border-box;text-align:center;"><h2 style="font-size:24px;font-weight:700;color:#ffffff;margin:0 0 24px;">📸 Gallery Produk</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><img src="https://placehold.co/320x200/1a1a2e/7C3AED?text=Gambar+1" alt="Gambar 1" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/1a1a2e/ff4757?text=Gambar+2" alt="Gambar 2" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/1a1a2e/38bdf8?text=Gambar+3" alt="Gambar 3" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/1a1a2e/f59e0b?text=Gambar+4" alt="Gambar 4" style="width:100%;border-radius:12px;" /></div></section>`,
+  'Single Image': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#13111c;box-sizing:border-box;text-align:center;"><img src="https://placehold.co/600x350/1a1a2e/7C3AED?text=Gambar+Produk" alt="Gambar" style="width:100%;border-radius:16px;" /></section>`,
   'Countdown Timer': `<section style="max-width:688px;margin:0 auto;padding:30px 35px;background:#1a1a2e;box-sizing:border-box;text-align:center;"><p style="color:#ff4757;font-size:13px;font-weight:700;letter-spacing:2px;margin:0 0 16px;">⏰ PROMO BERAKHIR DALAM</p><div style="display:flex;justify-content:center;gap:12px;"><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">00</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Hari</p></div><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">12</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Jam</p></div><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">30</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Menit</p></div><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">00</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Detik</p></div></div></section>`,
   'Sales Notification': `<div id="sn-popup" style="position:fixed;bottom:20px;left:20px;background:#ffffff;border:2px solid #6c63ff;border-radius:12px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:9999;display:flex;align-items:center;gap:10px;max-width:320px;"><span style="font-size:24px;">🔥</span><div><p style="margin:0;font-size:13px;color:#1a1a2e;font-weight:600;">Seseorang dari Jakarta</p><p style="margin:2px 0 0;font-size:12px;color:#666;">baru saja membeli <strong>Produk Anda</strong></p></div></div>`,
 };
+
+const PREMIUM_SECTIONS = ['Countdown Timer', 'Sales Notification'];
 
 export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl }: Props) {
   const [htmlCode, setHtmlCode] = useState(initialHtml || '');
@@ -41,6 +44,8 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
   const [showSectionPanel, setShowSectionPanel] = useState(false);
   const [showAddSection, setShowAddSection] = useState(false);
   const reorderSyncRef = useRef(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const scrollPosRef = useRef(0);
 
   const viewportWidths = { desktop: '100%', tablet: '768px', mobile: '390px' };
 
@@ -86,6 +91,13 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     setHtmlCode(html);
     setEditMode(false);
     setPixelApplied(!!fbPixelId.trim());
+  };
+
+  // Inject click prevention for non-edit preview (buttons should not be clickable)
+  const getPreviewHtml = () => {
+    if (!previewHtml) return '';
+    const preventScript = `<script>document.addEventListener('click',function(e){var a=e.target.closest('a,button');if(a){e.preventDefault();e.stopPropagation();}},true);document.addEventListener('submit',function(e){e.preventDefault();},true);</script>`;
+    return previewHtml.includes('</body>') ? previewHtml.replace('</body>', preventScript + '</body>') : previewHtml + preventScript;
   };
 
   const getEditableHtml = () => {
@@ -147,8 +159,15 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
 
     const script = doc.createElement('script');
     script.textContent = `
-      document.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', function(e) { e.preventDefault(); }); });
+      // Prevent all button/link clicks
+      document.querySelectorAll('a,button').forEach(function(a) { a.addEventListener('click', function(e) { e.preventDefault(); }); });
       document.addEventListener('submit', function(e) { e.preventDefault(); });
+      
+      // Track scroll position and report to parent
+      var _lastScroll = 0;
+      window.addEventListener('scroll', function() { _lastScroll = window.pageYOffset || document.documentElement.scrollTop; window.parent.postMessage({ type: 'SCROLL_POS', top: _lastScroll }, '*'); }, true);
+      window.addEventListener('message', function(e) { if (e.data && e.data.type === 'SET_SCROLL') { window.scrollTo(0, e.data.top); } });
+      
       var dragSrc = null;
       document.addEventListener('dragstart', function(e) {
         var el = e.target.closest ? e.target.closest('[data-edit-idx]') : e.target;
@@ -226,6 +245,15 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     return doc.documentElement.outerHTML;
   };
 
+  // Restore scroll position after iframe loads
+  const restoreScroll = useCallback(() => {
+    setTimeout(() => {
+      try {
+        iframeRef.current?.contentWindow?.postMessage({ type: 'SET_SCROLL', top: scrollPosRef.current }, '*');
+      } catch {}
+    }, 100);
+  }, []);
+
   useEffect(() => {
     const handler = (e: MessageEvent) => {
       if (e.data?.type === 'EDIT_ELEMENT') {
@@ -238,12 +266,17 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       } else if (e.data?.type === 'REORDER_HTML') {
         reorderSyncRef.current = true;
         setHtmlCode(e.data.html);
+        setPreviewHtml(e.data.html);
         toast({ title: '✅ Elemen dipindahkan!' });
+        // Restore scroll after reorder
+        setTimeout(() => restoreScroll(), 200);
+      } else if (e.data?.type === 'SCROLL_POS') {
+        scrollPosRef.current = e.data.top;
       }
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, []);
+  }, [restoreScroll]);
 
   const handleSaveEdit = (newValue: string, newHref?: string, pixelEvent?: string, styles?: { bgColor?: string; textColor?: string }) => {
     if (!editTarget) return;
@@ -277,7 +310,31 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       if (styles?.bgColor) el.style.backgroundColor = styles.bgColor;
       const updatedHtml = doc.documentElement.outerHTML;
       setPreviewHtml(updatedHtml); setHtmlCode(updatedHtml);
-      setEditMode(false); setTimeout(() => setEditMode(true), 50);
+      // Restore scroll after re-render instead of toggling editMode
+      setTimeout(() => restoreScroll(), 200);
+    }
+    setEditTarget(null);
+  };
+
+  const handleDeleteElement = () => {
+    if (!editTarget) return;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    const editableTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'span', 'li', 'button', 'img', 'iframe'];
+    let idx = 0; let targetEl: Element | null = null;
+    editableTags.forEach(tag => {
+      doc.querySelectorAll(tag).forEach(el => {
+        if (el.closest('#sn-popup')) { idx++; return; }
+        if (idx === editTarget.index) targetEl = el;
+        idx++;
+      });
+    });
+    if (targetEl) {
+      targetEl.remove();
+      const updatedHtml = doc.documentElement.outerHTML;
+      setPreviewHtml(updatedHtml); setHtmlCode(updatedHtml);
+      toast({ title: 'Elemen dihapus' });
+      setTimeout(() => restoreScroll(), 200);
     }
     setEditTarget(null);
   };
@@ -319,6 +376,10 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
   };
 
   const addSection = (templateKey: string) => {
+    if (PREMIUM_SECTIONS.includes(templateKey) && !isPaid) {
+      if (orderUrl) window.open(orderUrl, '_blank');
+      return;
+    }
     const templateHtml = SECTION_TEMPLATES[templateKey];
     if (!templateHtml) return;
     const parser = new DOMParser();
@@ -417,11 +478,14 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
                 </button>
                 {showAddSection && (
                   <div className="mt-2 space-y-1">
-                    {Object.keys(SECTION_TEMPLATES).map(key => (
-                      <button key={key} type="button" onClick={() => addSection(key)} className="w-full text-left px-2 py-1.5 rounded text-xs border border-border hover:bg-primary/10 hover:border-primary/50 transition-all text-foreground">
-                        {key}
-                      </button>
-                    ))}
+                    {Object.keys(SECTION_TEMPLATES).map(key => {
+                      const isLocked = PREMIUM_SECTIONS.includes(key) && !isPaid;
+                      return (
+                        <button key={key} type="button" onClick={() => addSection(key)} className={`w-full text-left px-2 py-1.5 rounded text-xs border transition-all text-foreground ${isLocked ? 'border-primary/30 bg-primary/5 opacity-60' : 'border-border hover:bg-primary/10 hover:border-primary/50'}`}>
+                          {key} {isLocked && <Lock className="inline h-3 w-3 ml-1 text-primary" />}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -462,11 +526,13 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
             <div className="flex justify-center overflow-hidden">
               <div style={{ width: viewportWidths[viewport], transition: 'width 0.3s ease' }} className="relative rounded-lg border border-border overflow-hidden">
                 <iframe
-                  srcDoc={editMode ? getEditableHtml() : previewHtml}
+                  ref={iframeRef}
+                  srcDoc={editMode ? getEditableHtml() : getPreviewHtml()}
                   className="w-full"
                   style={{ height: '600px', border: 'none' }}
                   title="Preview"
                   sandbox="allow-scripts"
+                  onLoad={restoreScroll}
                 />
               </div>
             </div>
@@ -492,7 +558,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
         <Button size="sm" onClick={handleExport} disabled={!previewHtml && !htmlCode} className="gap-1 bg-green-600 hover:bg-green-700 text-white font-bold ml-auto">⬇ Download HTML</Button>
       </div>
 
-      {editTarget && <EditModal editTarget={editTarget} onClose={() => setEditTarget(null)} onSave={handleSaveEdit} />}
+      {editTarget && <EditModal editTarget={editTarget} onClose={() => setEditTarget(null)} onSave={handleSaveEdit} onDelete={handleDeleteElement} />}
     </div>
   );
 }
