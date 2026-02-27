@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { EditModal, EditTarget } from './EditModal';
 import { toast } from '@/hooks/use-toast';
@@ -34,6 +34,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
   const [sections, setSections] = useState<SectionInfo[]>([]);
   const [showSectionPanel, setShowSectionPanel] = useState(false);
   const [showAddSection, setShowAddSection] = useState(false);
+  const reorderSyncRef = useRef(false);
 
   const viewportWidths = { desktop: '100%', tablet: '768px', mobile: '390px' };
 
@@ -234,39 +235,51 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
         var dropTarget = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
         if (!dropTarget || dropTarget === dragSrc) { dragSrc = null; return; }
 
-        // Insert before or after based on position
-        if (isAfter && dropTarget.nextSibling) {
-          dropTarget.parentNode.insertBefore(dragSrc, dropTarget.nextSibling);
-        } else if (isAfter) {
-          dropTarget.parentNode.appendChild(dragSrc);
-        } else {
-          dropTarget.parentNode.insertBefore(dragSrc, dropTarget);
-        }
+        // Smoothly animate the move
+        dragSrc.style.transition = 'all 0.25s ease';
+        dragSrc.style.opacity = '0';
+        dragSrc.style.transform = 'scale(0.95)';
 
-        // Brief flash animation on moved element
-        dragSrc.style.transition = 'background 0.4s ease';
-        dragSrc.style.background = 'rgba(124,58,237,0.15)';
-        setTimeout(function() { dragSrc.style.background = ''; dragSrc = null; }, 500);
+        setTimeout(function() {
+          // Insert before or after based on position
+          if (isAfter && dropTarget.nextSibling) {
+            dropTarget.parentNode.insertBefore(dragSrc, dropTarget.nextSibling);
+          } else if (isAfter) {
+            dropTarget.parentNode.appendChild(dragSrc);
+          } else {
+            dropTarget.parentNode.insertBefore(dragSrc, dropTarget);
+          }
 
-        // Send updated HTML back to parent
-        var clone = document.documentElement.cloneNode(true);
-        clone.querySelectorAll('[data-edit-idx]').forEach(function(el) {
-          el.removeAttribute('data-edit-idx');
-          el.removeAttribute('data-edit-tag');
-          el.removeAttribute('data-edit-href');
-          el.removeAttribute('draggable');
-          el.classList.remove('dragging');
-          el.classList.remove('drop-indicator');
-          el.classList.remove('drop-indicator-after');
-          var s = el.getAttribute('style') || '';
-          s = s.replace(/;?cursor:pointer;?/g, '').replace(/;?outline:2px dashed rgba\\(59,130,246,0\\.5\\);?/g, '').replace(/;?outline-offset:2px;?/g, '');
-          if (s.trim()) el.setAttribute('style', s); else el.removeAttribute('style');
-        });
-        clone.querySelectorAll('script').forEach(function(s) { s.remove(); });
-        clone.querySelectorAll('style').forEach(function(s) {
-          if ((s.textContent || '').indexOf('drop-indicator') !== -1) s.remove();
-        });
-        window.parent.postMessage({ type: 'REORDER_HTML', html: clone.outerHTML }, '*');
+          // Fade back in
+          dragSrc.style.opacity = '1';
+          dragSrc.style.transform = 'scale(1)';
+          dragSrc.style.background = 'rgba(124,58,237,0.1)';
+          setTimeout(function() { 
+            dragSrc.style.background = ''; 
+            dragSrc.style.transition = '';
+
+            // Send updated HTML back to parent (silent sync, no re-render)
+            var clone = document.documentElement.cloneNode(true);
+            clone.querySelectorAll('[data-edit-idx]').forEach(function(el) {
+              el.removeAttribute('data-edit-idx');
+              el.removeAttribute('data-edit-tag');
+              el.removeAttribute('data-edit-href');
+              el.removeAttribute('draggable');
+              el.classList.remove('dragging');
+              el.classList.remove('drop-indicator');
+              el.classList.remove('drop-indicator-after');
+              var s = el.getAttribute('style') || '';
+              s = s.replace(/;?cursor:pointer;?/g, '').replace(/;?outline:2px dashed rgba\\(59,130,246,0\\.5\\);?/g, '').replace(/;?outline-offset:2px;?/g, '');
+              if (s.trim()) el.setAttribute('style', s); else el.removeAttribute('style');
+            });
+            clone.querySelectorAll('script').forEach(function(s) { s.remove(); });
+            clone.querySelectorAll('style').forEach(function(s) {
+              if ((s.textContent || '').indexOf('drop-indicator') !== -1) s.remove();
+            });
+            window.parent.postMessage({ type: 'REORDER_HTML', html: clone.outerHTML }, '*');
+            dragSrc = null;
+          }, 300);
+        }, 150);
       }, true);
 
       document.addEventListener('dragend', function(e) {
@@ -334,11 +347,10 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
           textColor: e.data.textColor || '',
         });
       } else if (e.data?.type === 'REORDER_HTML') {
-        setPreviewHtml(e.data.html);
+        // Silent sync — only update the backing state, don't re-render iframe
+        reorderSyncRef.current = true;
         setHtmlCode(e.data.html);
-        // Re-enter edit mode
-        setEditMode(false);
-        setTimeout(() => setEditMode(true), 50);
+        // Update previewHtml via ref so it's available for export but doesn't cause srcDoc change
         toast({ title: '✅ Elemen dipindahkan!' });
       }
     };
@@ -539,7 +551,15 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
                     {vp === 'desktop' ? '🖥' : vp === 'tablet' ? '📟' : '📱'} {vp.charAt(0).toUpperCase() + vp.slice(1)}
                   </button>
                 ))}
-                <button type="button" onClick={() => { setEditMode(!editMode); if (!editMode) setShowSectionPanel(true); }} className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all ml-1 ${editMode ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-secondary text-muted-foreground border-border'}`}>
+                <button type="button" onClick={() => { 
+                  const newMode = !editMode; 
+                  if (!newMode) { 
+                    // Sync previewHtml from htmlCode when leaving edit mode (captures reorder changes)
+                    setPreviewHtml(htmlCode); 
+                  }
+                  setEditMode(newMode); 
+                  if (newMode) setShowSectionPanel(true); 
+                }} className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all ml-1 ${editMode ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-secondary text-muted-foreground border-border'}`}>
                   {editMode ? '🔓 Lock' : '✏️ Edit'}
                 </button>
                 {editMode && (
