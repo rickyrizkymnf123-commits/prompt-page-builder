@@ -6,10 +6,15 @@ import { Lock } from 'lucide-react';
 interface Props {
   onSelectTemplate: (html: string) => void;
   isPaid?: boolean;
+  orderUrl?: string;
 }
 
-export function TemplateGallery({ onSelectTemplate, isPaid = true }: Props) {
+export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl }: Props) {
   const [previewTemplate, setPreviewTemplate] = useState<LpTemplate | null>(null);
+
+  const handleUpgrade = () => {
+    if (orderUrl) window.open(orderUrl, '_blank');
+  };
 
   return (
     <div className="space-y-6">
@@ -39,7 +44,7 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true }: Props) {
                 {isPaid ? (
                   <Button size="sm" onClick={() => onSelectTemplate(tpl.html_content)}>✅ Gunakan</Button>
                 ) : (
-                  <Button size="sm" disabled className="gap-1"><Lock className="h-3 w-3" /> Premium</Button>
+                  <Button size="sm" onClick={handleUpgrade} className="gap-1"><Lock className="h-3 w-3" /> Premium</Button>
                 )}
               </div>
             </div>
@@ -52,7 +57,7 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true }: Props) {
                   Gunakan Template →
                 </Button>
               ) : (
-                <Button size="sm" className="w-full mt-2" variant="outline" disabled>
+                <Button size="sm" className="w-full mt-2" variant="outline" onClick={handleUpgrade}>
                   <Lock className="h-3 w-3 mr-1" /> Upgrade untuk Gunakan
                 </Button>
               )}
@@ -71,8 +76,10 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true }: Props) {
                 <p className="text-xs text-muted-foreground">{previewTemplate.description}</p>
               </div>
               <div className="flex gap-2">
-                {isPaid && (
+                {isPaid ? (
                   <Button size="sm" onClick={() => { onSelectTemplate(previewTemplate.html_content); setPreviewTemplate(null); }}>✅ Gunakan Template</Button>
+                ) : (
+                  <Button size="sm" onClick={handleUpgrade} className="gap-1"><Lock className="h-3 w-3" /> Upgrade</Button>
                 )}
                 <Button size="sm" variant="outline" onClick={() => setPreviewTemplate(null)}>✕ Tutup</Button>
               </div>

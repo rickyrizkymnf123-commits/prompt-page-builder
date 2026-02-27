@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { EditModal, EditTarget } from './EditModal';
 import { toast } from '@/hooks/use-toast';
+import { Lock } from 'lucide-react';
 
 interface SectionInfo {
   index: number;
@@ -13,6 +14,7 @@ interface Props {
   onBack: () => void;
   initialHtml?: string;
   isPaid?: boolean;
+  orderUrl?: string;
 }
 
 const SECTION_TEMPLATES: Record<string, string> = {
@@ -27,7 +29,7 @@ const SECTION_TEMPLATES: Record<string, string> = {
   'Sales Notification': `<div id="sn-popup" style="position:fixed;bottom:20px;left:20px;background:#ffffff;border:2px solid #6c63ff;border-radius:12px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:9999;display:flex;align-items:center;gap:10px;max-width:320px;"><span style="font-size:24px;">🔥</span><div><p style="margin:0;font-size:13px;color:#1a1a2e;font-weight:600;">Seseorang dari Jakarta</p><p style="margin:2px 0 0;font-size:12px;color:#666;">baru saja membeli <strong>Produk Anda</strong></p></div></div>`,
 };
 
-export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props) {
+export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl }: Props) {
   const [htmlCode, setHtmlCode] = useState(initialHtml || '');
   const [previewHtml, setPreviewHtml] = useState(initialHtml || '');
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -86,13 +88,11 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
     setPixelApplied(!!fbPixelId.trim());
   };
 
-  // Get editable HTML with fixes for countdown, navigation, and image editing
   const getEditableHtml = () => {
     if (!editMode || !previewHtml) return previewHtml;
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
 
-    // BUGFIX: Remove countdown & notification scripts to prevent interference
     doc.querySelectorAll('script').forEach(script => {
       const text = script.textContent || '';
       if (text.includes('cd-days') || text.includes('cd-hours') ||
@@ -107,16 +107,10 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
     editableTags.forEach(tag => {
       doc.querySelectorAll(tag).forEach(el => {
         if (el.closest('#sn-popup')) { idx++; return; }
-
         el.setAttribute('data-edit-idx', String(idx));
         el.setAttribute('data-edit-tag', tag.toUpperCase());
-        // Make every element draggable
-        if (tag !== 'iframe') {
-          el.setAttribute('draggable', 'true');
-        }
-
+        if (tag !== 'iframe') el.setAttribute('draggable', 'true');
         if (tag === 'a') el.setAttribute('data-edit-href', (el as HTMLAnchorElement).getAttribute('href') || '');
-
         if (tag === 'iframe') {
           const wrapper = doc.createElement('div');
           wrapper.setAttribute('data-edit-idx', String(idx));
@@ -133,212 +127,117 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
           idx++;
           return;
         }
-
         const style = el.getAttribute('style') || '';
         el.setAttribute('style', style + ';cursor:pointer;outline:2px dashed rgba(59,130,246,0.5);outline-offset:2px;');
         idx++;
       });
     });
 
-    // Add drag-and-drop styles
     const dragStyle = doc.createElement('style');
     dragStyle.textContent = `
       [data-edit-idx][draggable="true"] { transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
       [data-edit-idx][draggable="true"]:hover { outline: 2px solid rgba(124,58,237,0.8) !important; outline-offset: 2px; cursor: grab; }
       [data-edit-idx].dragging { opacity: 0.25 !important; transform: scale(0.96) !important; outline: 2px dashed rgba(124,58,237,0.4) !important; }
-      .drop-indicator { 
-        outline: none !important;
-        position: relative;
-      }
-      .drop-indicator::before {
-        content: '';
-        position: absolute;
-        left: 0; right: 0; top: -3px;
-        height: 4px;
-        background: linear-gradient(90deg, #7C3AED, #ff4757, #7C3AED);
-        border-radius: 4px;
-        animation: dropPulse 0.8s ease-in-out infinite;
-        z-index: 9999;
-        pointer-events: none;
-      }
+      .drop-indicator { outline: none !important; position: relative; }
+      .drop-indicator::before { content: ''; position: absolute; left: 0; right: 0; top: -3px; height: 4px; background: linear-gradient(90deg, #7C3AED, #ff4757, #7C3AED); border-radius: 4px; animation: dropPulse 0.8s ease-in-out infinite; z-index: 9999; pointer-events: none; }
       .drop-indicator-after::before { top: auto !important; bottom: -3px !important; }
-      @keyframes dropPulse {
-        0%, 100% { opacity: 0.6; transform: scaleX(0.95); }
-        50% { opacity: 1; transform: scaleX(1); }
-      }
-      @keyframes ghostFloat {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-2px); }
-      }
+      @keyframes dropPulse { 0%, 100% { opacity: 0.6; transform: scaleX(0.95); } 50% { opacity: 1; transform: scaleX(1); } }
     `;
     doc.head.appendChild(dragStyle);
 
-    // Inject click + drag-and-drop handler script
     const script = doc.createElement('script');
     script.textContent = `
-      // Prevent ALL navigation inside iframe
-      document.querySelectorAll('a').forEach(function(a) {
-        a.addEventListener('click', function(e) { e.preventDefault(); });
-      });
+      document.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', function(e) { e.preventDefault(); }); });
       document.addEventListener('submit', function(e) { e.preventDefault(); });
-
       var dragSrc = null;
-
       document.addEventListener('dragstart', function(e) {
         var el = e.target.closest ? e.target.closest('[data-edit-idx]') : e.target;
         if (!el || !el.hasAttribute('data-edit-idx')) return;
-        dragSrc = el;
-        el.classList.add('dragging');
+        dragSrc = el; el.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', el.getAttribute('data-edit-idx'));
-
-        // Create custom ghost with styling
         var ghost = el.cloneNode(true);
         ghost.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0.85;transform:scale(0.9) rotate(-1deg);border-radius:8px;box-shadow:0 12px 40px rgba(124,58,237,0.35);pointer-events:none;max-width:300px;overflow:hidden;z-index:99999;';
         document.body.appendChild(ghost);
         e.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, 20);
         setTimeout(function() { document.body.removeChild(ghost); }, 0);
       }, true);
-
       document.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
+        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
         var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
-        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { 
-          x.classList.remove('drop-indicator'); 
-          x.classList.remove('drop-indicator-after'); 
-        });
+        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { x.classList.remove('drop-indicator'); x.classList.remove('drop-indicator-after'); });
         if (target && target !== dragSrc) {
-          // Determine if dropping above or below based on mouse position
-          var rect = target.getBoundingClientRect();
-          var midY = rect.top + rect.height / 2;
-          if (e.clientY > midY) {
-            target.classList.add('drop-indicator');
-            target.classList.add('drop-indicator-after');
-          } else {
-            target.classList.add('drop-indicator');
-          }
+          var rect = target.getBoundingClientRect(); var midY = rect.top + rect.height / 2;
+          if (e.clientY > midY) { target.classList.add('drop-indicator'); target.classList.add('drop-indicator-after'); }
+          else { target.classList.add('drop-indicator'); }
         }
       }, true);
-
       document.addEventListener('dragleave', function(e) {
         var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
         if (target) { target.classList.remove('drop-indicator'); target.classList.remove('drop-indicator-after'); }
       }, true);
-
       document.addEventListener('drop', function(e) {
-        e.preventDefault();
-        var isAfter = false;
-        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { 
-          if (x.classList.contains('drop-indicator-after')) isAfter = true;
-          x.classList.remove('drop-indicator'); 
-          x.classList.remove('drop-indicator-after'); 
-        });
-        if (!dragSrc) return;
-        dragSrc.classList.remove('dragging');
+        e.preventDefault(); var isAfter = false;
+        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { if (x.classList.contains('drop-indicator-after')) isAfter = true; x.classList.remove('drop-indicator'); x.classList.remove('drop-indicator-after'); });
+        if (!dragSrc) return; dragSrc.classList.remove('dragging');
         var dropTarget = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
         if (!dropTarget || dropTarget === dragSrc) { dragSrc = null; return; }
-
-        // Move instantly without fade
-        if (isAfter && dropTarget.nextSibling) {
-          dropTarget.parentNode.insertBefore(dragSrc, dropTarget.nextSibling);
-        } else if (isAfter) {
-          dropTarget.parentNode.appendChild(dragSrc);
-        } else {
-          dropTarget.parentNode.insertBefore(dragSrc, dropTarget);
-        }
-
-        // Send updated HTML back to parent (silent sync, no re-render)
+        if (isAfter && dropTarget.nextSibling) { dropTarget.parentNode.insertBefore(dragSrc, dropTarget.nextSibling); }
+        else if (isAfter) { dropTarget.parentNode.appendChild(dragSrc); }
+        else { dropTarget.parentNode.insertBefore(dragSrc, dropTarget); }
         var clone = document.documentElement.cloneNode(true);
         clone.querySelectorAll('[data-edit-idx]').forEach(function(el) {
-          el.removeAttribute('data-edit-idx');
-          el.removeAttribute('data-edit-tag');
-          el.removeAttribute('data-edit-href');
-          el.removeAttribute('draggable');
-          el.classList.remove('dragging');
-          el.classList.remove('drop-indicator');
-          el.classList.remove('drop-indicator-after');
+          el.removeAttribute('data-edit-idx'); el.removeAttribute('data-edit-tag'); el.removeAttribute('data-edit-href'); el.removeAttribute('draggable');
+          el.classList.remove('dragging'); el.classList.remove('drop-indicator'); el.classList.remove('drop-indicator-after');
           var s = el.getAttribute('style') || '';
           s = s.replace(/;?cursor:pointer;?/g, '').replace(/;?outline:2px dashed rgba\\(59,130,246,0\\.5\\);?/g, '').replace(/;?outline-offset:2px;?/g, '');
           if (s.trim()) el.setAttribute('style', s); else el.removeAttribute('style');
         });
         clone.querySelectorAll('script').forEach(function(s) { s.remove(); });
-        clone.querySelectorAll('style').forEach(function(s) {
-          if ((s.textContent || '').indexOf('drop-indicator') !== -1) s.remove();
-        });
+        clone.querySelectorAll('style').forEach(function(s) { if ((s.textContent || '').indexOf('drop-indicator') !== -1) s.remove(); });
         window.parent.postMessage({ type: 'REORDER_HTML', html: clone.outerHTML }, '*');
         dragSrc = null;
       }, true);
-
       document.addEventListener('dragend', function(e) {
         if (dragSrc) dragSrc.classList.remove('dragging');
-        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { 
-          x.classList.remove('drop-indicator'); 
-          x.classList.remove('drop-indicator-after'); 
-        });
+        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { x.classList.remove('drop-indicator'); x.classList.remove('drop-indicator-after'); });
         dragSrc = null;
       }, true);
-
       document.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        // BUGFIX: Prioritize IMG over parent elements
+        e.preventDefault(); e.stopPropagation();
         var el = e.target;
-        if (el.tagName === 'IMG' && el.hasAttribute('data-edit-idx')) {
-          // use img directly
-        } else {
-          el = e.target.closest('[data-edit-idx]');
-        }
+        if (el.tagName === 'IMG' && el.hasAttribute('data-edit-idx')) { }
+        else { el = e.target.closest('[data-edit-idx]'); }
         if (!el) return;
-
         var idx = el.getAttribute('data-edit-idx');
         var tag = el.getAttribute('data-edit-tag');
-        var isImg = tag === 'IMG';
-        var isA = tag === 'A';
-        var isIframe = tag === 'IFRAME';
-        var value = isImg ? (el.getAttribute('src') || '') :
-                    isIframe ? (el.getAttribute('data-edit-src') || (el.querySelector('iframe') ? el.querySelector('iframe').getAttribute('src') : '') || '') :
-                    (el.innerText || el.textContent || '');
+        var isImg = tag === 'IMG'; var isA = tag === 'A'; var isIframe = tag === 'IFRAME';
+        var value = isImg ? (el.getAttribute('src') || '') : isIframe ? (el.getAttribute('data-edit-src') || (el.querySelector('iframe') ? el.querySelector('iframe').getAttribute('src') : '') || '') : (el.innerText || el.textContent || '');
         var href = isA ? (el.getAttribute('data-edit-href') || el.getAttribute('href') || '') : '';
         var pixelEvent = el.getAttribute('data-pixel-event') || '';
         var imgWidth = isImg ? (el.naturalWidth || el.getAttribute('width') || 0) : 0;
         var imgHeight = isImg ? (el.naturalHeight || el.getAttribute('height') || 0) : 0;
         var bgColor = el.style.backgroundColor || '';
         var textColor = el.style.color || '';
-
-        window.parent.postMessage({
-          type: 'EDIT_ELEMENT', idx: Number(idx), tag: tag, value: value, href: href,
-          isImg: isImg, isA: isA, isIframe: isIframe, pixelEvent: pixelEvent,
-          imgWidth: imgWidth, imgHeight: imgHeight, bgColor: bgColor, textColor: textColor
-        }, '*');
+        window.parent.postMessage({ type: 'EDIT_ELEMENT', idx: Number(idx), tag: tag, value: value, href: href, isImg: isImg, isA: isA, isIframe: isIframe, pixelEvent: pixelEvent, imgWidth: imgWidth, imgHeight: imgHeight, bgColor: bgColor, textColor: textColor }, '*');
       }, true);
     `;
     doc.body.appendChild(script);
     return doc.documentElement.outerHTML;
   };
 
-  // Listen for messages from iframe
   useEffect(() => {
     const handler = (e: MessageEvent) => {
       if (e.data?.type === 'EDIT_ELEMENT') {
         setEditTarget({
           type: e.data.isImg ? 'img' : e.data.isA ? 'link' : e.data.isIframe ? 'video' : 'text',
-          tag: e.data.tag,
-          value: e.data.value,
-          href: e.data.href || '',
-          index: e.data.idx,
-          pixelEvent: e.data.pixelEvent || '',
-          imgWidth: e.data.imgWidth || 0,
-          imgHeight: e.data.imgHeight || 0,
-          bgColor: e.data.bgColor || '',
-          textColor: e.data.textColor || '',
+          tag: e.data.tag, value: e.data.value, href: e.data.href || '', index: e.data.idx,
+          pixelEvent: e.data.pixelEvent || '', imgWidth: e.data.imgWidth || 0, imgHeight: e.data.imgHeight || 0,
+          bgColor: e.data.bgColor || '', textColor: e.data.textColor || '',
         });
       } else if (e.data?.type === 'REORDER_HTML') {
-        // Silent sync — only update the backing state, don't re-render iframe
         reorderSyncRef.current = true;
         setHtmlCode(e.data.html);
-        // Update previewHtml via ref so it's available for export but doesn't cause srcDoc change
         toast({ title: '✅ Elemen dipindahkan!' });
       }
     };
@@ -351,8 +250,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
     const editableTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'span', 'li', 'button', 'img', 'iframe'];
-    let idx = 0;
-    let targetEl: Element | null = null;
+    let idx = 0; let targetEl: Element | null = null;
     editableTags.forEach(tag => {
       doc.querySelectorAll(tag).forEach(el => {
         if (el.closest('#sn-popup')) { idx++; return; }
@@ -362,11 +260,9 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
     });
     if (targetEl) {
       const el = targetEl as HTMLElement;
-      if (editTarget.type === 'video') {
-        el.setAttribute('src', newValue);
-      } else if (editTarget.type === 'img') {
-        el.setAttribute('src', newValue);
-      } else if (editTarget.type === 'link') {
+      if (editTarget.type === 'video') el.setAttribute('src', newValue);
+      else if (editTarget.type === 'img') el.setAttribute('src', newValue);
+      else if (editTarget.type === 'link') {
         el.textContent = newValue;
         if (newHref !== undefined) el.setAttribute('href', newHref);
         if (pixelEvent) {
@@ -375,41 +271,26 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
             : `if(typeof fbq!=='undefined'){fbq('track','${pixelEvent}');}`;
           el.setAttribute('onclick', evScript);
           el.setAttribute('data-pixel-event', pixelEvent);
-        } else {
-          el.removeAttribute('onclick');
-          el.removeAttribute('data-pixel-event');
-        }
-      } else {
-        el.textContent = newValue;
-      }
-      // Apply color styles if provided
+        } else { el.removeAttribute('onclick'); el.removeAttribute('data-pixel-event'); }
+      } else el.textContent = newValue;
       if (styles?.textColor) el.style.color = styles.textColor;
       if (styles?.bgColor) el.style.backgroundColor = styles.bgColor;
-
       const updatedHtml = doc.documentElement.outerHTML;
-      setPreviewHtml(updatedHtml);
-      setHtmlCode(updatedHtml);
-      setEditMode(false);
-      setTimeout(() => setEditMode(true), 50);
+      setPreviewHtml(updatedHtml); setHtmlCode(updatedHtml);
+      setEditMode(false); setTimeout(() => setEditMode(true), 50);
     }
     setEditTarget(null);
   };
 
-  // Section management
   const moveSection = (sectionIndex: number, direction: 'up' | 'down') => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
     const root = doc.getElementById('lp-root') || doc.body;
     const children = Array.from(root.children).filter(c => c.tagName !== 'SCRIPT' && c.tagName !== 'STYLE' && c.id !== 'sn-popup');
-    
-    if (direction === 'up' && sectionIndex > 0) {
-      root.insertBefore(children[sectionIndex], children[sectionIndex - 1]);
-    } else if (direction === 'down' && sectionIndex < children.length - 1) {
-      root.insertBefore(children[sectionIndex + 1], children[sectionIndex]);
-    }
+    if (direction === 'up' && sectionIndex > 0) root.insertBefore(children[sectionIndex], children[sectionIndex - 1]);
+    else if (direction === 'down' && sectionIndex < children.length - 1) root.insertBefore(children[sectionIndex + 1], children[sectionIndex]);
     const html = doc.documentElement.outerHTML;
-    setPreviewHtml(html);
-    setHtmlCode(html);
+    setPreviewHtml(html); setHtmlCode(html);
   };
 
   const deleteSection = (sectionIndex: number) => {
@@ -420,8 +301,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
     if (children[sectionIndex]) {
       children[sectionIndex].remove();
       const html = doc.documentElement.outerHTML;
-      setPreviewHtml(html);
-      setHtmlCode(html);
+      setPreviewHtml(html); setHtmlCode(html);
       toast({ title: 'Section dihapus' });
     }
   };
@@ -434,8 +314,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
     if (children[sectionIndex]) {
       (children[sectionIndex] as HTMLElement).style.backgroundColor = color;
       const html = doc.documentElement.outerHTML;
-      setPreviewHtml(html);
-      setHtmlCode(html);
+      setPreviewHtml(html); setHtmlCode(html);
     }
   };
 
@@ -445,7 +324,6 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
     const root = doc.getElementById('lp-root') || doc.body;
-    // Insert before scripts/notification
     const snPopup = doc.getElementById('sn-popup');
     const temp = doc.createElement('div');
     temp.innerHTML = templateHtml;
@@ -455,8 +333,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
       else root.appendChild(newSection);
     }
     const html = doc.documentElement.outerHTML;
-    setPreviewHtml(html);
-    setHtmlCode(html);
+    setPreviewHtml(html); setHtmlCode(html);
     setShowAddSection(false);
     toast({ title: `Section "${templateKey}" ditambahkan` });
   };
@@ -467,22 +344,34 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
     const blob = new Blob([content], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'landing-page.html';
-    a.click();
+    a.href = url; a.download = 'landing-page.html'; a.click();
     URL.revokeObjectURL(url);
     toast({ title: '⬇ Download berhasil!', description: 'File landing-page.html siap digunakan.' });
   };
 
+  const handleUpgrade = () => {
+    if (orderUrl) window.open(orderUrl, '_blank');
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 space-y-4">
-      {/* Facebook Pixel */}
+      {/* Facebook Pixel - Premium feature */}
       <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-        <h2 className="text-sm font-semibold text-foreground">🎯 Facebook Pixel (Opsional)</h2>
-        <div className="flex gap-3 items-center">
-          <input type="text" value={fbPixelId} onChange={(e) => setFbPixelId(e.target.value)} placeholder="Pixel ID..." className="flex-1 rounded-lg bg-secondary text-foreground text-sm p-2.5 border border-border focus:outline-none focus:border-primary" />
-          {pixelApplied && <span className="text-xs text-green-500 font-medium">✅</span>}
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-foreground">🎯 Facebook Pixel ID</h2>
+          {!isPaid && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">PREMIUM</span>}
         </div>
+        {isPaid ? (
+          <div className="flex gap-3 items-center">
+            <input type="text" value={fbPixelId} onChange={(e) => setFbPixelId(e.target.value)} placeholder="Pixel ID..." className="flex-1 rounded-lg bg-secondary text-foreground text-sm p-2.5 border border-border focus:outline-none focus:border-primary" />
+            {pixelApplied && <span className="text-xs text-green-500 font-medium">✅</span>}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground">Fitur ini hanya untuk pengguna berbayar.</p>
+            {orderUrl && <Button size="sm" variant="outline" onClick={handleUpgrade} className="gap-1 text-xs"><Lock className="h-3 w-3" /> Upgrade</Button>}
+          </div>
+        )}
       </div>
 
       {/* Paste HTML - hidden when preview loaded or initialHtml provided */}
@@ -550,18 +439,18 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
                   </button>
                 ))}
                 {isPaid ? (
-                  <button type="button" onClick={() => { 
-                    const newMode = !editMode; 
-                    if (!newMode) { 
-                      setPreviewHtml(htmlCode); 
-                    }
-                    setEditMode(newMode); 
-                    if (newMode) setShowSectionPanel(true); 
+                  <button type="button" onClick={() => {
+                    const newMode = !editMode;
+                    if (!newMode) setPreviewHtml(htmlCode);
+                    setEditMode(newMode);
+                    if (newMode) setShowSectionPanel(true);
                   }} className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all ml-1 ${editMode ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-secondary text-muted-foreground border-border'}`}>
                     {editMode ? '🔓 Lock' : '✏️ Edit'}
                   </button>
                 ) : (
-                  <span className="px-3 py-1 rounded-lg text-xs font-medium border border-border bg-secondary text-muted-foreground ml-1 cursor-not-allowed">🔒 Edit (Premium)</span>
+                  <button type="button" onClick={handleUpgrade} className="px-3 py-1 rounded-lg text-xs font-medium border border-primary/40 bg-primary/10 text-primary ml-1 cursor-pointer hover:bg-primary/20 transition-all flex items-center gap-1">
+                    🔒 Edit (Premium)
+                  </button>
                 )}
                 {editMode && (
                   <button type="button" onClick={() => setShowSectionPanel(!showSectionPanel)} className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${showSectionPanel ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-muted-foreground border-border'}`}>
@@ -572,7 +461,6 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props)
             </div>
             <div className="flex justify-center overflow-hidden">
               <div style={{ width: viewportWidths[viewport], transition: 'width 0.3s ease' }} className="relative rounded-lg border border-border overflow-hidden">
-                {/* BUGFIX: Remove allow-same-origin to prevent iframe navigating to app routes */}
                 <iframe
                   srcDoc={editMode ? getEditableHtml() : previewHtml}
                   className="w-full"

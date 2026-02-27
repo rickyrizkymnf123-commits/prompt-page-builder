@@ -24,7 +24,7 @@ export function Header({ darkMode, onToggleDark }: Props) {
         </div>
         <div className="flex flex-col">
           <h1 className="text-xl font-bold text-foreground">
-            Landing Page <span className="text-primary">Builder V.10</span>
+            Landing Page <span className="text-primary">Builder V.11</span>
           </h1>
           <span className="text-xs text-muted-foreground">By Digital Strategi</span>
         </div>

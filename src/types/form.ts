@@ -42,7 +42,7 @@ export interface FormState {
   hargaPromo: string;
   hargaFinal: string;
   keteranganDiskon: string;
-  pricingLayers: 3 | 4;
+  pricingLayers: 4;
   bonusList: BonusItem[];
   deskripsiBenefit: string;
   ctaUtama: string;
@@ -68,7 +68,7 @@ export const initialFormState: FormState = {
   hargaPromo: '',
   hargaFinal: '',
   keteranganDiskon: '',
-  pricingLayers: 3,
+  pricingLayers: 4,
   bonusList: [],
   deskripsiBenefit: '',
   ctaUtama: '',
