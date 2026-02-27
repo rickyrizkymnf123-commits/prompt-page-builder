@@ -263,25 +263,33 @@ export default function AppPage() {
             <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
             <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
             
-            {/* Sales Notif & Countdown - locked for free users */}
+            {/* Sales Notif & Countdown - visible for all, locked for free users */}
             {isPaid ? (
               <>
                 <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
                 <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
               </>
             ) : (
-              <div className="rounded-xl border border-border bg-card p-5 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold text-muted-foreground">Sales Notification & Countdown Timer</span>
-                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">PREMIUM</span>
+              <div className="relative space-y-4">
+                <div className="pointer-events-none opacity-40 select-none">
+                  <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
+                  <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
                 </div>
-                <p className="text-xs text-muted-foreground">Fitur ini hanya tersedia untuk pengguna berbayar.</p>
-                {orderUrl && (
-                  <Button size="sm" variant="outline" onClick={handleUpgrade} className="gap-1 mt-1">
-                    ⭐ Upgrade untuk Unlock
-                  </Button>
-                )}
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <div className="bg-card/95 backdrop-blur border border-border rounded-xl p-5 text-center shadow-xl">
+                    <div className="flex items-center gap-2 justify-center mb-2">
+                      <Lock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-semibold text-muted-foreground">Sales Notification & Countdown Timer</span>
+                      <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">PREMIUM</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">Fitur ini hanya tersedia untuk pengguna berbayar.</p>
+                    {orderUrl && (
+                      <Button size="sm" onClick={handleUpgrade} className="gap-1">
+                        ⭐ Upgrade untuk Unlock
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
