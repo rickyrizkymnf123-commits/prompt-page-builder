@@ -101,11 +101,14 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
     let idx = 0;
     editableTags.forEach(tag => {
       doc.querySelectorAll(tag).forEach(el => {
-        // Skip elements inside sales notification popup
         if (el.closest('#sn-popup')) { idx++; return; }
 
         el.setAttribute('data-edit-idx', String(idx));
         el.setAttribute('data-edit-tag', tag.toUpperCase());
+        // Make every element draggable
+        if (tag !== 'iframe') {
+          el.setAttribute('draggable', 'true');
+        }
 
         if (tag === 'a') el.setAttribute('data-edit-href', (el as HTMLAnchorElement).getAttribute('href') || '');
 
@@ -114,6 +117,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
           wrapper.setAttribute('data-edit-idx', String(idx));
           wrapper.setAttribute('data-edit-tag', 'IFRAME');
           wrapper.setAttribute('data-edit-src', (el as HTMLIFrameElement).getAttribute('src') || '');
+          wrapper.setAttribute('draggable', 'true');
           wrapper.setAttribute('style', 'position:relative;cursor:pointer;');
           el.parentNode?.insertBefore(wrapper, el);
           wrapper.appendChild(el);
@@ -131,7 +135,16 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
       });
     });
 
-    // Inject click handler script with fixes
+    // Add drag-and-drop styles
+    const dragStyle = doc.createElement('style');
+    dragStyle.textContent = `
+      [data-edit-idx][draggable="true"]:hover { outline: 2px solid rgba(124,58,237,0.8) !important; outline-offset: 2px; }
+      [data-edit-idx].dragging { opacity: 0.3 !important; }
+      .drop-indicator { outline: 3px solid #ff4757 !important; outline-offset: 0px; background: rgba(255,71,87,0.08) !important; }
+    `;
+    doc.head.appendChild(dragStyle);
+
+    // Inject click + drag-and-drop handler script
     const script = doc.createElement('script');
     script.textContent = `
       // Prevent ALL navigation inside iframe
@@ -139,6 +152,73 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
         a.addEventListener('click', function(e) { e.preventDefault(); });
       });
       document.addEventListener('submit', function(e) { e.preventDefault(); });
+
+      var dragSrc = null;
+
+      document.addEventListener('dragstart', function(e) {
+        var el = e.target.closest ? e.target.closest('[data-edit-idx]') : e.target;
+        if (!el || !el.hasAttribute('data-edit-idx')) return;
+        dragSrc = el;
+        el.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', el.getAttribute('data-edit-idx'));
+      }, true);
+
+      document.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
+        document.querySelectorAll('.drop-indicator').forEach(function(x) { x.classList.remove('drop-indicator'); });
+        if (target && target !== dragSrc) {
+          target.classList.add('drop-indicator');
+        }
+      }, true);
+
+      document.addEventListener('dragleave', function(e) {
+        var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
+        if (target) target.classList.remove('drop-indicator');
+      }, true);
+
+      document.addEventListener('drop', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.drop-indicator').forEach(function(x) { x.classList.remove('drop-indicator'); });
+        if (!dragSrc) return;
+        dragSrc.classList.remove('dragging');
+        var dropTarget = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
+        if (!dropTarget || dropTarget === dragSrc) { dragSrc = null; return; }
+
+        // Insert dragSrc before dropTarget
+        dropTarget.parentNode.insertBefore(dragSrc, dropTarget);
+        dragSrc = null;
+
+        // Send updated HTML back to parent
+        // Clean up edit attributes before sending
+        var clone = document.documentElement.cloneNode(true);
+        clone.querySelectorAll('[data-edit-idx]').forEach(function(el) {
+          el.removeAttribute('data-edit-idx');
+          el.removeAttribute('data-edit-tag');
+          el.removeAttribute('data-edit-href');
+          el.removeAttribute('draggable');
+          el.classList.remove('dragging');
+          el.classList.remove('drop-indicator');
+          // Remove the edit outline from style
+          var s = el.getAttribute('style') || '';
+          s = s.replace(/;?cursor:pointer;?/g, '').replace(/;?outline:2px dashed rgba\\(59,130,246,0\\.5\\);?/g, '').replace(/;?outline-offset:2px;?/g, '');
+          if (s.trim()) el.setAttribute('style', s); else el.removeAttribute('style');
+        });
+        // Remove injected scripts and styles
+        clone.querySelectorAll('script').forEach(function(s) { s.remove(); });
+        clone.querySelectorAll('style').forEach(function(s) {
+          if ((s.textContent || '').indexOf('drop-indicator') !== -1) s.remove();
+        });
+        window.parent.postMessage({ type: 'REORDER_HTML', html: clone.outerHTML }, '*');
+      }, true);
+
+      document.addEventListener('dragend', function(e) {
+        if (dragSrc) dragSrc.classList.remove('dragging');
+        document.querySelectorAll('.drop-indicator').forEach(function(x) { x.classList.remove('drop-indicator'); });
+        dragSrc = null;
+      }, true);
 
       document.addEventListener('click', function(e) {
         e.preventDefault();
@@ -195,6 +275,13 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
           bgColor: e.data.bgColor || '',
           textColor: e.data.textColor || '',
         });
+      } else if (e.data?.type === 'REORDER_HTML') {
+        setPreviewHtml(e.data.html);
+        setHtmlCode(e.data.html);
+        // Re-enter edit mode
+        setEditMode(false);
+        setTimeout(() => setEditMode(true), 50);
+        toast({ title: '✅ Elemen dipindahkan!' });
       }
     };
     window.addEventListener('message', handler);
@@ -362,8 +449,6 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
                 <div key={i} className="rounded-lg bg-secondary border border-border p-2 space-y-1">
                   <p className="text-xs font-medium text-foreground truncate" title={sec.name}>{sec.name}</p>
                   <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => moveSection(i, 'up')} disabled={i === 0} className="px-1.5 py-0.5 rounded text-xs bg-muted hover:bg-muted-foreground/20 disabled:opacity-30">↑</button>
-                    <button type="button" onClick={() => moveSection(i, 'down')} disabled={i === sections.length - 1} className="px-1.5 py-0.5 rounded text-xs bg-muted hover:bg-muted-foreground/20 disabled:opacity-30">↓</button>
                     <input type="color" defaultValue="#1a1a2e" onChange={(e) => changeSectionColor(i, e.target.value)} className="w-6 h-6 rounded cursor-pointer border-0 p-0 ml-auto" title="Ganti warna background" />
                     <button type="button" onClick={() => { if (confirm('Hapus section ini?')) deleteSection(i); }} className="px-1.5 py-0.5 rounded text-xs text-destructive hover:bg-destructive/10">🗑</button>
                   </div>
@@ -420,7 +505,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
             </div>
             {editMode && (
               <div className="rounded-lg bg-accent/10 border border-accent/30 p-2 text-center">
-                <p className="text-xs text-accent font-medium">✏️ Edit Mode ON — klik teks, link, atau gambar untuk mengedit. Gunakan panel Sections untuk reorder/hapus/tambah.</p>
+                <p className="text-xs text-accent font-medium">✏️ Edit Mode ON — klik untuk edit, <strong>drag & drop</strong> untuk pindahkan elemen mana saja. Panel Sections untuk hapus/tambah.</p>
               </div>
             )}
           </div>
