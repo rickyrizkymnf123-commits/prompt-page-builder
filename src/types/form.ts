@@ -4,8 +4,8 @@ export interface SalesNotifConfig {
   namaPembeli: string;
   pesanNotif: string;
   namaProdukNotif: string;
-  interval: number;   // detik antar notif
-  durasi: number;     // detik notif tampil
+  interval: number;
+  durasi: number;
   ukuran: 'small' | 'medium' | 'large';
   emoji: string;
   bgColor: string;
@@ -25,6 +25,11 @@ export interface CountdownConfig {
   accentColor: string;
 }
 
+export interface BonusItem {
+  nama: string;
+  hargaAsli: string;
+}
+
 export interface FormState {
   framework: string;
   gayaBahasa: string;
@@ -35,6 +40,10 @@ export interface FormState {
   namaProduk: string;
   hargaNormal: string;
   hargaPromo: string;
+  hargaFinal: string;
+  keteranganDiskon: string;
+  pricingLayers: 3 | 4;
+  bonusList: BonusItem[];
   deskripsiBenefit: string;
   ctaUtama: string;
   gayaDesain: string;
@@ -57,6 +66,10 @@ export const initialFormState: FormState = {
   namaProduk: '',
   hargaNormal: '',
   hargaPromo: '',
+  hargaFinal: '',
+  keteranganDiskon: '',
+  pricingLayers: 3,
+  bonusList: [],
   deskripsiBenefit: '',
   ctaUtama: '',
   gayaDesain: '',
