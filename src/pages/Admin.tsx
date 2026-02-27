@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   LogOut, Shield, CheckCircle, XCircle, Trash2, Clock, Users, FileText,
-  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink, UserPlus, Layout,
+  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink, UserPlus, Layout, Settings, Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "@/hooks/use-toast";
@@ -70,6 +70,7 @@ export default function Admin() {
   const [addMemberDialog, setAddMemberDialog] = useState(false);
   const [addMemberForm, setAddMemberForm] = useState({ email: '', password: '', name: '', role: 'user' });
   const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [addMemberTier, setAddMemberTier] = useState<'free' | 'paid'>('free');
   const [darkMode, setDarkMode] = useState(true);
   const [form, setForm] = useState<FormState>({ ...initialFormState });
   const [promptText, setPromptText] = useState("");
@@ -84,6 +85,9 @@ export default function Admin() {
   const [tplLoading, setTplLoading] = useState(false);
   const [previewTplHtml, setPreviewTplHtml] = useState<string | null>(null);
   const [previewTplTitle, setPreviewTplTitle] = useState('');
+
+  // Settings state
+  const [orderUrl, setOrderUrl] = useState('');
 
   const navigate = useNavigate();
   const { toast: showToast } = useToast();
@@ -103,6 +107,15 @@ export default function Admin() {
     const { data } = await supabase.from("lp_templates").select("*").order("sort_order", { ascending: true });
     setTemplates((data as DbTemplate[]) || []);
   };
+  const fetchSettings = async () => {
+    try {
+      const { data } = await (supabase as any).from('app_settings').select('*');
+      if (data) {
+        const s = (data as any[]).find((r: any) => r.key === 'scalev_order_url');
+        if (s) setOrderUrl(s.value || '');
+      }
+    } catch {}
+  };
 
   useEffect(() => {
     const check = async () => {
@@ -111,7 +124,7 @@ export default function Admin() {
       const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).maybeSingle();
       if (roleData?.role !== "admin") { navigate("/app"); return; }
       setAuthorized(true);
-      await Promise.all([fetchUsers(), fetchLogs(), fetchTemplates()]);
+      await Promise.all([fetchUsers(), fetchLogs(), fetchTemplates(), fetchSettings()]);
       setLoading(false);
     };
     check();
@@ -143,13 +156,20 @@ export default function Admin() {
     else showToast({ title: "Berhasil", description: `Password direset untuk ${resetDialog.email}` });
     setResetDialog({ open: false, userId: "", email: "" }); setNewPassword(""); setActionLoading(null);
   };
+  const handleChangeTier = async (userId: string, newTier: 'free' | 'paid') => {
+    setActionLoading(userId);
+    await supabase.functions.invoke("admin-users", { body: { action: "change_tier", user_id: userId, role: newTier } });
+    showToast({ title: `Tier diubah ke ${newTier === 'paid' ? 'Berbayar' : 'Gratis'}` });
+    await fetchUsers();
+    setActionLoading(null);
+  };
   const handleAddMember = async () => {
     if (!addMemberForm.email || !addMemberForm.password) { showToast({ title: "Error", description: "Email dan password wajib.", variant: "destructive" }); return; }
     if (addMemberForm.password.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); return; }
     setAddMemberLoading(true);
-    const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "add_member", email: addMemberForm.email, password: addMemberForm.password, name: addMemberForm.name, role: addMemberForm.role } });
+    const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "add_member", email: addMemberForm.email, password: addMemberForm.password, name: addMemberForm.name, role: addMemberForm.role, tier: addMemberTier } });
     if (error || data?.error) showToast({ title: "Gagal", description: data?.error || error?.message, variant: "destructive" });
-    else { showToast({ title: "Berhasil", description: `Member ${addMemberForm.email} ditambahkan.` }); setAddMemberDialog(false); setAddMemberForm({ email: '', password: '', name: '', role: 'user' }); await fetchUsers(); }
+    else { showToast({ title: "Berhasil", description: `Member ${addMemberForm.email} ditambahkan.` }); setAddMemberDialog(false); setAddMemberForm({ email: '', password: '', name: '', role: 'user' }); setAddMemberTier('free'); await fetchUsers(); }
     setAddMemberLoading(false);
   };
 
@@ -236,7 +256,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-border bg-card px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center"><Rocket className="h-5 w-5 text-primary-foreground" /></div>
           <div className="flex flex-col">
@@ -252,7 +272,7 @@ export default function Admin() {
 
       <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full">
         <Tabs defaultValue="tools">
-          <TabsList className="mb-6">
+          <TabsList className="sticky top-[57px] z-40 mb-6 bg-card/95 backdrop-blur">
             <TabsTrigger value="tools" className="gap-2"><Zap className="h-4 w-4" /> Tools</TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" /> Users
@@ -260,6 +280,7 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="templates" className="gap-2"><Layout className="h-4 w-4" /> Templates</TabsTrigger>
             <TabsTrigger value="logs" className="gap-2"><FileText className="h-4 w-4" /> Logs</TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2"><Settings className="h-4 w-4" /> Settings</TabsTrigger>
           </TabsList>
 
           {/* TOOLS TAB */}
@@ -317,7 +338,7 @@ export default function Admin() {
               </div>
             )}
 
-            {toolStep === 3 && <HtmlPreviewEditor onBack={() => setToolStep(2)} />}
+            {toolStep === 3 && <HtmlPreviewEditor onBack={() => setToolStep(2)} isPaid={true} />}
           </TabsContent>
 
           {/* TEMPLATES TAB */}
@@ -328,7 +349,7 @@ export default function Admin() {
                   <Button variant="outline" size="sm" onClick={() => setPreviewTplHtml(null)}>← Kembali ke Daftar Template</Button>
                   <span className="text-sm font-semibold text-foreground">{previewTplTitle}</span>
                 </div>
-                <HtmlPreviewEditor onBack={() => setPreviewTplHtml(null)} initialHtml={previewTplHtml} />
+                <HtmlPreviewEditor onBack={() => setPreviewTplHtml(null)} initialHtml={previewTplHtml} isPaid={true} />
               </div>
             ) : (
               <>
@@ -371,7 +392,7 @@ export default function Admin() {
                   </CardContent>
                 </Card>
 
-                {/* Sample Templates Gallery */}
+                {/* Sample Templates Gallery with iframe */}
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2">📋 Template Bawaan ({sampleTemplates.length})</CardTitle>
@@ -394,14 +415,12 @@ export default function Admin() {
                       {sampleTemplates.map(tpl => (
                         <div key={tpl.id} className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-all group">
                           <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-                            <img src={tpl.thumbnail_url} alt={tpl.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <div className="w-full h-full overflow-hidden" style={{ pointerEvents: 'none' }}>
+                              <iframe srcDoc={tpl.html_content} className="w-[400%] h-[400%] border-0" style={{ transform: 'scale(0.25)', transformOrigin: 'top left' }} title={tpl.title} sandbox="" loading="lazy" />
+                            </div>
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                               <Button size="sm" variant="secondary" onClick={() => { setPreviewTplHtml(tpl.html_content); setPreviewTplTitle(tpl.title); }}>👁 Preview & Edit</Button>
-                              <Button size="sm" onClick={() => {
-                                setEditTplId(null);
-                                setTplForm({ title: tpl.title, description: tpl.description, category: tpl.category, html_content: tpl.html_content, is_active: true, sort_order: 0 });
-                                setTplDialog(true);
-                              }}>💾 Simpan ke DB</Button>
+                              <Button size="sm" onClick={() => { setEditTplId(null); setTplForm({ title: tpl.title, description: tpl.description, category: tpl.category, html_content: tpl.html_content, is_active: true, sort_order: 0 }); setTplDialog(true); }}>💾 Simpan ke DB</Button>
                             </div>
                           </div>
                           <div className="p-3 space-y-1">
@@ -449,21 +468,42 @@ export default function Admin() {
                 </div>
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader><TableRow><TableHead>Nama</TableHead><TableHead>Email</TableHead><TableHead>Status</TableHead><TableHead>Role</TableHead><TableHead>Terdaftar</TableHead><TableHead>Login</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow></TableHeader>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nama</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Tier</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Terdaftar</TableHead>
+                        <TableHead>Login</TableHead>
+                        <TableHead className="text-right">Aksi</TableHead>
+                      </TableRow>
+                    </TableHeader>
                     <TableBody>
-                      {filteredUsers.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Tidak ada data.</TableCell></TableRow>
+                      {filteredUsers.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Tidak ada data.</TableCell></TableRow>
                       : filteredUsers.map(u => (
                         <TableRow key={u.id} className={u.status==="pending"?"bg-amber-500/5":""}>
                           <TableCell className="font-medium">{u.name||"-"}</TableCell>
                           <TableCell className="text-sm">{u.email}</TableCell>
+                          <TableCell>
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.product_code === 'LPE' ? 'text-primary bg-primary/10 border border-primary/30' : 'text-amber-500 bg-amber-500/10 border border-amber-500/30'}`}>
+                              {u.product_code === 'LPE' ? '⭐ Berbayar' : '🆓 Gratis'}
+                            </span>
+                          </TableCell>
                           <TableCell><StatusBadge status={u.status} /></TableCell>
                           <TableCell><span className={`text-xs font-medium ${u.role==="admin"?"text-primary":"text-muted-foreground"}`}>{u.role}</span></TableCell>
                           <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString("id-ID")}</TableCell>
                           <TableCell className="text-xs text-muted-foreground">{u.last_sign_in ? new Date(u.last_sign_in).toLocaleString("id-ID") : "-"}</TableCell>
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
+                            <div className="flex items-center justify-end gap-1 flex-wrap">
                               {u.status==="pending" && u.entitlement_id && (<><Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-300" onClick={() => handleApprove(u.entitlement_id!)} disabled={actionLoading===u.entitlement_id}><CheckCircle className="h-3 w-3" /> ACC</Button><Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30" onClick={() => handleReject(u.entitlement_id!)} disabled={actionLoading===u.entitlement_id}><XCircle className="h-3 w-3" /> Tolak</Button></>)}
                               {u.status==="rejected" && u.entitlement_id && <Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-300" onClick={() => handleApprove(u.entitlement_id!)} disabled={actionLoading===u.entitlement_id}><CheckCircle className="h-3 w-3" /> ACC</Button>}
+                              {u.role !== 'admin' && (
+                                <Button size="sm" variant="outline" className="text-xs" onClick={() => handleChangeTier(u.id, u.product_code === 'LPE' ? 'free' : 'paid')} disabled={actionLoading===u.id}>
+                                  {u.product_code === 'LPE' ? '⬇ Gratis' : '⬆ Berbayar'}
+                                </Button>
+                              )}
                               <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setResetDialog({ open: true, userId: u.id, email: u.email })}><KeyRound className="h-3 w-3" /></Button>
                               {u.role!=="admin" && <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDelete(u.id)} disabled={actionLoading===u.id}><Trash2 className="h-3 w-3" /></Button>}
                             </div>
@@ -500,6 +540,34 @@ export default function Admin() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* SETTINGS TAB */}
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" /> Pengaturan</CardTitle></CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Link Order Form Scalev</label>
+                  <p className="text-xs text-muted-foreground">User gratis akan diarahkan ke link ini untuk upgrade ke versi berbayar</p>
+                  <div className="flex gap-2">
+                    <Input value={orderUrl} onChange={(e) => setOrderUrl(e.target.value)} placeholder="https://checkout.scalev.id/..." className="flex-1" />
+                    <Button onClick={async () => {
+                      await (supabase as any).from('app_settings').update({ value: orderUrl }).eq('key', 'scalev_order_url');
+                      showToast({ title: '✅ Link disimpan!' });
+                    }}>Simpan</Button>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border bg-secondary p-4 space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground">ℹ️ Panduan Tier Akses</h3>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    <li>🆓 <strong>Gratis</strong> — Hanya bisa Generate Prompt manual. Template, Edit Mode, Countdown, Sales Notif terkunci.</li>
+                    <li>⭐ <strong>Berbayar</strong> — Akses penuh semua fitur. Otomatis aktif ketika user membeli via Scalev.</li>
+                    <li>🔄 <strong>Auto-Upgrade</strong> — Ketika user gratis membeli via Scalev, tier otomatis berubah ke Berbayar.</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -523,6 +591,17 @@ export default function Admin() {
             <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Nama</label><Input placeholder="Nama" value={addMemberForm.name} onChange={(e) => setAddMemberForm(p => ({ ...p, name: e.target.value }))} /></div>
             <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Email *</label><Input type="email" placeholder="email@contoh.com" value={addMemberForm.email} onChange={(e) => setAddMemberForm(p => ({ ...p, email: e.target.value }))} /></div>
             <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Password *</label><Input type="password" placeholder="Min. 6 karakter" value={addMemberForm.password} onChange={(e) => setAddMemberForm(p => ({ ...p, password: e.target.value }))} /></div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Tier Akses</label>
+              <div className="flex gap-2">
+                {(['free', 'paid'] as const).map(t => (
+                  <button key={t} type="button" onClick={() => setAddMemberTier(t)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${addMemberTier === t ? 'bg-primary/10 text-primary border-primary' : 'bg-secondary text-muted-foreground border-border'}`}>
+                    {t === 'paid' ? '⭐ Berbayar (Full)' : '🆓 Gratis (Terbatas)'}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Role</label><div className="flex gap-2">{['user','admin'].map(r => <button key={r} type="button" onClick={() => setAddMemberForm(p => ({ ...p, role: r }))} className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${addMemberForm.role===r?'bg-primary/10 text-primary border-primary':'bg-secondary text-muted-foreground border-border'}`}>{r==='admin'?'👑 Admin':'👤 User'}</button>)}</div></div>
           </div>
           <DialogFooter>

@@ -12,6 +12,7 @@ interface SectionInfo {
 interface Props {
   onBack: () => void;
   initialHtml?: string;
+  isPaid?: boolean;
 }
 
 const SECTION_TEMPLATES: Record<string, string> = {
@@ -21,9 +22,12 @@ const SECTION_TEMPLATES: Record<string, string> = {
   'CTA Section': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#1a1a2e;text-align:center;box-sizing:border-box;"><h2 style="font-size:28px;font-weight:800;color:#ffffff;margin:0 0 16px;">🚀 Jangan Tunggu Lagi!</h2><p style="font-size:16px;color:#b0b0b0;margin:0 0 24px;">Dapatkan akses sekarang sebelum promo berakhir.</p><a href="#" style="display:inline-block;padding:16px 40px;background:#ff4757;color:#fff;border-radius:12px;font-weight:700;text-decoration:none;font-size:18px;">Beli Sekarang</a><p style="font-size:12px;color:#9ca3af;margin:12px 0 0;">✅ Garansi 30 hari uang kembali</p></section>`,
   'Feature List': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#0f0d1a;box-sizing:border-box;"><h2 style="font-size:24px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">✨ Apa yang Kamu Dapat</h2><ul style="list-style:none;padding:0;margin:0;"><li style="padding:12px 16px;background:#1a1a2e;border-radius:8px;margin-bottom:8px;color:#e8e8f0;font-size:14px;">✅ Fitur utama pertama</li><li style="padding:12px 16px;background:#1a1a2e;border-radius:8px;margin-bottom:8px;color:#e8e8f0;font-size:14px;">✅ Fitur utama kedua</li><li style="padding:12px 16px;background:#1a1a2e;border-radius:8px;color:#e8e8f0;font-size:14px;">✅ Fitur utama ketiga</li></ul></section>`,
   'Bonus Section': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#13111c;box-sizing:border-box;"><h2 style="font-size:24px;font-weight:700;color:#ff4757;text-align:center;margin:0 0 24px;">🎁 BONUS YANG AKAN KAMU DAPATKAN</h2><div style="padding:16px;background:#1a1a2e;border-radius:12px;margin-bottom:12px;border-left:4px solid #ff4757;"><p style="color:#ffffff;font-weight:600;margin:0 0 4px;">✅ Bonus 1 — Template Premium</p><p style="color:#9ca3af;font-size:13px;margin:0;">Harga normal: <span style="text-decoration:line-through;color:#ff4757;">Rp 199.000</span></p></div><div style="padding:16px;background:#1a1a2e;border-radius:12px;border-left:4px solid #ff4757;"><p style="color:#ffffff;font-weight:600;margin:0 0 4px;">✅ Bonus 2 — Akses Komunitas</p><p style="color:#9ca3af;font-size:13px;margin:0;">Harga normal: <span style="text-decoration:line-through;color:#ff4757;">Rp 299.000</span></p></div></section>`,
+  'Image Gallery': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#0f0d1a;box-sizing:border-box;text-align:center;"><h2 style="font-size:24px;font-weight:700;color:#ffffff;margin:0 0 24px;">📸 Gallery Produk</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><img src="https://placehold.co/320x200/1a1a2e/7C3AED?text=Gambar+1" alt="Gambar 1" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/1a1a2e/ff4757?text=Gambar+2" alt="Gambar 2" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/1a1a2e/38bdf8?text=Gambar+3" alt="Gambar 3" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/1a1a2e/f59e0b?text=Gambar+4" alt="Gambar 4" style="width:100%;border-radius:12px;" /></div></section>`,
+  'Countdown Timer': `<section style="max-width:688px;margin:0 auto;padding:30px 35px;background:#1a1a2e;box-sizing:border-box;text-align:center;"><p style="color:#ff4757;font-size:13px;font-weight:700;letter-spacing:2px;margin:0 0 16px;">⏰ PROMO BERAKHIR DALAM</p><div style="display:flex;justify-content:center;gap:12px;"><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">00</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Hari</p></div><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">12</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Jam</p></div><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">30</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Menit</p></div><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">00</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Detik</p></div></div></section>`,
+  'Sales Notification': `<div id="sn-popup" style="position:fixed;bottom:20px;left:20px;background:#ffffff;border:2px solid #6c63ff;border-radius:12px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:9999;display:flex;align-items:center;gap:10px;max-width:320px;"><span style="font-size:24px;">🔥</span><div><p style="margin:0;font-size:13px;color:#1a1a2e;font-weight:600;">Seseorang dari Jakarta</p><p style="margin:2px 0 0;font-size:12px;color:#666;">baru saja membeli <strong>Produk Anda</strong></p></div></div>`,
 };
 
-export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
+export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true }: Props) {
   const [htmlCode, setHtmlCode] = useState(initialHtml || '');
   const [previewHtml, setPreviewHtml] = useState(initialHtml || '');
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -481,16 +485,24 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
         </div>
       </div>
 
-      {/* Paste HTML */}
-      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">📄 Paste HTML Script</h2>
-        <textarea value={htmlCode} onChange={(e) => setHtmlCode(e.target.value)} placeholder="Paste kode HTML dari AI..." className="w-full h-40 rounded-lg bg-secondary text-foreground text-sm font-mono p-3 border border-border resize-y focus:outline-none focus:border-primary" />
-        <div className="flex gap-2">
-          <Button size="sm" onClick={handleLoadPreview} className="gap-1">▶ Load Preview</Button>
-          <Button size="sm" variant="outline" onClick={() => { setHtmlCode(''); setPreviewHtml(''); }}>🗑 Clear</Button>
-          {previewHtml && <Button size="sm" variant="outline" onClick={handleExport} className="ml-auto">⬇ Export</Button>}
+      {/* Paste HTML - hidden when preview loaded or initialHtml provided */}
+      {!initialHtml && !previewHtml && (
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <h2 className="text-sm font-semibold text-foreground">📄 Paste HTML Script</h2>
+          <textarea value={htmlCode} onChange={(e) => setHtmlCode(e.target.value)} placeholder="Paste kode HTML dari AI..." className="w-full h-40 rounded-lg bg-secondary text-foreground text-sm font-mono p-3 border border-border resize-y focus:outline-none focus:border-primary" />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleLoadPreview} className="gap-1">▶ Load Preview</Button>
+            <Button size="sm" variant="outline" onClick={() => { setHtmlCode(''); setPreviewHtml(''); }}>🗑 Clear</Button>
+          </div>
         </div>
-      </div>
+      )}
+      {!initialHtml && previewHtml && (
+        <div className="rounded-xl border border-border bg-card p-3 flex items-center gap-3">
+          <span className="text-xs font-medium text-muted-foreground">✅ HTML Loaded</span>
+          <Button size="sm" variant="outline" onClick={() => setPreviewHtml('')}>📝 Edit HTML</Button>
+          <Button size="sm" variant="outline" onClick={handleExport} className="ml-auto">⬇ Export</Button>
+        </div>
+      )}
 
       {/* Preview + Section Manager */}
       {previewHtml && (
@@ -503,6 +515,8 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
                 <div key={i} className="rounded-lg bg-secondary border border-border p-2 space-y-1">
                   <p className="text-xs font-medium text-foreground truncate" title={sec.name}>{sec.name}</p>
                   <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => moveSection(i, 'up')} disabled={i === 0} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬆</button>
+                    <button type="button" onClick={() => moveSection(i, 'down')} disabled={i === sections.length - 1} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬇</button>
                     <input type="color" defaultValue="#1a1a2e" onChange={(e) => changeSectionColor(i, e.target.value)} className="w-6 h-6 rounded cursor-pointer border-0 p-0 ml-auto" title="Ganti warna background" />
                     <button type="button" onClick={() => { if (confirm('Hapus section ini?')) deleteSection(i); }} className="px-1.5 py-0.5 rounded text-xs text-destructive hover:bg-destructive/10">🗑</button>
                   </div>
@@ -535,17 +549,20 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
                     {vp === 'desktop' ? '🖥' : vp === 'tablet' ? '📟' : '📱'} {vp.charAt(0).toUpperCase() + vp.slice(1)}
                   </button>
                 ))}
-                <button type="button" onClick={() => { 
-                  const newMode = !editMode; 
-                  if (!newMode) { 
-                    // Sync previewHtml from htmlCode when leaving edit mode (captures reorder changes)
-                    setPreviewHtml(htmlCode); 
-                  }
-                  setEditMode(newMode); 
-                  if (newMode) setShowSectionPanel(true); 
-                }} className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all ml-1 ${editMode ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-secondary text-muted-foreground border-border'}`}>
-                  {editMode ? '🔓 Lock' : '✏️ Edit'}
-                </button>
+                {isPaid ? (
+                  <button type="button" onClick={() => { 
+                    const newMode = !editMode; 
+                    if (!newMode) { 
+                      setPreviewHtml(htmlCode); 
+                    }
+                    setEditMode(newMode); 
+                    if (newMode) setShowSectionPanel(true); 
+                  }} className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all ml-1 ${editMode ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-secondary text-muted-foreground border-border'}`}>
+                    {editMode ? '🔓 Lock' : '✏️ Edit'}
+                  </button>
+                ) : (
+                  <span className="px-3 py-1 rounded-lg text-xs font-medium border border-border bg-secondary text-muted-foreground ml-1 cursor-not-allowed">🔒 Edit (Premium)</span>
+                )}
                 {editMode && (
                   <button type="button" onClick={() => setShowSectionPanel(!showSectionPanel)} className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${showSectionPanel ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-muted-foreground border-border'}`}>
                     📦 Sections

@@ -244,30 +244,46 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create entitlement
-    const { error: entitlementError } = await supabaseAdmin
+    // Auto-upgrade: check for existing free tier entitlement
+    const { data: existingFree } = await supabaseAdmin
       .from("entitlements")
-      .insert({
-        user_id: userId,
-        product_code: product_code || "LPE",
-        status: "active",
-        order_id,
-      });
+      .select("id")
+      .eq("user_id", userId)
+      .eq("product_code", "LPE_FREE")
+      .maybeSingle();
 
-    if (entitlementError) {
-      await supabaseAdmin.from("provision_logs").insert({
-        order_id,
-        email,
-        status: "failed",
-        message: `Failed to create entitlement: ${entitlementError.message}`,
-      });
-      return new Response(
-        JSON.stringify({ ok: false, error: entitlementError.message }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    if (existingFree) {
+      // Upgrade from free to paid
+      await supabaseAdmin
+        .from("entitlements")
+        .update({ product_code: product_code || "LPE", status: "active", order_id })
+        .eq("id", existingFree.id);
+    } else {
+      // Create new entitlement
+      const { error: entitlementError } = await supabaseAdmin
+        .from("entitlements")
+        .insert({
+          user_id: userId,
+          product_code: product_code || "LPE",
+          status: "active",
+          order_id,
+        });
+
+      if (entitlementError) {
+        await supabaseAdmin.from("provision_logs").insert({
+          order_id,
+          email,
+          status: "failed",
+          message: `Failed to create entitlement: ${entitlementError.message}`,
+        });
+        return new Response(
+          JSON.stringify({ ok: false, error: entitlementError.message }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
     }
 
     // Log success

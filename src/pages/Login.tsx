@@ -46,8 +46,8 @@ export default function Login() {
       // Check active entitlement
       const { data: entitlements } = await supabase
         .from("entitlements")
-        .select("id")
-        .eq("product_code", "LPE")
+        .select("id, product_code")
+        .in("product_code", ["LPE", "LPE_FREE"])
         .eq("status", "active");
 
       if (!entitlements || entitlements.length === 0) {
