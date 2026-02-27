@@ -218,13 +218,20 @@ function buildDesignBlock(form: FormState): string {
   return `# 🎨 DESAIN VISUAL
 
 * Gaya Desain: ${form.gayaDesain || 'Modern Minimalis'}
-* Tema: Dark Mode (background gelap, teks terang) — sesuaikan dengan gaya "${form.gayaDesain || 'Modern Minimalis'}"
+* Tema: **DARK MODE WAJIB** — sesuaikan dengan gaya "${form.gayaDesain || 'Modern Minimalis'}"
+* **KRITIS:** Background TIDAK BOLEH putih/terang. Setiap section dan container WAJIB punya background gelap via inline style.
+* Warna background utama: \`#0f0d1a\` atau \`#1a1a2e\` (dark purple/navy)
+* Warna background section bergantian: gunakan variasi gelap seperti \`#13111c\`, \`#1a1a2e\`, \`#0f0d1a\`, \`#16132b\`
+* Warna teks utama: \`#ffffff\` atau \`#f0f0f0\`
+* Warna teks sekunder: \`#b0b0b0\` atau \`#9ca3af\`
+* Warna aksen/CTA: sesuaikan gaya desain (default: \`#7C3AED\` purple atau \`#ff4757\` merah)
+* **SETIAP elemen div/section WAJIB punya style="background-color:..." yang gelap** — jangan biarkan ada elemen tanpa background karena Scalev default putih
 * CTA harus besar, kontras, eye-catching
 * Skimming friendly (heading jelas + bullet points)
 * Maksimal 1 emoji per heading/bullet
 * Gunakan font modern (sans-serif sebagai fallback)
 * Visual hierarchy: heading besar → subheading → body text → CTA
-* Setiap section punya background kontras bergantian`;
+* Setiap section punya background kontras bergantian (tetap dalam range warna gelap)`;
 }
 
 function buildCopywritingBlock(form: FormState, awarenessLevel: string): string {
