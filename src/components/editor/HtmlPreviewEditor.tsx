@@ -235,51 +235,35 @@ export function HtmlPreviewEditor({ onBack, initialHtml }: Props) {
         var dropTarget = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
         if (!dropTarget || dropTarget === dragSrc) { dragSrc = null; return; }
 
-        // Smoothly animate the move
-        dragSrc.style.transition = 'all 0.25s ease';
-        dragSrc.style.opacity = '0';
-        dragSrc.style.transform = 'scale(0.95)';
+        // Move instantly without fade
+        if (isAfter && dropTarget.nextSibling) {
+          dropTarget.parentNode.insertBefore(dragSrc, dropTarget.nextSibling);
+        } else if (isAfter) {
+          dropTarget.parentNode.appendChild(dragSrc);
+        } else {
+          dropTarget.parentNode.insertBefore(dragSrc, dropTarget);
+        }
 
-        setTimeout(function() {
-          // Insert before or after based on position
-          if (isAfter && dropTarget.nextSibling) {
-            dropTarget.parentNode.insertBefore(dragSrc, dropTarget.nextSibling);
-          } else if (isAfter) {
-            dropTarget.parentNode.appendChild(dragSrc);
-          } else {
-            dropTarget.parentNode.insertBefore(dragSrc, dropTarget);
-          }
-
-          // Fade back in
-          dragSrc.style.opacity = '1';
-          dragSrc.style.transform = 'scale(1)';
-          dragSrc.style.background = 'rgba(124,58,237,0.1)';
-          setTimeout(function() { 
-            dragSrc.style.background = ''; 
-            dragSrc.style.transition = '';
-
-            // Send updated HTML back to parent (silent sync, no re-render)
-            var clone = document.documentElement.cloneNode(true);
-            clone.querySelectorAll('[data-edit-idx]').forEach(function(el) {
-              el.removeAttribute('data-edit-idx');
-              el.removeAttribute('data-edit-tag');
-              el.removeAttribute('data-edit-href');
-              el.removeAttribute('draggable');
-              el.classList.remove('dragging');
-              el.classList.remove('drop-indicator');
-              el.classList.remove('drop-indicator-after');
-              var s = el.getAttribute('style') || '';
-              s = s.replace(/;?cursor:pointer;?/g, '').replace(/;?outline:2px dashed rgba\\(59,130,246,0\\.5\\);?/g, '').replace(/;?outline-offset:2px;?/g, '');
-              if (s.trim()) el.setAttribute('style', s); else el.removeAttribute('style');
-            });
-            clone.querySelectorAll('script').forEach(function(s) { s.remove(); });
-            clone.querySelectorAll('style').forEach(function(s) {
-              if ((s.textContent || '').indexOf('drop-indicator') !== -1) s.remove();
-            });
-            window.parent.postMessage({ type: 'REORDER_HTML', html: clone.outerHTML }, '*');
-            dragSrc = null;
-          }, 300);
-        }, 150);
+        // Send updated HTML back to parent (silent sync, no re-render)
+        var clone = document.documentElement.cloneNode(true);
+        clone.querySelectorAll('[data-edit-idx]').forEach(function(el) {
+          el.removeAttribute('data-edit-idx');
+          el.removeAttribute('data-edit-tag');
+          el.removeAttribute('data-edit-href');
+          el.removeAttribute('draggable');
+          el.classList.remove('dragging');
+          el.classList.remove('drop-indicator');
+          el.classList.remove('drop-indicator-after');
+          var s = el.getAttribute('style') || '';
+          s = s.replace(/;?cursor:pointer;?/g, '').replace(/;?outline:2px dashed rgba\\(59,130,246,0\\.5\\);?/g, '').replace(/;?outline-offset:2px;?/g, '');
+          if (s.trim()) el.setAttribute('style', s); else el.removeAttribute('style');
+        });
+        clone.querySelectorAll('script').forEach(function(s) { s.remove(); });
+        clone.querySelectorAll('style').forEach(function(s) {
+          if ((s.textContent || '').indexOf('drop-indicator') !== -1) s.remove();
+        });
+        window.parent.postMessage({ type: 'REORDER_HTML', html: clone.outerHTML }, '*');
+        dragSrc = null;
       }, true);
 
       document.addEventListener('dragend', function(e) {
