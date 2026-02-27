@@ -134,7 +134,47 @@ Section yang BOLEH full-width (tanpa pola bergantian):
   const countdownBlock = buildCountdownBlock(form);
 
   return `Kamu adalah developer landing page expert dan copywriter yang fokus pada konversi tinggi.
-...
+
+## ROLE & TASK
+Buatkan satu halaman landing page lengkap dalam format HTML sesuai instruksi berikut. Kamu WAJIB mengikuti setiap detail tanpa mengurangi atau mengubah apapun.
+
+${outputRule}
+
+${layoutSection}
+
+## PROFIL PRODUK
+- Nama Produk: ${form.namaProduk || '[Nama Produk]'}
+- Tipe: ${form.tipeProduk || '-'}
+- Tujuan: ${form.tujuanUtama || '-'}
+- Harga Normal: ${hargaNormalFormatted}
+- Harga Promo: ${hargaPromoFormatted}
+- Deskripsi/Benefit: ${form.deskripsiBenefit || '-'}
+- CTA Utama: ${form.ctaUtama || 'Beli Sekarang'}
+
+## TARGET MARKET
+- Level Awareness: ${awarenessLevel}
+- Target Audience: ${form.targetAudience || '-'}
+
+## GAYA & DESAIN
+- Framework Copywriting: ${form.framework || 'PAS'}
+- Gaya Bahasa: ${form.gayaBahasa || 'Profesional'}
+- Gaya Desain: ${form.gayaDesain || 'Modern Minimalis'}
+${referensiSection}
+
+## SECTIONS YANG HARUS ADA
+- ${sectionsToInclude || 'Hero, Benefit, CTA'}
+
+## ATURAN OUTPUT (WAJIB DIIKUTI 100%)
+1. Gunakan framework copywriting "${form.framework || 'PAS'}" untuk struktur storytelling.
+2. Gaya bahasa: ${form.gayaBahasa || 'Profesional'} — konsisten di seluruh halaman.
+3. Gaya desain: ${form.gayaDesain || 'Modern Minimalis'} — warna, spacing, typography harus sesuai tema.
+4. Setiap section HARUS punya section wrapper dengan padding yang cukup dan background yang kontras bergantian.
+5. Gunakan visual hierarchy yang jelas: heading besar → subheading → body text → CTA.
+6. Tambahkan icon/emoji untuk memperkuat poin benefit (✅, 🔥, ⚡, dll).
+7. Testimonial harus terlihat natural dengan nama, foto placeholder, dan kutipan.
+8. Gunakan warna kontras untuk CTA button — harus langsung terlihat.
+9. Semua teks harus menggunakan font-family: sans-serif sebagai fallback.${isStandalone ? '\n10. Import Google Fonts yang sesuai dengan gaya desain di <head>.' : '\n10. Gunakan font-family inline yang aman (sans-serif, serif, monospace).'}
+11. WAJIB responsive — gunakan max-width dan width:100% pada semua elemen utama.
 12. Semua gambar HARUS tag <img> standar — jangan embed base64 atau background-image CSS.
 13. Tombol CTA harus berupa tag <a href="#"> atau <button> yang jelas, besar, dan eye-catching.
 14. COUNTDOWN TIMER WAJIB BERGERAK: Jika ada section Scarcity/Timer, WAJIB gunakan JavaScript setInterval yang berjalan real-time setiap 1 detik. Buat elemen dengan id unik (cd-days, cd-hours, cd-minutes, cd-seconds) dan atribut data-edit-id="countdown-deadline" pada container timer agar bisa diedit.${countdownBlock}${isScalev ? `
