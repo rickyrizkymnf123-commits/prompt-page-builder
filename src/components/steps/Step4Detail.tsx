@@ -44,10 +44,11 @@ export function Step4Detail({
     else { setIsManualCta(false); onChange('ctaUtama', value); }
   };
 
-  const addBonus = () => onChangeBonusList([...bonusList, { nama: '', hargaAsli: '' }]);
-  const removeBonus = (i: number) => onChangeBonusList(bonusList.filter((_, idx) => idx !== i));
+  const safeList = bonusList || [];
+  const addBonus = () => onChangeBonusList([...safeList, { nama: '', hargaAsli: '' }]);
+  const removeBonus = (i: number) => onChangeBonusList(safeList.filter((_, idx) => idx !== i));
   const updateBonus = (i: number, field: keyof BonusItem, value: string) => {
-    const updated = [...bonusList];
+    const updated = [...safeList];
     updated[i] = { ...updated[i], [field]: value };
     onChangeBonusList(updated);
   };
@@ -126,7 +127,7 @@ export function Step4Detail({
           <label className="text-sm font-medium text-foreground">🎁 Bonus (Opsional)</label>
           <button type="button" onClick={addBonus} className="text-xs text-primary font-semibold hover:underline">+ Tambah Bonus</button>
         </div>
-        {bonusList.map((bonus, i) => (
+        {safeList.map((bonus, i) => (
           <div key={i} className="flex gap-2 items-start">
             <div className="flex-1 space-y-1">
               <Input placeholder={`Bonus ${i + 1}: Nama bonus...`} value={bonus.nama} onChange={(e) => updateBonus(i, 'nama', e.target.value)} className="bg-secondary border-border text-sm" />
@@ -137,17 +138,17 @@ export function Step4Detail({
             <button type="button" onClick={() => removeBonus(i)} className="mt-1 text-destructive hover:bg-destructive/10 rounded p-1 text-xs">🗑</button>
           </div>
         ))}
-        {bonusList.length > 0 && (
+        {safeList.length > 0 && (
           <div className="rounded-lg bg-secondary/60 border border-border p-3 space-y-1">
             <p className="text-[10px] text-muted-foreground uppercase font-semibold">Preview Bonus</p>
-            {bonusList.filter(b => b.nama).map((b, i) => (
+            {safeList.filter(b => b.nama).map((b, i) => (
               <p key={i} className="text-xs text-foreground">
                 ✅ {b.nama} {b.hargaAsli && <span className="text-destructive line-through ml-1">Rp {Number(b.hargaAsli).toLocaleString('id-ID')}</span>}
               </p>
             ))}
-            {bonusList.some(b => b.hargaAsli) && (
+            {safeList.some(b => b.hargaAsli) && (
               <p className="text-xs font-semibold text-primary mt-1">
-                Total nilai bonus: Rp {bonusList.reduce((sum, b) => sum + (Number(b.hargaAsli) || 0), 0).toLocaleString('id-ID')}
+                Total nilai bonus: Rp {safeList.reduce((sum, b) => sum + (Number(b.hargaAsli) || 0), 0).toLocaleString('id-ID')}
               </p>
             )}
           </div>
