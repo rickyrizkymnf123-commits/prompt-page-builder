@@ -28,6 +28,7 @@ import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
 import { StepCountdown } from "@/components/steps/StepCountdown";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
+import { sampleTemplates } from "@/data/sampleTemplates";
 
 // --- Types ---
 interface AdminUser {
@@ -318,15 +319,16 @@ export default function Admin() {
           </TabsContent>
 
           {/* TEMPLATES TAB */}
-          <TabsContent value="templates">
+          <TabsContent value="templates" className="space-y-6">
+            {/* DB Templates */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2"><Layout className="h-5 w-5" /> Template Landing Page ({templates.length})</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Layout className="h-5 w-5" /> Template Database ({templates.length})</CardTitle>
                 <Button size="sm" onClick={() => { setEditTplId(null); setTplForm({ title: '', description: '', category: 'general', html_content: '', is_active: true, sort_order: 0 }); setTplDialog(true); }} className="gap-1">➕ Tambah Template</Button>
               </CardHeader>
               <CardContent>
                 {templates.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">Belum ada template. Klik "Tambah Template" untuk membuat.</p>
+                  <p className="text-center text-muted-foreground py-8">Belum ada template di database.</p>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -353,6 +355,49 @@ export default function Admin() {
                     </TableBody>
                   </Table>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Sample Templates Gallery */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">📋 Template Bawaan ({sampleTemplates.length})</CardTitle>
+                <Button size="sm" variant="outline" onClick={async () => {
+                  const existingTitles = templates.map(t => t.title);
+                  const toInsert = sampleTemplates.filter(s => !existingTitles.includes(s.title));
+                  if (toInsert.length === 0) { showToast({ title: 'Semua template sudah ada di database.' }); return; }
+                  for (let i = 0; i < toInsert.length; i++) {
+                    await supabase.from("lp_templates").insert({
+                      title: toInsert[i].title, description: toInsert[i].description, category: toInsert[i].category,
+                      html_content: toInsert[i].html_content, is_active: true, sort_order: i + templates.length,
+                    });
+                  }
+                  showToast({ title: `✅ ${toInsert.length} template ditambahkan ke database!` });
+                  await fetchTemplates();
+                }} className="gap-1">🚀 Push Semua ke Database</Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sampleTemplates.map(tpl => (
+                    <div key={tpl.id} className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-all group">
+                      <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
+                        <img src={tpl.thumbnail_url} alt={tpl.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <Button size="sm" variant="secondary" onClick={() => {
+                            setEditTplId(null);
+                            setTplForm({ title: tpl.title, description: tpl.description, category: tpl.category, html_content: tpl.html_content, is_active: true, sort_order: 0 });
+                            setTplDialog(true);
+                          }}>✏️ Edit & Simpan</Button>
+                        </div>
+                      </div>
+                      <div className="p-3 space-y-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">{tpl.category}</span>
+                        <h3 className="font-bold text-foreground text-sm">{tpl.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{tpl.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
