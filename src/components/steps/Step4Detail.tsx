@@ -23,19 +23,17 @@ interface Props {
   hargaPromo: string;
   hargaFinal: string;
   keteranganDiskon: string;
-  pricingLayers: 3 | 4;
   bonusList: BonusItem[];
   deskripsiBenefit: string;
   ctaUtama: string;
   onChange: (field: string, value: string) => void;
-  onChangeLayers: (layers: 3 | 4) => void;
   onChangeBonusList: (list: BonusItem[]) => void;
 }
 
 export function Step4Detail({
   namaProduk, hargaNormal, hargaPromo, hargaFinal, keteranganDiskon,
-  pricingLayers, bonusList, deskripsiBenefit, ctaUtama, onChange,
-  onChangeLayers, onChangeBonusList
+  bonusList, deskripsiBenefit, ctaUtama, onChange,
+  onChangeBonusList
 }: Props) {
   const [isManualCta, setIsManualCta] = useState(false);
 
@@ -60,64 +58,46 @@ export function Step4Detail({
         <Input placeholder="Masukkan nama produk..." value={namaProduk} onChange={(e) => onChange('namaProduk', e.target.value)} className="bg-secondary border-border" />
       </div>
 
-      {/* Pricing Layers */}
+      {/* Pricing - 4 Layer Only (Normal → Promo → Harga Asli) */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-foreground">Struktur Harga</label>
-        <div className="flex gap-2">
-          {([3, 4] as const).map(n => (
-            <button key={n} type="button" onClick={() => onChangeLayers(n)} className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-medium border transition-all ${pricingLayers === n ? 'bg-primary/10 text-primary border-primary' : 'bg-secondary text-muted-foreground border-border hover:border-primary/40'}`}>
-              {n} Layer {n === 3 ? '(Normal → Promo)' : '(Normal → Promo → Final)'}
-            </button>
-          ))}
-        </div>
+        <label className="text-sm font-medium text-foreground">Struktur Harga (3 Layer)</label>
+        <p className="text-xs text-muted-foreground">Harga Normal (dicoret) → Harga Promo (dicoret) → Harga Asli (Final)</p>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-muted-foreground uppercase">Harga Normal <span className="text-destructive text-[10px]">(dicoret)</span></label>
             <Input type="number" placeholder="Rp" value={hargaNormal} onChange={(e) => onChange('hargaNormal', e.target.value)} className="bg-secondary border-border" />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-muted-foreground uppercase">
-              Harga Promo {pricingLayers === 4 && <span className="text-destructive text-[10px]">(dicoret)</span>}
-            </label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase">Harga Promo <span className="text-destructive text-[10px]">(dicoret)</span></label>
             <Input type="number" placeholder="Rp" value={hargaPromo} onChange={(e) => onChange('hargaPromo', e.target.value)} className="bg-secondary border-border" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-muted-foreground uppercase">Harga Asli <span className="text-primary text-[10px]">(Final)</span></label>
+            <Input type="number" placeholder="Rp" value={hargaFinal} onChange={(e) => onChange('hargaFinal', e.target.value)} className="bg-secondary border-border" />
           </div>
         </div>
 
-        {pricingLayers === 4 && (
-          <>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Harga Final (Setelah Diskon Tambahan)</label>
-              <Input type="number" placeholder="Rp" value={hargaFinal} onChange={(e) => onChange('hargaFinal', e.target.value)} className="bg-secondary border-border" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Keterangan Diskon Tambahan</label>
-              <Input placeholder='Contoh: Kalo pake kode voucher "DISKON50"' value={keteranganDiskon} onChange={(e) => onChange('keteranganDiskon', e.target.value)} className="bg-secondary border-border" />
-            </div>
-          </>
-        )}
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-muted-foreground uppercase">Keterangan Diskon (Opsional)</label>
+          <Input placeholder='Contoh: Kalo pake kode voucher "DISKON50"' value={keteranganDiskon} onChange={(e) => onChange('keteranganDiskon', e.target.value)} className="bg-secondary border-border" />
+        </div>
 
-        {/* Pricing Preview */}
-        <div className="rounded-lg bg-secondary/60 border border-border p-3 text-center space-y-1">
+        {/* Pricing Preview - matching reference image style */}
+        <div className="rounded-lg bg-secondary/60 border border-border p-4 text-center space-y-2">
           <p className="text-[10px] text-muted-foreground uppercase font-semibold">Preview Harga</p>
           <p className="text-lg text-destructive line-through font-bold">
             {hargaNormal ? `Rp ${Number(hargaNormal).toLocaleString('id-ID')}` : 'Rp -'}
           </p>
-          {pricingLayers === 4 ? (
-            <>
-              <p className="text-base text-muted-foreground line-through font-semibold">
-                {hargaPromo ? `Rp ${Number(hargaPromo).toLocaleString('id-ID')}` : 'Rp -'}
-              </p>
-              <p className="text-xs text-muted-foreground">{keteranganDiskon || '...'}</p>
-              <p className="text-2xl text-primary font-black">
-                {hargaFinal ? `Rp ${Number(hargaFinal).toLocaleString('id-ID')}` : 'Rp -'}
-              </p>
-            </>
-          ) : (
-            <p className="text-2xl text-primary font-black">
-              {hargaPromo ? `Rp ${Number(hargaPromo).toLocaleString('id-ID')}` : 'Rp -'}
-            </p>
+          <p className="text-base text-muted-foreground line-through font-semibold">
+            {hargaPromo ? `Rp ${Number(hargaPromo).toLocaleString('id-ID')}` : 'Rp -'}
+          </p>
+          {keteranganDiskon && (
+            <p className="text-xs text-muted-foreground">{keteranganDiskon}</p>
           )}
+          <p className="text-2xl text-primary font-black">
+            {hargaFinal ? `Rp ${Number(hargaFinal).toLocaleString('id-ID')}` : 'Rp -'}
+          </p>
         </div>
       </div>
 

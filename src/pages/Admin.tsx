@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   LogOut, Shield, CheckCircle, XCircle, Trash2, Clock, Users, FileText,
-  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink, UserPlus, Layout, Settings, Lock,
+  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink, UserPlus, Layout, Settings, Lock, Eye, EyeOff,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "@/hooks/use-toast";
@@ -30,7 +31,6 @@ import { generatePrompt } from "@/utils/generatePrompt";
 import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { sampleTemplates } from "@/data/sampleTemplates";
 
-// --- Types ---
 interface AdminUser {
   id: string; email: string; name: string | null; phone: string | null;
   status: string; entitlement_id: string | null; product_code: string | null;
@@ -67,8 +67,10 @@ export default function Admin() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [resetDialog, setResetDialog] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: "", email: "" });
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [addMemberDialog, setAddMemberDialog] = useState(false);
   const [addMemberForm, setAddMemberForm] = useState({ email: '', password: '', name: '', role: 'user' });
+  const [showAddMemberPassword, setShowAddMemberPassword] = useState(false);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [addMemberTier, setAddMemberTier] = useState<'free' | 'paid'>('free');
   const [darkMode, setDarkMode] = useState(true);
@@ -76,6 +78,12 @@ export default function Admin() {
   const [promptText, setPromptText] = useState("");
   const [toolStep, setToolStep] = useState(1);
   const [isDirty, setIsDirty] = useState(false);
+  // Bulk selection
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [bulkDialog, setBulkDialog] = useState<{ open: boolean; action: string }>({ open: false, action: '' });
+  const [bulkPassword, setBulkPassword] = useState('');
+  const [showBulkPassword, setShowBulkPassword] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   // Templates state
   const [templates, setTemplates] = useState<DbTemplate[]>([]);
@@ -154,14 +162,13 @@ export default function Admin() {
     const { error } = await supabase.functions.invoke("admin-users", { body: { action: "reset_password", user_id: resetDialog.userId, password: newPassword } });
     if (error) showToast({ title: "Gagal", description: error.message, variant: "destructive" });
     else showToast({ title: "Berhasil", description: `Password direset untuk ${resetDialog.email}` });
-    setResetDialog({ open: false, userId: "", email: "" }); setNewPassword(""); setActionLoading(null);
+    setResetDialog({ open: false, userId: "", email: "" }); setNewPassword(""); setShowNewPassword(false); setActionLoading(null);
   };
   const handleChangeTier = async (userId: string, newTier: 'free' | 'paid') => {
     setActionLoading(userId);
     await supabase.functions.invoke("admin-users", { body: { action: "change_tier", user_id: userId, role: newTier } });
     showToast({ title: `Tier diubah ke ${newTier === 'paid' ? 'Berbayar' : 'Gratis'}` });
-    await fetchUsers();
-    setActionLoading(null);
+    await fetchUsers(); setActionLoading(null);
   };
   const handleAddMember = async () => {
     if (!addMemberForm.email || !addMemberForm.password) { showToast({ title: "Error", description: "Email dan password wajib.", variant: "destructive" }); return; }
@@ -173,21 +180,62 @@ export default function Admin() {
     setAddMemberLoading(false);
   };
 
+  // Bulk actions
+  const toggleSelectUser = (userId: string) => {
+    setSelectedUsers(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  };
+  const toggleSelectAll = () => {
+    if (selectedUsers.size === filteredUsers.filter(u => u.role !== 'admin').length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(filteredUsers.filter(u => u.role !== 'admin').map(u => u.id)));
+    }
+  };
+  const handleBulkAction = async () => {
+    if (selectedUsers.size === 0) return;
+    setBulkLoading(true);
+    const ids = Array.from(selectedUsers);
+
+    if (bulkDialog.action === 'tier_paid' || bulkDialog.action === 'tier_free') {
+      const tier = bulkDialog.action === 'tier_paid' ? 'paid' : 'free';
+      for (const uid of ids) {
+        await supabase.functions.invoke("admin-users", { body: { action: "change_tier", user_id: uid, role: tier } });
+      }
+      showToast({ title: `✅ ${ids.length} user diubah ke ${tier === 'paid' ? 'Berbayar' : 'Gratis'}` });
+    } else if (bulkDialog.action === 'reset_password') {
+      if (!bulkPassword || bulkPassword.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); setBulkLoading(false); return; }
+      for (const uid of ids) {
+        await supabase.functions.invoke("admin-users", { body: { action: "reset_password", user_id: uid, password: bulkPassword } });
+      }
+      showToast({ title: `✅ Password ${ids.length} user direset` });
+    } else if (bulkDialog.action === 'delete') {
+      for (const uid of ids) {
+        await supabase.from("entitlements").delete().eq("user_id", uid);
+      }
+      showToast({ title: `✅ ${ids.length} user dihapus` });
+    }
+
+    setBulkLoading(false);
+    setBulkDialog({ open: false, action: '' });
+    setBulkPassword('');
+    setSelectedUsers(new Set());
+    await fetchUsers();
+  };
+
   // Template CRUD
   const handleSaveTemplate = async () => {
     if (!tplForm.title || !tplForm.html_content) { showToast({ title: "Error", description: "Title dan HTML wajib diisi.", variant: "destructive" }); return; }
     setTplLoading(true);
     if (editTplId) {
-      await supabase.from("lp_templates").update({
-        title: tplForm.title, description: tplForm.description, category: tplForm.category,
-        html_content: tplForm.html_content, is_active: tplForm.is_active, sort_order: tplForm.sort_order,
-      }).eq("id", editTplId);
+      await supabase.from("lp_templates").update({ title: tplForm.title, description: tplForm.description, category: tplForm.category, html_content: tplForm.html_content, is_active: tplForm.is_active, sort_order: tplForm.sort_order }).eq("id", editTplId);
       showToast({ title: "Template diupdate!" });
     } else {
-      await supabase.from("lp_templates").insert({
-        title: tplForm.title, description: tplForm.description, category: tplForm.category,
-        html_content: tplForm.html_content, is_active: tplForm.is_active, sort_order: tplForm.sort_order,
-      });
+      await supabase.from("lp_templates").insert({ title: tplForm.title, description: tplForm.description, category: tplForm.category, html_content: tplForm.html_content, is_active: tplForm.is_active, sort_order: tplForm.sort_order });
       showToast({ title: "Template ditambahkan!" });
     }
     setTplDialog(false); setEditTplId(null);
@@ -224,10 +272,6 @@ export default function Admin() {
     setForm(prev => ({ ...prev, elemenTambahan: { ...prev.elemenTambahan, [element]: !prev.elemenTambahan[element] } }));
     if (toolStep > 1) setIsDirty(true);
   }, [toolStep]);
-  const handleChangeLayers = useCallback((layers: 3 | 4) => {
-    setForm(prev => ({ ...prev, pricingLayers: layers }));
-    if (toolStep > 1) setIsDirty(true);
-  }, [toolStep]);
   const handleChangeBonusList = useCallback((list: BonusItem[]) => {
     setForm(prev => ({ ...prev, bonusList: list }));
     if (toolStep > 1) setIsDirty(true);
@@ -260,7 +304,7 @@ export default function Admin() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center"><Rocket className="h-5 w-5 text-primary-foreground" /></div>
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-foreground">Landing Page <span className="text-primary">Builder V.10</span></h1>
+            <h1 className="text-xl font-bold text-foreground">Landing Page <span className="text-primary">Builder V.11</span></h1>
             <span className="text-xs text-muted-foreground flex items-center gap-1">By Digital Strategi · <Shield className="h-3 w-3" /> Admin Panel</span>
           </div>
         </div>
@@ -306,7 +350,7 @@ export default function Admin() {
                 <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
                 <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
                 <Step3Target levelAwareness={form.levelAwareness} targetAudience={form.targetAudience} onChange={handleChange} />
-                <Step4Detail namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo} hargaFinal={form.hargaFinal} keteranganDiskon={form.keteranganDiskon} pricingLayers={form.pricingLayers} bonusList={form.bonusList} deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama} onChange={handleChange} onChangeLayers={handleChangeLayers} onChangeBonusList={handleChangeBonusList} />
+                <Step4Detail namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo} hargaFinal={form.hargaFinal} keteranganDiskon={form.keteranganDiskon} bonusList={form.bonusList} deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama} onChange={handleChange} onChangeBonusList={handleChangeBonusList} />
                 <Step5Design gayaDesain={form.gayaDesain} onChange={handleChange} />
                 <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
                 <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
@@ -353,7 +397,6 @@ export default function Admin() {
               </div>
             ) : (
               <>
-                {/* DB Templates */}
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2"><Layout className="h-5 w-5" /> Template Database ({templates.length})</CardTitle>
@@ -364,12 +407,7 @@ export default function Admin() {
                       <p className="text-center text-muted-foreground py-8">Belum ada template di database.</p>
                     ) : (
                       <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Title</TableHead><TableHead>Category</TableHead><TableHead>Status</TableHead>
-                            <TableHead>Order</TableHead><TableHead className="text-right">Aksi</TableHead>
-                          </TableRow>
-                        </TableHeader>
+                        <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Category</TableHead><TableHead>Status</TableHead><TableHead>Order</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow></TableHeader>
                         <TableBody>
                           {templates.map(tpl => (
                             <TableRow key={tpl.id}>
@@ -392,7 +430,6 @@ export default function Admin() {
                   </CardContent>
                 </Card>
 
-                {/* Sample Templates Gallery with iframe */}
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2">📋 Template Bawaan ({sampleTemplates.length})</CardTitle>
@@ -401,10 +438,7 @@ export default function Admin() {
                       const toInsert = sampleTemplates.filter(s => !existingTitles.includes(s.title));
                       if (toInsert.length === 0) { showToast({ title: 'Semua template sudah ada di database.' }); return; }
                       for (let i = 0; i < toInsert.length; i++) {
-                        await supabase.from("lp_templates").insert({
-                          title: toInsert[i].title, description: toInsert[i].description, category: toInsert[i].category,
-                          html_content: toInsert[i].html_content, is_active: true, sort_order: i + templates.length,
-                        });
+                        await supabase.from("lp_templates").insert({ title: toInsert[i].title, description: toInsert[i].description, category: toInsert[i].category, html_content: toInsert[i].html_content, is_active: true, sort_order: i + templates.length });
                       }
                       showToast({ title: `✅ ${toInsert.length} template ditambahkan ke database!` });
                       await fetchTemplates();
@@ -461,15 +495,27 @@ export default function Admin() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-2 mb-4 flex-wrap">
+                <div className="flex gap-2 mb-4 flex-wrap items-center">
                   {["all","pending","active","rejected"].map(s => (
                     <Button key={s} size="sm" variant={filterStatus===s?"default":"outline"} onClick={() => setFilterStatus(s)} className="text-xs capitalize">{s==="all"?"Semua":s}</Button>
                   ))}
+                  {selectedUsers.size > 0 && (
+                    <div className="flex gap-1 ml-auto">
+                      <span className="text-xs text-muted-foreground self-center mr-1">{selectedUsers.size} dipilih</span>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_paid' })} className="text-xs gap-1">⬆ Berbayar</Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_free' })} className="text-xs gap-1">⬇ Gratis</Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'reset_password' })} className="text-xs gap-1"><KeyRound className="h-3 w-3" /> Reset Sandi</Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'delete' })} className="text-xs gap-1 text-destructive"><Trash2 className="h-3 w-3" /> Hapus</Button>
+                    </div>
+                  )}
                 </div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox checked={selectedUsers.size > 0 && selectedUsers.size === filteredUsers.filter(u => u.role !== 'admin').length} onCheckedChange={toggleSelectAll} />
+                        </TableHead>
                         <TableHead>Nama</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Tier</TableHead>
@@ -481,9 +527,12 @@ export default function Admin() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredUsers.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Tidak ada data.</TableCell></TableRow>
+                      {filteredUsers.length === 0 ? <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Tidak ada data.</TableCell></TableRow>
                       : filteredUsers.map(u => (
-                        <TableRow key={u.id} className={u.status==="pending"?"bg-amber-500/5":""}>
+                        <TableRow key={u.id} className={`${u.status==="pending"?"bg-amber-500/5":""} ${selectedUsers.has(u.id) ? "bg-primary/5" : ""}`}>
+                          <TableCell>
+                            {u.role !== 'admin' && <Checkbox checked={selectedUsers.has(u.id)} onCheckedChange={() => toggleSelectUser(u.id)} />}
+                          </TableCell>
                           <TableCell className="font-medium">{u.name||"-"}</TableCell>
                           <TableCell className="text-sm">{u.email}</TableCell>
                           <TableCell>
@@ -560,7 +609,7 @@ export default function Admin() {
                 <div className="rounded-xl border border-border bg-secondary p-4 space-y-2">
                   <h3 className="text-sm font-semibold text-foreground">ℹ️ Panduan Tier Akses</h3>
                   <ul className="text-xs text-muted-foreground space-y-1">
-                    <li>🆓 <strong>Gratis</strong> — Hanya bisa Generate Prompt manual. Template, Edit Mode, Countdown, Sales Notif terkunci.</li>
+                    <li>🆓 <strong>Gratis</strong> — Hanya bisa Generate Prompt manual. Template, Edit Mode, Countdown, Sales Notif, Pixel ID terkunci.</li>
                     <li>⭐ <strong>Berbayar</strong> — Akses penuh semua fitur. Otomatis aktif ketika user membeli via Scalev.</li>
                     <li>🔄 <strong>Auto-Upgrade</strong> — Ketika user gratis membeli via Scalev, tier otomatis berubah ke Berbayar.</li>
                   </ul>
@@ -572,13 +621,50 @@ export default function Admin() {
       </main>
 
       {/* Reset Password Dialog */}
-      <Dialog open={resetDialog.open} onOpenChange={(open) => { if (!open) setResetDialog({ open: false, userId: "", email: "" }); }}>
+      <Dialog open={resetDialog.open} onOpenChange={(open) => { if (!open) { setResetDialog({ open: false, userId: "", email: "" }); setShowNewPassword(false); } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Reset Password</DialogTitle><DialogDescription>Reset password untuk {resetDialog.email}</DialogDescription></DialogHeader>
-          <Input type="password" placeholder="Password baru (min. 6)" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+          <div className="relative">
+            <Input type={showNewPassword ? "text" : "password"} placeholder="Password baru (min. 6)" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="pr-10" />
+            <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" tabIndex={-1}>
+              {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setResetDialog({ open: false, userId: "", email: "" })}>Batal</Button>
             <Button onClick={handleResetPassword} disabled={actionLoading===resetDialog.userId}>{actionLoading===resetDialog.userId ? "..." : "Reset"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Action Dialog */}
+      <Dialog open={bulkDialog.open} onOpenChange={(open) => { if (!open) { setBulkDialog({ open: false, action: '' }); setBulkPassword(''); setShowBulkPassword(false); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {bulkDialog.action === 'tier_paid' && '⬆ Ubah ke Berbayar'}
+              {bulkDialog.action === 'tier_free' && '⬇ Ubah ke Gratis'}
+              {bulkDialog.action === 'reset_password' && '🔑 Reset Password Massal'}
+              {bulkDialog.action === 'delete' && '🗑 Hapus User Massal'}
+            </DialogTitle>
+            <DialogDescription>Tindakan ini akan diterapkan ke {selectedUsers.size} user yang dipilih.</DialogDescription>
+          </DialogHeader>
+          {bulkDialog.action === 'reset_password' && (
+            <div className="relative">
+              <Input type={showBulkPassword ? "text" : "password"} placeholder="Password baru untuk semua (min. 6)" value={bulkPassword} onChange={(e) => setBulkPassword(e.target.value)} className="pr-10" />
+              <button type="button" onClick={() => setShowBulkPassword(!showBulkPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" tabIndex={-1}>
+                {showBulkPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          )}
+          {bulkDialog.action === 'delete' && (
+            <p className="text-sm text-destructive font-medium">⚠️ Tindakan ini tidak bisa dibatalkan!</p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDialog({ open: false, action: '' })}>Batal</Button>
+            <Button onClick={handleBulkAction} disabled={bulkLoading} variant={bulkDialog.action === 'delete' ? 'destructive' : 'default'}>
+              {bulkLoading ? "Memproses..." : "Konfirmasi"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -590,7 +676,15 @@ export default function Admin() {
           <div className="space-y-3 py-2">
             <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Nama</label><Input placeholder="Nama" value={addMemberForm.name} onChange={(e) => setAddMemberForm(p => ({ ...p, name: e.target.value }))} /></div>
             <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Email *</label><Input type="email" placeholder="email@contoh.com" value={addMemberForm.email} onChange={(e) => setAddMemberForm(p => ({ ...p, email: e.target.value }))} /></div>
-            <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Password *</label><Input type="password" placeholder="Min. 6 karakter" value={addMemberForm.password} onChange={(e) => setAddMemberForm(p => ({ ...p, password: e.target.value }))} /></div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Password *</label>
+              <div className="relative">
+                <Input type={showAddMemberPassword ? "text" : "password"} placeholder="Min. 6 karakter" value={addMemberForm.password} onChange={(e) => setAddMemberForm(p => ({ ...p, password: e.target.value }))} className="pr-10" />
+                <button type="button" onClick={() => setShowAddMemberPassword(!showAddMemberPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" tabIndex={-1}>
+                  {showAddMemberPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Tier Akses</label>
               <div className="flex gap-2">

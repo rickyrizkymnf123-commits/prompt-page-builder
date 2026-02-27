@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogIn, AlertCircle } from "lucide-react";
+import { LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -31,7 +32,6 @@ export default function Login() {
         return;
       }
 
-      // Check if admin
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
@@ -43,7 +43,6 @@ export default function Login() {
         return;
       }
 
-      // Check active entitlement
       const { data: entitlements } = await supabase
         .from("entitlements")
         .select("id, product_code")
@@ -75,7 +74,7 @@ export default function Login() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">
-            Landing Page <span className="text-primary">Builder V.10</span>
+            Landing Page <span className="text-primary">Builder V.11</span>
           </CardTitle>
           <p className="text-xs text-muted-foreground font-medium">By Digital Strategi</p>
           <p className="text-muted-foreground text-sm pt-1">Masuk ke akun Anda</p>
@@ -88,7 +87,25 @@ export default function Login() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="login-password">Password</Label>
-              <Input id="login-password" type="password" placeholder="Masukkan password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <div className="relative">
+                <Input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Masukkan password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             {error && (
               <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">

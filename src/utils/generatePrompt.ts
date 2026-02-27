@@ -23,7 +23,7 @@ Mindset:
 - Menguasai struktur persuasion modern
 
 ---
-
+  
 ## 🎯 TUGAS UTAMA
 
 Buat **Landing Page High-Converting** dalam bentuk **kode HTML tunggal (single file)** untuk platform **${platformName}**, desain premium, fokus konversi, aman regulasi iklan.
@@ -31,39 +31,39 @@ Buat **Landing Page High-Converting** dalam bentuk **kode HTML tunggal (single f
 Output HARUS **langsung berupa HTML saja** (tanpa penjelasan, tanpa teks di luar HTML).
 
 ---
-
+  
 ${buildPlatformBlock(platformName, deviceTarget)}
 
 ---
-
+  
 ${buildDesignBlock(form)}
 
 ---
-
+  
 ${buildCopywritingBlock(form, awarenessLevel)}
 
 ---
-
+  
 ${buildProductBlock(form, fmt)}
 
 ---
-
+  
 ## 🧱 SECTION WAJIB ADA (URUTKAN DENGAN LOGIS)
 
 ${buildSectionList(activeElements)}
 ${buildReferensiBlock(form)}
 
 ---
-
+  
 ${buildCountdownBlock(form)}
 
 ---
-
+  
 ## 🔔 SALES NOTIFICATION POPUP
 ${buildSalesNotifBlock(form)}
 
 ---
-
+  
 ## 💰 CONVERSION RULES
 
 ${buildPricingRules(form, fmt)}
@@ -74,7 +74,7 @@ CTA harus:
 - Teks: **"${form.ctaUtama || 'Beli Sekarang'}"**
 
 ---
-
+  
 ## 🔐 TRUST & REASSURANCE
 
 Wajib ada:
@@ -84,10 +84,11 @@ Wajib ada:
 - Garansi masuk akal
 
 ---
-
+  
 ${buildChecklistBlock(platformName, platformName === 'Scalev')}`;
 }
 
+// Section list builder
 function buildSectionList(activeElements: string[]): string {
   const orderedSections = ['Hero Section','Social Proof','Problem Section','Before-After','Video Section','Feature List','Bonus Section','How It Works','Pricing Table','Guarantee','FAQ','Final CTA','Testimonial','Scarcity / Timer'];
   const selected = activeElements.length > 0 ? activeElements : ['Hero Section','Social Proof','Problem Section','Before-After','Video Section','Feature List','Bonus Section','How It Works','Pricing Table','Guarantee','FAQ'];
@@ -105,11 +106,21 @@ function buildSectionList(activeElements: string[]): string {
   return sorted.map((s, i) => `${i + 1}) ${s}${desc[s] ? ` (${desc[s]})` : ''}`).join('\n');
 }
 
+// Platform block builder
 function buildPlatformBlock(platformName: string, deviceTarget: string): string {
   const scalevDeviceRules: Record<string, string> = {
-    Desktop: `- Padding halaman: 32px vertikal, 128px horizontal\n- Lebar konten efektif: ±432px\n- Padding internal section: 32px 128px`,
-    Tablet: `- Padding halaman: 32px vertikal, 50px horizontal\n- Lebar konten efektif: ±588px\n- Padding internal section: 32px 50px`,
-    Mobile: `- Padding halaman: 35px semua sisi\n- Lebar konten efektif: ±618px\n- Padding internal section: 35px\n- Margin antar komponen: 16px\n- Layout: SINGLE COLUMN\n- Flex direction: column untuk semua layout`,
+    Desktop: `- Padding halaman: 32px vertikal, 128px horizontal
+- Lebar konten efektif: ±432px
+- Padding internal section: 32px 128px`,
+    Tablet: `- Padding halaman: 32px vertikal, 50px horizontal
+- Lebar konten efektif: ±588px
+- Padding internal section: 32px 50px`,
+    Mobile: `- Padding halaman: 35px semua sisi
+- Lebar konten efektif: ±618px
+- Padding internal section: 35px
+- Margin antar komponen: 16px
+- Layout: SINGLE COLUMN
+- Flex direction: column untuk semua layout`,
   };
   const rules: Record<string, string> = {
     'Scalev': `# 📐 ATURAN STRUKTUR & LAYOUT — SCALEV (${deviceTarget})
@@ -128,15 +139,36 @@ function buildPlatformBlock(platformName: string, deviceTarget: string): string 
 
 ### Device Rules (${deviceTarget}):
 ${scalevDeviceRules[deviceTarget] || scalevDeviceRules['Mobile']}`,
-    'Berdu': `# 📐 ATURAN — BERDU\n\n0) Wrapper root: \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;...">\`\n1) Single column, max-width:780px, margin:0 auto, padding:35px.\n2) Inline CSS. No CDN. Gambar: \`<img>\` + width:100% + format .webp`,
-    'Lynk.id': `# 📐 ATURAN — LYNK.ID\n\n0) Wrapper root wajib.\n1) Single column, inline CSS.\n2) Gambar: \`<img>\` + width:100% + format .webp`,
-    'WordPress': `# 📐 ATURAN — WORDPRESS\n\n1) HTML tunggal, boleh \`<style>\` scoped.\n2) Semantik HTML, kompatibel Elementor HTML widget.\n3) Gambar: \`<img>\` + width:100% + format .webp`,
-    'Shopify': `# 📐 ATURAN — SHOPIFY\n\n1) HTML tunggal + CSS inline.\n2) Tag standar. Gambar: \`<img>\` + width:100% + format .webp`,
-    'Standalone': `# 📐 ATURAN — STANDALONE HTML\n\n1) File HTML lengkap.\n2) Boleh \`<style>\` + Google Fonts.\n3) Single column, responsive.\n4) Gambar: \`<img>\` + width:100% + format .webp`,
+    'Berdu': `# 📐 ATURAN — BERDU
+
+0) Wrapper root: \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;...">\`
+1) Single column, max-width:780px, margin:0 auto, padding:35px.
+2) Inline CSS. No CDN. Gambar: \`<img>\` + width:100% + format .webp`,
+    'Lynk.id': `# 📐 ATURAN — LYNK.ID
+
+0) Wrapper root wajib.
+1) Single column, inline CSS.
+2) Gambar: \`<img>\` + width:100% + format .webp`,
+    'WordPress': `# 📐 ATURAN — WORDPRESS
+
+1) HTML tunggal, boleh \`<style>\` scoped.
+2) Semantik HTML, kompatibel Elementor HTML widget.
+3) Gambar: \`<img>\` + width:100% + format .webp`,
+    'Shopify': `# 📐 ATURAN — SHOPIFY
+
+1) HTML tunggal + CSS inline.
+2) Tag standar. Gambar: \`<img>\` + width:100% + format .webp`,
+    'Standalone': `# 📐 ATURAN — STANDALONE HTML
+
+1) File HTML lengkap.
+2) Boleh \`<style>\` + Google Fonts.
+3) Single column, responsive.
+4) Gambar: \`<img>\` + width:100% + format .webp`,
   };
   return rules[platformName] || rules['Standalone'];
 }
 
+// Design block builder
 function buildDesignBlock(form: FormState): string {
   return `# 🎨 DESAIN VISUAL
 
@@ -148,6 +180,7 @@ function buildDesignBlock(form: FormState): string {
 - CTA besar, kontras, centered. Setiap section background berbeda.`;
 }
 
+// Copywriting block builder
 function buildCopywritingBlock(form: FormState, awarenessLevel: string): string {
   return `# ✍️ COPYWRITING FRAMEWORK
 
@@ -160,15 +193,13 @@ Gaya bahasa: **${form.gayaBahasa || 'Profesional'}**
 Hindari: Klaim "pasti"/"jamin"/"100%", overclaim medis/finansial, janji tidak realistis`;
 }
 
+// Product block builder
 function buildProductBlock(form: FormState, fmt: (v: string) => string): string {
+  // Always 4-layer (3 prices: Normal, Promo, Final)
   let pricingInfo = `- Harga Normal: **${fmt(form.hargaNormal)}** (dicoret)`;
-  if (form.pricingLayers === 4) {
-    pricingInfo += `\n- Harga Promo: **${fmt(form.hargaPromo)}** (dicoret)`;
-    pricingInfo += `\n- Harga Final: **${fmt(form.hargaFinal)}**`;
-    if (form.keteranganDiskon) pricingInfo += `\n- Keterangan: ${form.keteranganDiskon}`;
-  } else {
-    pricingInfo += `\n- Harga Promo: **${fmt(form.hargaPromo)}**`;
-  }
+  pricingInfo += `\n- Harga Promo: **${fmt(form.hargaPromo)}** (dicoret)`;
+  pricingInfo += `\n- Harga Asli (Final): **${fmt(form.hargaFinal)}**`;
+  if (form.keteranganDiskon) pricingInfo += `\n- Keterangan: ${form.keteranganDiskon}`;
 
   let bonusInfo = '';
   if (form.bonusList.length > 0) {
@@ -192,12 +223,12 @@ ${pricingInfo}
 ${form.deskripsiBenefit ? `- Deskripsi/Benefit: ${form.deskripsiBenefit}` : ''}${bonusInfo}`;
 }
 
+// Pricing rules builder
 function buildPricingRules(form: FormState, fmt: (v: string) => string): string {
-  if (form.pricingLayers === 4) {
-    return `- Harga normal dicoret: **${fmt(form.hargaNormal)}**
+  return `- Harga normal dicoret: **${fmt(form.hargaNormal)}**
 - Harga promo dicoret: **${fmt(form.hargaPromo)}**
 - ${form.keteranganDiskon || 'Dengan diskon tambahan'}
-- **HARGA FINAL (tidak dicoret, paling besar):** **${fmt(form.hargaFinal)}**
+- **HARGA ASLI / FINAL (tidak dicoret, paling besar):** **${fmt(form.hargaFinal)}**
 - Tambahkan urgency wajar (tanpa overclaim)
 - Setiap CTA WAJIB ada micro-copy trust 1–2 baris di bawah tombol
 
@@ -205,15 +236,10 @@ function buildPricingRules(form: FormState, fmt: (v: string) => string): string 
 1. Harga tertinggi (coret, merah)
 2. Harga promo (coret juga)
 3. Keterangan diskon tambahan
-4. Harga final (besar, bold, warna aksen, TIDAK dicoret)`;
-  }
-
-  return `- Harga normal dicoret: **${fmt(form.hargaNormal)}**
-- Harga promo ditonjolkan: **${fmt(form.hargaPromo)}**
-- Tambahkan urgency wajar (tanpa overclaim)
-- Setiap CTA WAJIB ada micro-copy trust 1–2 baris di bawah tombol`;
+4. Harga asli / final (besar, bold, warna aksen, TIDAK dicoret)`;
 }
 
+// Referensi block builder
 function buildReferensiBlock(form: FormState): string {
   if (!form.linkReferensi && !form.inspirasiDesain) return '';
   let block = '\n\n## 🔗 REFERENSI DESAIN';
@@ -222,6 +248,7 @@ function buildReferensiBlock(form: FormState): string {
   return block;
 }
 
+// Countdown block builder
 function buildCountdownBlock(form: FormState): string {
   const c = form.countdown;
   const totalMs = c?.enabled ? (c.hari * 86400000) + (c.jam * 3600000) + (c.menit * 60000) + (c.detik * 1000) : 2 * 86400000;
@@ -245,6 +272,7 @@ JavaScript (tanpa modifikasi):
 HTML WAJIB: Container \`div#countdown-container\`, angka \`span#cd-days/hours/minutes/seconds\` style: \`background:${accent};color:${text}\``;
 }
 
+// Sales notification block builder
 function buildSalesNotifBlock(form: FormState): string {
   const n = form.salesNotif;
   if (!n.enabled) return 'Tidak ada sales notification.';
@@ -272,6 +300,7 @@ function buildSalesNotifBlock(form: FormState): string {
 \`\`\``;
 }
 
+// Checklist block builder
 function buildChecklistBlock(platformName: string, isScalev: boolean): string {
   return `## ✅ OUTPUT FINAL
 

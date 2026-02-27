@@ -101,7 +101,6 @@ export default function AppPage() {
       const hasPaid = entitlements.some((e: any) => e.product_code === 'LPE');
       setUserTier(hasPaid ? 'paid' : 'free');
       
-      // Fetch order URL
       try {
         const { data: settings } = await (supabase as any).from('app_settings').select('value').eq('key', 'scalev_order_url').maybeSingle();
         if (settings?.value) setOrderUrl(settings.value);
@@ -138,11 +137,6 @@ export default function AppPage() {
     if (currentStep > 1) setIsDirty(true);
   }, [currentStep]);
 
-  const handleChangeLayers = useCallback((layers: 3 | 4) => {
-    setForm(prev => ({ ...prev, pricingLayers: layers }));
-    if (currentStep > 1) setIsDirty(true);
-  }, [currentStep]);
-
   const handleChangeBonusList = useCallback((list: BonusItem[]) => {
     setForm(prev => ({ ...prev, bonusList: list }));
     if (currentStep > 1) setIsDirty(true);
@@ -171,6 +165,10 @@ export default function AppPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleUpgrade = () => {
+    if (orderUrl) window.open(orderUrl, '_blank');
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Memuat...</p></div>;
   }
@@ -185,10 +183,10 @@ export default function AppPage() {
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex items-center justify-between flex-wrap gap-3">
             <div>
               <p className="text-sm font-semibold text-foreground">🆓 Mode Gratis — Fitur terbatas</p>
-              <p className="text-xs text-muted-foreground">Upgrade untuk akses Template, Edit Mode, Countdown, dan Sales Notification</p>
+              <p className="text-xs text-muted-foreground">Upgrade untuk akses Template, Edit Mode, Countdown, Sales Notification, dan Pixel ID</p>
             </div>
             {orderUrl && (
-              <Button size="sm" onClick={() => window.open(orderUrl, '_blank')} className="gap-1">
+              <Button size="sm" onClick={handleUpgrade} className="gap-1">
                 ⭐ Upgrade Sekarang
               </Button>
             )}
@@ -206,6 +204,11 @@ export default function AppPage() {
             <button type="button" onClick={() => setMode('template')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all ${mode === 'template' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border-border hover:border-primary/40'}`}>
               📋 Gunakan Template {!isPaid && <Lock className="h-3 w-3" />}
             </button>
+            {!isPaid && (
+              <button type="button" onClick={handleUpgrade} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-all ml-auto cursor-pointer">
+                🔒 Premium
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -220,12 +223,13 @@ export default function AppPage() {
           }}
           initialHtml={mode === 'template' ? templateHtml : undefined}
           isPaid={isPaid}
+          orderUrl={orderUrl}
         />
       )}
 
       {currentStep === 1 && mode === 'template' && (
         <div className="max-w-[1440px] mx-auto px-6 pb-12">
-          <TemplateGallery onSelectTemplate={handleSelectTemplate} isPaid={isPaid} />
+          <TemplateGallery onSelectTemplate={handleSelectTemplate} isPaid={isPaid} orderUrl={orderUrl} />
         </div>
       )}
 
@@ -233,7 +237,7 @@ export default function AppPage() {
         <div className="max-w-[1440px] mx-auto p-6">
           <section className="text-center py-12 px-6 mb-6 rounded-lg border border-border bg-card">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-6">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />V10
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />V11
             </motion.div>
             <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight max-w-3xl mx-auto">
               Buat Landing Page professional cuman dalam{" "}<span className="text-primary">Hitungan menit</span> <Zap className="inline h-8 w-8 text-primary" />
@@ -250,9 +254,9 @@ export default function AppPage() {
             <Step4Detail
               namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo}
               hargaFinal={form.hargaFinal} keteranganDiskon={form.keteranganDiskon}
-              pricingLayers={form.pricingLayers} bonusList={form.bonusList}
+              bonusList={form.bonusList}
               deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama}
-              onChange={handleChange} onChangeLayers={handleChangeLayers} onChangeBonusList={handleChangeBonusList}
+              onChange={handleChange} onChangeBonusList={handleChangeBonusList}
             />
             <Step5Design gayaDesain={form.gayaDesain} onChange={handleChange} />
             <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
@@ -274,7 +278,7 @@ export default function AppPage() {
                 </div>
                 <p className="text-xs text-muted-foreground">Fitur ini hanya tersedia untuk pengguna berbayar.</p>
                 {orderUrl && (
-                  <Button size="sm" variant="outline" onClick={() => window.open(orderUrl, '_blank')} className="gap-1 mt-1">
+                  <Button size="sm" variant="outline" onClick={handleUpgrade} className="gap-1 mt-1">
                     ⭐ Upgrade untuk Unlock
                   </Button>
                 )}
