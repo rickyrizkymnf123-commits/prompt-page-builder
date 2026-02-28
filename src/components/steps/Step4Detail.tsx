@@ -86,15 +86,18 @@ export function Step4Detail({
         {/* Pricing Preview - matching reference image style */}
         <div className="rounded-lg bg-secondary/60 border border-border p-4 text-center space-y-2">
           <p className="text-[10px] text-muted-foreground uppercase font-semibold">Preview Harga</p>
+          <p className="text-[10px] text-muted-foreground uppercase mt-2">Harga Normal</p>
           <p className="text-lg text-destructive line-through font-bold">
             {hargaNormal ? `Rp ${Number(hargaNormal).toLocaleString('id-ID')}` : 'Rp -'}
           </p>
+          <p className="text-[10px] text-muted-foreground uppercase mt-1">Harga Promo</p>
           <p className="text-base text-muted-foreground line-through font-semibold">
             {hargaPromo ? `Rp ${Number(hargaPromo).toLocaleString('id-ID')}` : 'Rp -'}
           </p>
           {keteranganDiskon && (
-            <p className="text-xs text-muted-foreground">{keteranganDiskon}</p>
+            <p className="text-xs text-muted-foreground mt-1">{keteranganDiskon}</p>
           )}
+          <p className="text-[10px] text-muted-foreground uppercase mt-1">Harga Final</p>
           <p className="text-2xl text-primary font-black">
             {hargaFinal ? `Rp ${Number(hargaFinal).toLocaleString('id-ID')}` : 'Rp -'}
           </p>
