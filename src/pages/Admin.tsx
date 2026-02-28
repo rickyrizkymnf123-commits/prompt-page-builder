@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,7 @@ export default function Admin() {
   const [tplLoading, setTplLoading] = useState(false);
   const [previewTplHtml, setPreviewTplHtml] = useState<string | null>(null);
   const [previewTplTitle, setPreviewTplTitle] = useState('');
+  const adminScrollRef = useRef<number>(0);
 
   // Settings state
   const [orderUrl, setOrderUrl] = useState('');
@@ -390,10 +391,10 @@ export default function Admin() {
             {previewTplHtml !== null ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <Button variant="outline" size="sm" onClick={() => setPreviewTplHtml(null)}>← Kembali ke Daftar Template</Button>
+                  <Button variant="outline" size="sm" onClick={() => { setPreviewTplHtml(null); requestAnimationFrame(() => { window.scrollTo({ top: adminScrollRef.current, behavior: 'instant' as ScrollBehavior }); }); }}>← Kembali ke Daftar Template</Button>
                   <span className="text-sm font-semibold text-foreground">{previewTplTitle}</span>
                 </div>
-                <HtmlPreviewEditor onBack={() => setPreviewTplHtml(null)} initialHtml={previewTplHtml} isPaid={true} />
+                <HtmlPreviewEditor onBack={() => { setPreviewTplHtml(null); requestAnimationFrame(() => { window.scrollTo({ top: adminScrollRef.current, behavior: 'instant' as ScrollBehavior }); }); }} initialHtml={previewTplHtml} isPaid={true} />
               </div>
             ) : (
               <>
@@ -417,7 +418,7 @@ export default function Admin() {
                               <TableCell className="text-sm">{tpl.sort_order}</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-1">
-                                  <Button size="sm" variant="outline" onClick={() => { setPreviewTplHtml(tpl.html_content); setPreviewTplTitle(tpl.title); }}>👁 Preview</Button>
+                                  <Button size="sm" variant="outline" onClick={() => { adminScrollRef.current = window.scrollY; setPreviewTplHtml(tpl.html_content); setPreviewTplTitle(tpl.title); }}>👁 Preview</Button>
                                   <Button size="sm" variant="outline" onClick={() => handleEditTemplate(tpl)}>✏️</Button>
                                   <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDeleteTemplate(tpl.id)}>🗑</Button>
                                 </div>
@@ -453,7 +454,7 @@ export default function Admin() {
                               <iframe srcDoc={tpl.html_content} className="w-[400%] h-[400%] border-0" style={{ transform: 'scale(0.25)', transformOrigin: 'top left' }} title={tpl.title} sandbox="" loading="lazy" />
                             </div>
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                              <Button size="sm" variant="secondary" onClick={() => { setPreviewTplHtml(tpl.html_content); setPreviewTplTitle(tpl.title); }}>👁 Preview & Edit</Button>
+                              <Button size="sm" variant="secondary" onClick={() => { adminScrollRef.current = window.scrollY; setPreviewTplHtml(tpl.html_content); setPreviewTplTitle(tpl.title); }}>👁 Preview & Edit</Button>
                               <Button size="sm" onClick={() => { setEditTplId(null); setTplForm({ title: tpl.title, description: tpl.description, category: tpl.category, html_content: tpl.html_content, is_active: true, sort_order: 0 }); setTplDialog(true); }}>💾 Simpan ke DB</Button>
                             </div>
                           </div>

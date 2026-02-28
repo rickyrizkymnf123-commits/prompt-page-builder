@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { EditModal, EditTarget } from './EditModal';
 import { EditorMarketingPanel, SalesNotifEditorConfig, CountdownEditorConfig } from './EditorMarketingPanel';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { Lock } from 'lucide-react';
 
@@ -28,7 +29,7 @@ const SECTION_TEMPLATES: Record<string, string> = {
   'Image Gallery': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#0f0d1a;box-sizing:border-box;text-align:center;"><h2 style="font-size:24px;font-weight:700;color:#ffffff;margin:0 0 24px;">📸 Gallery Produk</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><img src="https://placehold.co/320x200/1a1a2e/7C3AED?text=Gambar+1" alt="Gambar 1" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/1a1a2e/ff4757?text=Gambar+2" alt="Gambar 2" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/1a1a2e/38bdf8?text=Gambar+3" alt="Gambar 3" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/1a1a2e/f59e0b?text=Gambar+4" alt="Gambar 4" style="width:100%;border-radius:12px;" /></div></section>`,
   'Single Image': `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:#13111c;box-sizing:border-box;text-align:center;"><img src="https://placehold.co/600x350/1a1a2e/7C3AED?text=Gambar+Produk" alt="Gambar" style="width:100%;border-radius:16px;" /></section>`,
   'Countdown Timer': `<section style="max-width:688px;margin:0 auto;padding:30px 35px;background:#1a1a2e;box-sizing:border-box;text-align:center;"><p style="color:#ff4757;font-size:13px;font-weight:700;letter-spacing:2px;margin:0 0 16px;">⏰ PROMO BERAKHIR DALAM</p><div style="display:flex;justify-content:center;gap:12px;"><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">00</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Hari</p></div><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">12</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Jam</p></div><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">30</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Menit</p></div><div style="text-align:center;"><span style="display:inline-block;background:#ff4757;color:#fff;font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">00</span><p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Detik</p></div></div></section>`,
-  'Sales Notification': `<div id="sn-popup" style="position:fixed;bottom:20px;left:20px;background:#ffffff;border:2px solid #6c63ff;border-radius:12px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:9999;display:flex;align-items:center;gap:10px;max-width:320px;"><span style="font-size:24px;">🔥</span><div><p style="margin:0;font-size:13px;color:#1a1a2e;font-weight:600;">Seseorang dari Jakarta</p><p style="margin:2px 0 0;font-size:12px;color:#666;">baru saja membeli <strong>Produk Anda</strong></p></div></div>`,
+  'Sales Notification': '', // Handled by marketing tools panel
 };
 
 const PREMIUM_SECTIONS = ['Countdown Timer', 'Sales Notification'];
@@ -349,6 +350,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     else if (direction === 'down' && sectionIndex < children.length - 1) root.insertBefore(children[sectionIndex + 1], children[sectionIndex]);
     const html = doc.documentElement.outerHTML;
     setPreviewHtml(html); setHtmlCode(html);
+    setTimeout(() => restoreScroll(), 200);
   };
 
   const deleteSection = (sectionIndex: number) => {
@@ -381,6 +383,26 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       if (orderUrl) window.open(orderUrl, '_blank');
       return;
     }
+    // Sales Notification and Countdown are handled by marketing tools
+    if (templateKey === 'Sales Notification') {
+      injectSalesNotif({
+        enabled: true, position: 'bottom-left', emoji: '🔥',
+        names: 'Seseorang dari Jakarta,Budi Surabaya,Ani Bandung', message: 'baru saja membeli',
+        produk: 'Produk Anda', interval: 5, duration: 4,
+        bgColor: '#ffffff', borderColor: '#6c63ff', textColor: '#1a1a2e',
+      });
+      setShowAddSection(false);
+      return;
+    }
+    if (templateKey === 'Countdown Timer') {
+      injectCountdown({
+        enabled: true, labelAtas: '⏰ PROMO BERAKHIR DALAM',
+        hari: 0, jam: 12, menit: 30, detik: 0,
+        bgColor: '#1a1a2e', textColor: '#ffffff', accentColor: '#ff4757',
+      });
+      setShowAddSection(false);
+      return;
+    }
     const templateHtml = SECTION_TEMPLATES[templateKey];
     if (!templateHtml) return;
     const parser = new DOMParser();
@@ -398,7 +420,6 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     setPreviewHtml(html); setHtmlCode(html);
     setShowAddSection(false);
     toast({ title: `Section "${templateKey}" ditambahkan` });
-    // Restore scroll after adding section
     setTimeout(() => restoreScroll(), 300);
   };
 
@@ -418,7 +439,63 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
   };
 
   const hasSalesNotif = previewHtml.includes('id="sn-popup"');
-  const hasCountdown = previewHtml.includes('cd-days') || previewHtml.includes('cd-hours');
+  const hasCountdown = previewHtml.includes('cd-days') || previewHtml.includes('cd-hours') || previewHtml.includes('data-section-type="countdown"');
+
+  // Parse existing sales notif config from HTML for marketing tools sync
+  const parsedSnConfig = useMemo<Partial<SalesNotifEditorConfig>>(() => {
+    if (!hasSalesNotif) return {};
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(previewHtml, 'text/html');
+      const popup = doc.getElementById('sn-popup');
+      if (!popup) return {};
+      const style = popup.getAttribute('style') || '';
+      let position = 'bottom-left';
+      if (style.includes('top') && style.includes('right')) position = 'top-right';
+      else if (style.includes('top') && style.includes('left')) position = 'top-left';
+      else if (style.includes('bottom') && style.includes('right')) position = 'bottom-right';
+      const bgMatch = style.match(/background:\s*([^;]+)/);
+      const borderMatch = style.match(/border:\s*[^;]*solid\s+([^;]+)/);
+      const emojiEl = popup.querySelector('span');
+      const emoji = emojiEl?.textContent?.trim() || '🔥';
+      const nameEl = doc.getElementById('sn-name');
+      const msgEl = popup.querySelectorAll('p')[1];
+      const msgText = msgEl?.textContent || '';
+      const strongEl = msgEl?.querySelector('strong');
+      const produk = strongEl?.textContent || 'Produk Anda';
+      const message = msgText.replace(produk, '').trim();
+      // Parse names from script
+      let names = 'Seseorang dari Jakarta';
+      const scripts = doc.querySelectorAll('script');
+      scripts.forEach(s => {
+        const t = s.textContent || '';
+        const namesMatch = t.match(/var names=(\[.*?\])/);
+        if (namesMatch) {
+          try { names = JSON.parse(namesMatch[1]).join(','); } catch {}
+        }
+      });
+      return { position, emoji, names, message, produk, bgColor: bgMatch?.[1]?.trim(), borderColor: borderMatch?.[1]?.trim() };
+    } catch { return {}; }
+  }, [previewHtml, hasSalesNotif]);
+
+  const parsedCdConfig = useMemo<Partial<CountdownEditorConfig>>(() => {
+    if (!hasCountdown) return {};
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(previewHtml, 'text/html');
+      const cdSection = doc.querySelector('[data-section-type="countdown"]') || doc.querySelector('[id^="cd-"]')?.closest('section');
+      if (!cdSection) return {};
+      const style = (cdSection as HTMLElement).getAttribute('style') || '';
+      const bgMatch = style.match(/background:\s*([^;]+)/);
+      const labelEl = cdSection.querySelector('p');
+      const labelAtas = labelEl?.textContent?.trim() || '';
+      const accentEl = cdSection.querySelector('[id="cd-days"]');
+      const accentStyle = accentEl?.getAttribute('style') || '';
+      const accentBgMatch = accentStyle.match(/background:\s*([^;]+)/);
+      const textColorMatch = accentStyle.match(/color:\s*([^;]+)/);
+      return { bgColor: bgMatch?.[1]?.trim(), labelAtas, accentColor: accentBgMatch?.[1]?.trim(), textColor: textColorMatch?.[1]?.trim() };
+    } catch { return {}; }
+  }, [previewHtml, hasCountdown]);
 
   const injectSalesNotif = (config: SalesNotifEditorConfig) => {
     const parser = new DOMParser();
@@ -548,35 +625,43 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
         <div className="flex gap-4">
           {/* Section Panel */}
           {editMode && showSectionPanel && (
-            <div className="w-64 flex-shrink-0 rounded-xl border border-border bg-card p-3 space-y-2 max-h-[700px] overflow-y-auto">
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">📦 Sections ({sections.length})</h3>
-              {sections.map((sec, i) => (
-                <div key={i} className="rounded-lg bg-secondary border border-border p-2 space-y-1">
-                  <p className="text-xs font-medium text-foreground truncate" title={sec.name}>{sec.name}</p>
-                  <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => moveSection(i, 'up')} disabled={i === 0} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬆</button>
-                    <button type="button" onClick={() => moveSection(i, 'down')} disabled={i === sections.length - 1} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬇</button>
-                    <input type="color" defaultValue="#1a1a2e" onChange={(e) => changeSectionColor(i, e.target.value)} className="w-6 h-6 rounded cursor-pointer border-0 p-0 ml-auto" title="Ganti warna background" />
-                    <button type="button" onClick={() => { if (confirm('Hapus section ini?')) deleteSection(i); }} className="px-1.5 py-0.5 rounded text-xs text-destructive hover:bg-destructive/10">🗑</button>
+            <div className="w-64 flex-shrink-0 sticky top-4 self-start">
+              <div className="rounded-xl border border-border bg-card p-3 space-y-2">
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">📦 Sections ({sections.length})</h3>
+                <ScrollArea className="max-h-[500px]">
+                  <div className="space-y-2 pr-2">
+                    {sections.map((sec, i) => (
+                      <div key={i} className="rounded-lg bg-secondary border border-border p-2 space-y-1">
+                        <p className="text-xs font-medium text-foreground truncate" title={sec.name}>{sec.name}</p>
+                        <div className="flex items-center gap-1">
+                          <button type="button" onClick={() => moveSection(i, 'up')} disabled={i === 0} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬆</button>
+                          <button type="button" onClick={() => moveSection(i, 'down')} disabled={i === sections.length - 1} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬇</button>
+                          <input type="color" defaultValue="#1a1a2e" onChange={(e) => changeSectionColor(i, e.target.value)} className="w-6 h-6 rounded cursor-pointer border-0 p-0 ml-auto" title="Ganti warna background" />
+                          <button type="button" onClick={() => { if (confirm('Hapus section ini?')) deleteSection(i); }} className="px-1.5 py-0.5 rounded text-xs text-destructive hover:bg-destructive/10">🗑</button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                </ScrollArea>
+                <div className="pt-2">
+                  <button type="button" onClick={() => setShowAddSection(!showAddSection)} className="w-full py-2 rounded-lg border border-dashed border-primary/50 text-primary text-xs font-semibold hover:bg-primary/5 transition-all">
+                    ➕ Tambah Section
+                  </button>
+                  {showAddSection && (
+                    <ScrollArea className="max-h-[250px] mt-2">
+                      <div className="space-y-1 pr-2">
+                        {Object.keys(SECTION_TEMPLATES).map(key => {
+                          const isLocked = PREMIUM_SECTIONS.includes(key) && !isPaid;
+                          return (
+                            <button key={key} type="button" onClick={() => addSection(key)} className={`w-full text-left px-2 py-1.5 rounded text-xs border transition-all text-foreground ${isLocked ? 'border-primary/30 bg-primary/5 opacity-60' : 'border-border hover:bg-primary/10 hover:border-primary/50'}`}>
+                              {key} {isLocked && <Lock className="inline h-3 w-3 ml-1 text-primary" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  )}
                 </div>
-              ))}
-              <div className="pt-2">
-                <button type="button" onClick={() => setShowAddSection(!showAddSection)} className="w-full py-2 rounded-lg border border-dashed border-primary/50 text-primary text-xs font-semibold hover:bg-primary/5 transition-all">
-                  ➕ Tambah Section
-                </button>
-                {showAddSection && (
-                  <div className="mt-2 space-y-1">
-                    {Object.keys(SECTION_TEMPLATES).map(key => {
-                      const isLocked = PREMIUM_SECTIONS.includes(key) && !isPaid;
-                      return (
-                        <button key={key} type="button" onClick={() => addSection(key)} className={`w-full text-left px-2 py-1.5 rounded text-xs border transition-all text-foreground ${isLocked ? 'border-primary/30 bg-primary/5 opacity-60' : 'border-border hover:bg-primary/10 hover:border-primary/50'}`}>
-                          {key} {isLocked && <Lock className="inline h-3 w-3 ml-1 text-primary" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -642,6 +727,8 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
           onRemoveCountdown={removeCountdown}
           hasSalesNotif={hasSalesNotif}
           hasCountdown={hasCountdown}
+          initialSnConfig={parsedSnConfig}
+          initialCdConfig={parsedCdConfig}
         />
       )}
 
