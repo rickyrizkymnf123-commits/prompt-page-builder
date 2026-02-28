@@ -46,6 +46,7 @@ export default function Login() {
       const { data: entitlements } = await supabase
         .from("entitlements")
         .select("id, product_code")
+        .eq("user_id", data.user.id)
         .in("product_code", ["LPE", "LPE_FREE"])
         .eq("status", "active");
 
