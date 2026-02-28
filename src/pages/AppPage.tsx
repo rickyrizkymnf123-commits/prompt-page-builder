@@ -237,7 +237,7 @@ export default function AppPage() {
         <div className="max-w-[1440px] mx-auto p-6">
           <section className="text-center py-12 px-6 mb-6 rounded-lg border border-border bg-card">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-6">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />V11
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />V11 — New Release 🚀
             </motion.div>
             <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight max-w-3xl mx-auto">
               Buat Landing Page professional cuman dalam{" "}<span className="text-primary">Hitungan menit</span> <Zap className="inline h-8 w-8 text-primary" />

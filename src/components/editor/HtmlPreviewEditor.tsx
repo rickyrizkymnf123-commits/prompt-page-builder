@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { EditModal, EditTarget } from './EditModal';
+import { EditorMarketingPanel, SalesNotifEditorConfig, CountdownEditorConfig } from './EditorMarketingPanel';
 import { toast } from '@/hooks/use-toast';
 import { Lock } from 'lucide-react';
 
@@ -397,6 +398,8 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     setPreviewHtml(html); setHtmlCode(html);
     setShowAddSection(false);
     toast({ title: `Section "${templateKey}" ditambahkan` });
+    // Restore scroll after adding section
+    setTimeout(() => restoreScroll(), 300);
   };
 
   const handleExport = () => {
@@ -412,6 +415,92 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
 
   const handleUpgrade = () => {
     if (orderUrl) window.open(orderUrl, '_blank');
+  };
+
+  const hasSalesNotif = previewHtml.includes('id="sn-popup"');
+  const hasCountdown = previewHtml.includes('cd-days') || previewHtml.includes('cd-hours');
+
+  const injectSalesNotif = (config: SalesNotifEditorConfig) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    // Remove existing
+    doc.getElementById('sn-popup')?.remove();
+    doc.querySelectorAll('script').forEach(s => { if ((s.textContent || '').includes('sn-popup') || (s.textContent || '').includes('showNotif')) s.remove(); });
+
+    const posMap: Record<string, string> = {
+      'bottom-left': 'bottom:20px;left:20px;',
+      'bottom-right': 'bottom:20px;right:20px;',
+      'top-left': 'top:20px;left:20px;',
+      'top-right': 'top:20px;right:20px;',
+    };
+    const posStyle = posMap[config.position] || posMap['bottom-left'];
+    const names = config.names.split(',').map(n => n.trim()).filter(Boolean);
+    const namesJson = JSON.stringify(names);
+
+    const snHtml = `<div id="sn-popup" style="position:fixed;${posStyle}background:${config.bgColor};border:2px solid ${config.borderColor};border-radius:12px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:9999;display:none;align-items:center;gap:10px;max-width:320px;transition:all 0.4s ease;"><span style="font-size:24px;">${config.emoji}</span><div><p id="sn-name" style="margin:0;font-size:13px;color:${config.textColor};font-weight:600;"></p><p style="margin:2px 0 0;font-size:12px;color:${config.textColor};opacity:0.8;">${config.message} <strong>${config.produk}</strong></p></div></div>`;
+    const snScript = `<script>(function(){var names=${namesJson};var i=0;var popup=document.getElementById('sn-popup');var nameEl=document.getElementById('sn-name');function showNotif(){if(!popup||!nameEl)return;nameEl.textContent=names[i%names.length];popup.style.display='flex';setTimeout(function(){popup.style.display='none';i++;},${config.duration * 1000});} setTimeout(function(){showNotif();setInterval(showNotif,${(config.interval + config.duration) * 1000});},${config.interval * 1000});})()</script>`;
+
+    const root = doc.getElementById('lp-root') || doc.body;
+    const temp = doc.createElement('div');
+    temp.innerHTML = snHtml;
+    if (temp.firstElementChild) root.appendChild(temp.firstElementChild);
+    const scriptEl = doc.createElement('div');
+    scriptEl.innerHTML = snScript;
+    if (scriptEl.firstElementChild) doc.body.appendChild(scriptEl.firstElementChild);
+
+    const html = doc.documentElement.outerHTML;
+    setPreviewHtml(html); setHtmlCode(html);
+    toast({ title: '✅ Sales Notification diperbarui!' });
+    setTimeout(() => restoreScroll(), 300);
+  };
+
+  const removeSalesNotif = () => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    doc.getElementById('sn-popup')?.remove();
+    doc.querySelectorAll('script').forEach(s => { if ((s.textContent || '').includes('sn-popup') || (s.textContent || '').includes('showNotif')) s.remove(); });
+    const html = doc.documentElement.outerHTML;
+    setPreviewHtml(html); setHtmlCode(html);
+    toast({ title: 'Sales Notification dihapus' });
+  };
+
+  const injectCountdown = (config: CountdownEditorConfig) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    // Remove existing countdown sections
+    doc.querySelectorAll('[data-section-type="countdown"]').forEach(el => el.remove());
+    doc.querySelectorAll('script').forEach(s => { if ((s.textContent || '').includes('cd-days') || (s.textContent || '').includes('cd-hours')) s.remove(); });
+
+    const totalSec = (config.hari * 86400) + (config.jam * 3600) + (config.menit * 60) + config.detik;
+    const cdHtml = `<section data-section-type="countdown" style="max-width:688px;margin:0 auto;padding:30px 35px;background:${config.bgColor};box-sizing:border-box;text-align:center;"><p style="color:${config.accentColor};font-size:13px;font-weight:700;letter-spacing:2px;margin:0 0 16px;">${config.labelAtas}</p><div style="display:flex;justify-content:center;gap:12px;"><div style="text-align:center;"><span id="cd-days" style="display:inline-block;background:${config.accentColor};color:${config.textColor};font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">${String(config.hari).padStart(2, '0')}</span><p style="font-size:11px;color:${config.textColor};opacity:0.7;margin:6px 0 0;">Hari</p></div><div style="text-align:center;"><span id="cd-hours" style="display:inline-block;background:${config.accentColor};color:${config.textColor};font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">${String(config.jam).padStart(2, '0')}</span><p style="font-size:11px;color:${config.textColor};opacity:0.7;margin:6px 0 0;">Jam</p></div><div style="text-align:center;"><span id="cd-minutes" style="display:inline-block;background:${config.accentColor};color:${config.textColor};font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">${String(config.menit).padStart(2, '0')}</span><p style="font-size:11px;color:${config.textColor};opacity:0.7;margin:6px 0 0;">Menit</p></div><div style="text-align:center;"><span id="cd-seconds" style="display:inline-block;background:${config.accentColor};color:${config.textColor};font-size:28px;font-weight:800;padding:8px 16px;border-radius:8px;">${String(config.detik).padStart(2, '0')}</span><p style="font-size:11px;color:${config.textColor};opacity:0.7;margin:6px 0 0;">Detik</p></div></div></section>`;
+    const cdScript = `<script>(function(){var end=Date.now()+${totalSec}*1000;function pad(n){return String(n).padStart(2,'0');}function tick(){var diff=Math.max(0,Math.floor((end-Date.now())/1000));var d=Math.floor(diff/86400);var h=Math.floor((diff%86400)/3600);var m=Math.floor((diff%3600)/60);var s=diff%60;var de=document.getElementById('cd-days');var he=document.getElementById('cd-hours');var me=document.getElementById('cd-minutes');var se=document.getElementById('cd-seconds');if(de)de.textContent=pad(d);if(he)he.textContent=pad(h);if(me)me.textContent=pad(m);if(se)se.textContent=pad(s);if(diff>0)requestAnimationFrame(function(){setTimeout(tick,1000);});}tick();})()</script>`;
+
+    const root = doc.getElementById('lp-root') || doc.body;
+    const snPopup = doc.getElementById('sn-popup');
+    const temp = doc.createElement('div');
+    temp.innerHTML = cdHtml;
+    if (temp.firstElementChild) {
+      if (snPopup) root.insertBefore(temp.firstElementChild, snPopup);
+      else root.appendChild(temp.firstElementChild);
+    }
+    const scriptEl = doc.createElement('div');
+    scriptEl.innerHTML = cdScript;
+    if (scriptEl.firstElementChild) doc.body.appendChild(scriptEl.firstElementChild);
+
+    const html = doc.documentElement.outerHTML;
+    setPreviewHtml(html); setHtmlCode(html);
+    toast({ title: '✅ Countdown Timer diperbarui!' });
+    setTimeout(() => restoreScroll(), 300);
+  };
+
+  const removeCountdown = () => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    doc.querySelectorAll('[data-section-type="countdown"]').forEach(el => el.remove());
+    doc.querySelectorAll('script').forEach(s => { if ((s.textContent || '').includes('cd-days') || (s.textContent || '').includes('cd-hours')) s.remove(); });
+    const html = doc.documentElement.outerHTML;
+    setPreviewHtml(html); setHtmlCode(html);
+    toast({ title: 'Countdown Timer dihapus' });
   };
 
   return (
@@ -543,6 +632,17 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
             )}
           </div>
         </div>
+      )}
+
+      {editMode && isPaid && previewHtml && (
+        <EditorMarketingPanel
+          onInjectSalesNotif={injectSalesNotif}
+          onInjectCountdown={injectCountdown}
+          onRemoveSalesNotif={removeSalesNotif}
+          onRemoveCountdown={removeCountdown}
+          hasSalesNotif={hasSalesNotif}
+          hasCountdown={hasCountdown}
+        />
       )}
 
       {editMode && (
