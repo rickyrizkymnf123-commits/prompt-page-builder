@@ -264,10 +264,35 @@ Durasi: ${durasi}
 Label: **"${label}"**
 Background: **${bg}**, Text: **${text}**, Accent: **${accent}**
 
-JavaScript (tanpa modifikasi):
+JavaScript WAJIB (salin PERSIS tanpa modifikasi):
 \`\`\`
-(function(){var deadline=new Date(Date.now()+${totalMs});function tick(){var d=deadline-Date.now();if(d<0)return;document.getElementById('cd-days').textContent=String(Math.floor(d/86400000)).padStart(2,'0');document.getElementById('cd-hours').textContent=String(Math.floor((d%86400000)/3600000)).padStart(2,'0');document.getElementById('cd-minutes').textContent=String(Math.floor((d%3600000)/60000)).padStart(2,'0');document.getElementById('cd-seconds').textContent=String(Math.floor((d%60000)/1000)).padStart(2,'0');}setInterval(tick,1000);tick();})();
+<script>
+(function(){
+  var totalSec = ${Math.floor(totalMs / 1000)};
+  var end = Date.now() + totalSec * 1000;
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function tick(){
+    var diff = Math.max(0, Math.floor((end - Date.now()) / 1000));
+    var d = Math.floor(diff / 86400);
+    var h = Math.floor((diff % 86400) / 3600);
+    var m = Math.floor((diff % 3600) / 60);
+    var s = diff % 60;
+    var de = document.getElementById('cd-days');
+    var he = document.getElementById('cd-hours');
+    var me = document.getElementById('cd-minutes');
+    var se = document.getElementById('cd-seconds');
+    if(de) de.textContent = pad(d);
+    if(he) he.textContent = pad(h);
+    if(me) me.textContent = pad(m);
+    if(se) se.textContent = pad(s);
+    if(diff > 0) setTimeout(tick, 1000);
+  }
+  tick();
+})();
+</script>
 \`\`\`
+
+**PENTING:** Script countdown HARUS diletakkan SEBELUM \`</body>\`. Gunakan \`setTimeout(tick, 1000)\` bukan \`setInterval\` supaya tidak drift. ID elemen WAJIB: \`cd-days\`, \`cd-hours\`, \`cd-minutes\`, \`cd-seconds\`.
 
 HTML WAJIB: Container \`div#countdown-container\`, angka \`span#cd-days/hours/minutes/seconds\` style: \`background:${accent};color:${text}\``;
 }

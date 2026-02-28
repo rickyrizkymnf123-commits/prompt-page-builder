@@ -625,41 +625,37 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
         <div className="flex gap-4">
           {/* Section Panel */}
           {editMode && showSectionPanel && (
-            <div className="w-64 flex-shrink-0 sticky top-4 self-start">
+            <div className="w-64 flex-shrink-0 sticky top-4 self-start max-h-[85vh] overflow-y-auto">
               <div className="rounded-xl border border-border bg-card p-3 space-y-2">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">📦 Sections ({sections.length})</h3>
-                <ScrollArea className="max-h-[500px]">
-                  <div className="space-y-2 pr-2">
-                    {sections.map((sec, i) => (
-                      <div key={i} className="rounded-lg bg-secondary border border-border p-2 space-y-1">
-                        <p className="text-xs font-medium text-foreground truncate" title={sec.name}>{sec.name}</p>
-                        <div className="flex items-center gap-1">
-                          <button type="button" onClick={() => moveSection(i, 'up')} disabled={i === 0} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬆</button>
-                          <button type="button" onClick={() => moveSection(i, 'down')} disabled={i === sections.length - 1} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬇</button>
-                          <input type="color" defaultValue="#1a1a2e" onChange={(e) => changeSectionColor(i, e.target.value)} className="w-6 h-6 rounded cursor-pointer border-0 p-0 ml-auto" title="Ganti warna background" />
-                          <button type="button" onClick={() => { if (confirm('Hapus section ini?')) deleteSection(i); }} className="px-1.5 py-0.5 rounded text-xs text-destructive hover:bg-destructive/10">🗑</button>
-                        </div>
+                <div className="space-y-2">
+                  {sections.map((sec, i) => (
+                    <div key={i} className="rounded-lg bg-secondary border border-border p-2 space-y-1">
+                      <p className="text-xs font-medium text-foreground truncate" title={sec.name}>{sec.name}</p>
+                      <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => moveSection(i, 'up')} disabled={i === 0} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬆</button>
+                        <button type="button" onClick={() => moveSection(i, 'down')} disabled={i === sections.length - 1} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬇</button>
+                        <input type="color" defaultValue="#1a1a2e" onChange={(e) => changeSectionColor(i, e.target.value)} className="w-6 h-6 rounded cursor-pointer border-0 p-0 ml-auto" title="Ganti warna background" />
+                        <button type="button" onClick={() => { if (confirm('Hapus section ini?')) deleteSection(i); }} className="px-1.5 py-0.5 rounded text-xs text-destructive hover:bg-destructive/10">🗑</button>
                       </div>
-                    ))}
-                  </div>
-                </ScrollArea>
+                    </div>
+                  ))}
+                </div>
                 <div className="pt-2">
                   <button type="button" onClick={() => setShowAddSection(!showAddSection)} className="w-full py-2 rounded-lg border border-dashed border-primary/50 text-primary text-xs font-semibold hover:bg-primary/5 transition-all">
                     ➕ Tambah Section
                   </button>
                   {showAddSection && (
-                    <ScrollArea className="max-h-[250px] mt-2">
-                      <div className="space-y-1 pr-2">
-                        {Object.keys(SECTION_TEMPLATES).map(key => {
-                          const isLocked = PREMIUM_SECTIONS.includes(key) && !isPaid;
-                          return (
-                            <button key={key} type="button" onClick={() => addSection(key)} className={`w-full text-left px-2 py-1.5 rounded text-xs border transition-all text-foreground ${isLocked ? 'border-primary/30 bg-primary/5 opacity-60' : 'border-border hover:bg-primary/10 hover:border-primary/50'}`}>
-                              {key} {isLocked && <Lock className="inline h-3 w-3 ml-1 text-primary" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </ScrollArea>
+                    <div className="space-y-1 mt-2">
+                      {Object.keys(SECTION_TEMPLATES).map(key => {
+                        const isLocked = PREMIUM_SECTIONS.includes(key) && !isPaid;
+                        return (
+                          <button key={key} type="button" onClick={() => addSection(key)} className={`w-full text-left px-2 py-1.5 rounded text-xs border transition-all text-foreground ${isLocked ? 'border-primary/30 bg-primary/5 opacity-60' : 'border-border hover:bg-primary/10 hover:border-primary/50'}`}>
+                            {key} {isLocked && <Lock className="inline h-3 w-3 ml-1 text-primary" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </div>
