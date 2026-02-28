@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface SalesNotifEditorConfig {
@@ -34,6 +34,8 @@ interface Props {
   onRemoveCountdown: () => void;
   hasSalesNotif: boolean;
   hasCountdown: boolean;
+  initialSnConfig?: Partial<SalesNotifEditorConfig>;
+  initialCdConfig?: Partial<CountdownEditorConfig>;
 }
 
 const positionOptions = [
@@ -50,7 +52,7 @@ const colorPresets = [
   { bg: '#1e3a5f', text: '#ffffff', accent: '#f39c12', label: 'Navy Gold' },
 ];
 
-export function EditorMarketingPanel({ onInjectSalesNotif, onInjectCountdown, onRemoveSalesNotif, onRemoveCountdown, hasSalesNotif, hasCountdown }: Props) {
+export function EditorMarketingPanel({ onInjectSalesNotif, onInjectCountdown, onRemoveSalesNotif, onRemoveCountdown, hasSalesNotif, hasCountdown, initialSnConfig, initialCdConfig }: Props) {
   const [activeTab, setActiveTab] = useState<'salesNotif' | 'countdown'>('salesNotif');
 
   const [snConfig, setSnConfig] = useState<SalesNotifEditorConfig>({
@@ -78,6 +80,19 @@ export function EditorMarketingPanel({ onInjectSalesNotif, onInjectCountdown, on
     textColor: '#ffffff',
     accentColor: '#ff4757',
   });
+
+  // Sync initial configs from parsed HTML
+  useEffect(() => {
+    if (initialSnConfig && Object.keys(initialSnConfig).length > 0) {
+      setSnConfig(prev => ({ ...prev, ...initialSnConfig }));
+    }
+  }, [initialSnConfig]);
+
+  useEffect(() => {
+    if (initialCdConfig && Object.keys(initialCdConfig).length > 0) {
+      setCdConfig(prev => ({ ...prev, ...initialCdConfig }));
+    }
+  }, [initialCdConfig]);
 
   const updateSn = (field: keyof SalesNotifEditorConfig, value: any) => {
     setSnConfig(prev => ({ ...prev, [field]: value }));
