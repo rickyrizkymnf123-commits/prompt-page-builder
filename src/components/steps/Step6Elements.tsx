@@ -29,7 +29,7 @@ export function Step6Elements({ elemenTambahan, onToggle }: Props) {
       <p className="text-sm text-muted-foreground">
         Pilih section yang ingin ditambahkan di landing page:
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-2">
         {elemenTambahanOptions.map((el) => {
           const active = elemenTambahan[el] ?? false;
           const icon = sectionIcons[el] || '📌';

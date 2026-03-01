@@ -63,7 +63,7 @@ export function Step4Detail({
         <label className="text-sm font-medium text-foreground">Struktur Harga (3 Layer)</label>
         <p className="text-xs text-muted-foreground">Harga Normal (dicoret) → Harga Promo (dicoret) → Harga Diskon (Beli Sekarang)</p>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-muted-foreground uppercase">Harga Normal <span className="text-destructive text-[10px]">(dicoret)</span></label>
             <Input type="number" placeholder="Rp" value={hargaNormal} onChange={(e) => onChange('hargaNormal', e.target.value)} className="bg-secondary border-border" />

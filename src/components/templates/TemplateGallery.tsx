@@ -71,7 +71,7 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl }: P
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {allTemplates.map(tpl => (
           <div key={tpl.id} className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-all group">
             <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
@@ -117,20 +117,20 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl }: P
 
       {/* Preview Modal */}
       {previewTemplate && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) closePreview(); }}>
-          <div className="bg-card rounded-2xl border border-border w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-foreground">{previewTemplate.title}</h3>
-                <p className="text-xs text-muted-foreground">{previewTemplate.description}</p>
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={(e) => { if (e.target === e.currentTarget) closePreview(); }}>
+          <div className="bg-card rounded-t-2xl sm:rounded-2xl border border-border w-full sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="font-bold text-foreground text-sm sm:text-base truncate">{previewTemplate.title}</h3>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{previewTemplate.description}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
                 {isPaid ? (
-                  <Button size="sm" onClick={() => { onSelectTemplate(previewTemplate.html_content); closePreview(); }}>✅ Gunakan Template</Button>
+                  <Button size="sm" onClick={() => { onSelectTemplate(previewTemplate.html_content); closePreview(); }} className="text-xs sm:text-sm">✅ Gunakan</Button>
                 ) : (
-                  <Button size="sm" onClick={handleUpgrade} className="gap-1"><Lock className="h-3 w-3" /> Upgrade</Button>
+                  <Button size="sm" onClick={handleUpgrade} className="gap-1 text-xs sm:text-sm"><Lock className="h-3 w-3" /> Upgrade</Button>
                 )}
-                <Button size="sm" variant="outline" onClick={closePreview}>✕ Tutup</Button>
+                <Button size="sm" variant="outline" onClick={closePreview} className="text-xs sm:text-sm">✕</Button>
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
