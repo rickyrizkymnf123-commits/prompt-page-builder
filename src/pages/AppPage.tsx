@@ -159,7 +159,10 @@ export default function AppPage() {
   const [userTier, setUserTier] = useState<'free' | 'paid'>('free');
   const [orderUrl, setOrderUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [promptUsage, setPromptUsage] = useState(0);
+  const [usageLimitReached, setUsageLimitReached] = useState(false);
   const navigate = useNavigate();
+  const FREE_LIMIT = 5;
 
   const isPaid = userTier === 'paid';
 
@@ -180,6 +183,15 @@ export default function AppPage() {
         const { data: settings } = await (supabase as any).from('app_settings').select('value').eq('key', 'scalev_order_url').maybeSingle();
         if (settings?.value) setOrderUrl(settings.value);
       } catch {}
+
+      // Fetch prompt usage for free users
+      if (!hasPaid) {
+        const { data: usage } = await supabase.from('prompt_usage').select('used_count').eq('user_id', session.user.id).maybeSingle();
+        const count = usage?.used_count ?? 0;
+        setPromptUsage(count);
+        setUsageLimitReached(count >= 5);
+      }
+      
       
       setLoading(false);
     };
@@ -217,11 +229,26 @@ export default function AppPage() {
     if (currentStep > 1) setIsDirty(true);
   }, [currentStep]);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!isPaid && usageLimitReached) {
+      toast({ title: '🔒 Limit Tercapai', description: `Kamu sudah menggunakan ${FREE_LIMIT}x generate gratis. Upgrade untuk unlimited.`, variant: 'destructive' });
+      return;
+    }
     setIsGenerating(true);
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Simulate generation with delay for animation
+
+    // Increment usage for free users
+    if (!isPaid) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const newCount = promptUsage + 1;
+        await supabase.from('prompt_usage').upsert({ user_id: session.user.id, used_count: newCount, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+        setPromptUsage(newCount);
+        if (newCount >= FREE_LIMIT) setUsageLimitReached(true);
+      }
+    }
+
     setTimeout(() => {
       const prompt = generatePrompt(form);
       setPromptText(prompt);
@@ -374,11 +401,25 @@ export default function AppPage() {
               </div>
             )}
 
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
-              <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
-                <Zap className="h-4 w-4" /> {isDirty ? "Generate Ulang" : "Generate Prompt ⚡"}
-              </Button>
+            <div className="space-y-2 pt-2">
+              {!isPaid && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Generate tersisa: <span className={`font-bold ${usageLimitReached ? 'text-destructive' : 'text-primary'}`}>{Math.max(0, FREE_LIMIT - promptUsage)}/{FREE_LIMIT}</span>
+                  {usageLimitReached && ' — Upgrade untuk unlimited'}
+                </p>
+              )}
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
+                {!isPaid && usageLimitReached ? (
+                  <Button onClick={handleUpgrade} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2" size="lg">
+                    <Lock className="h-4 w-4" /> Upgrade untuk Generate ⭐
+                  </Button>
+                ) : (
+                  <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
+                    <Zap className="h-4 w-4" /> {isDirty ? "Generate Ulang" : "Generate Prompt ⚡"}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
