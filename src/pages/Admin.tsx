@@ -345,31 +345,31 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-50 border-b border-border bg-card px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center"><Rocket className="h-5 w-5 text-primary-foreground" /></div>
-          <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-foreground">Landing Page <span className="text-primary">Builder V.11</span></h1>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">By Digital Strategi · <Shield className="h-3 w-3" /> Admin Panel</span>
+      <header className="sticky top-0 z-50 border-b border-border bg-card px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0"><Rocket className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" /></div>
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-sm sm:text-xl font-bold text-foreground truncate">LP <span className="text-primary">Builder</span> <span className="hidden sm:inline">V.11</span></h1>
+            <span className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1"><Shield className="h-3 w-3" /> Admin</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)}>{darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}</Button>
-          <Button variant="ghost" size="icon" onClick={async () => { await supabase.auth.signOut(); navigate("/login"); }}><LogOut className="h-5 w-5" /></Button>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setDarkMode(!darkMode)}>{darkMode ? <Sun className="h-4 w-4 sm:h-5 sm:w-5" /> : <Moon className="h-4 w-4 sm:h-5 sm:w-5" />}</Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={async () => { await supabase.auth.signOut(); navigate("/login"); }}><LogOut className="h-4 w-4 sm:h-5 sm:w-5" /></Button>
         </div>
       </header>
 
-      <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full">
+      <main className="flex-1 px-3 py-4 sm:p-6 max-w-[1400px] mx-auto w-full">
         <Tabs defaultValue="tools">
-          <TabsList className="sticky top-[57px] z-40 mb-6 bg-card/95 backdrop-blur">
-            <TabsTrigger value="tools" className="gap-2"><Zap className="h-4 w-4" /> Tools</TabsTrigger>
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="h-4 w-4" /> Users
-              {pendingCount > 0 && <span className="ml-1 bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">{pendingCount}</span>}
+          <TabsList className="sticky top-[49px] sm:top-[57px] z-40 mb-4 sm:mb-6 bg-card/95 backdrop-blur w-full overflow-x-auto flex justify-start">
+            <TabsTrigger value="tools" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden xs:inline">Tools</span><span className="xs:hidden">⚡</span></TabsTrigger>
+            <TabsTrigger value="users" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Users</span>
+              {pendingCount > 0 && <span className="ml-0.5 bg-amber-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">{pendingCount}</span>}
             </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-2"><Layout className="h-4 w-4" /> Templates</TabsTrigger>
-            <TabsTrigger value="logs" className="gap-2"><FileText className="h-4 w-4" /> Logs</TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2"><Settings className="h-4 w-4" /> Settings</TabsTrigger>
+            <TabsTrigger value="templates" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Layout className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Templates</span></TabsTrigger>
+            <TabsTrigger value="logs" className="gap-1 sm:gap-2 text-xs sm:text-sm"><FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Logs</span></TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Settings</span></TabsTrigger>
           </TabsList>
 
           {/* TOOLS TAB */}
@@ -414,18 +414,18 @@ export default function Admin() {
             {toolStep === 2 && isGenerating && <AdminGeneratingLoader />}
 
             {toolStep === 2 && !isGenerating && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-4xl mx-auto space-y-6">
-                <p className="text-center text-sm text-muted-foreground">Copy prompt lalu buka AI favorit kamu</p>
-                <div className="rounded-xl border border-border bg-card p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-base font-semibold text-foreground">📋 Prompt</h2>
-                    <Button variant="outline" size="sm" onClick={async () => { await navigator.clipboard.writeText(promptText); toast({ title: 'Disalin!' }); }} className="gap-2"><Copy className="h-4 w-4" /> Copy</Button>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+                <p className="text-center text-xs sm:text-sm text-muted-foreground">Copy prompt lalu buka AI favorit kamu</p>
+                <div className="rounded-xl border border-border bg-card p-3 sm:p-5">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <h2 className="text-sm sm:text-base font-semibold text-foreground">📋 Prompt</h2>
+                    <Button variant="outline" size="sm" onClick={async () => { await navigator.clipboard.writeText(promptText); toast({ title: 'Disalin!' }); }} className="gap-1.5 text-xs sm:text-sm"><Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Copy</Button>
                   </div>
-                  <ScrollArea className="h-64"><pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-3 bg-secondary rounded-lg"><TypewriterText text={promptText} /></pre></ScrollArea>
+                  <ScrollArea className="h-48 sm:h-64"><pre className="text-xs sm:text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-2 sm:p-3 bg-secondary rounded-lg"><TypewriterText text={promptText} /></pre></ScrollArea>
                 </div>
-                <Button onClick={async () => { try { await navigator.clipboard.writeText(promptText); } catch {} window.open('https://chat.z.ai/', '_blank'); toast({ title: '✅ Prompt disalin!' }); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg"><ExternalLink className="h-4 w-4" /> Buat Landing Page</Button>
-                <Button variant="outline" onClick={() => { setToolStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="w-full gap-2" size="lg">Lanjut ke Preview →</Button>
-                <Button variant="outline" onClick={() => setToolStep(1)} className="w-full">← Kembali</Button>
+                <Button onClick={async () => { try { await navigator.clipboard.writeText(promptText); } catch {} window.open('https://chat.z.ai/', '_blank'); toast({ title: '✅ Prompt disalin!' }); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2 text-sm" size="lg"><ExternalLink className="h-4 w-4" /> Buat Landing Page</Button>
+                <Button variant="outline" onClick={() => { setToolStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="w-full gap-2 text-sm" size="lg">Lanjut ke Preview →</Button>
+                <Button variant="outline" onClick={() => setToolStep(1)} className="w-full text-sm">← Kembali</Button>
               </motion.div>
             )}
 
@@ -445,15 +445,15 @@ export default function Admin() {
             ) : (
               <>
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center gap-2"><Layout className="h-5 w-5" /> Template Database ({templates.length})</CardTitle>
-                    <Button size="sm" onClick={() => { setEditTplId(null); setTplForm({ title: '', description: '', category: 'general', html_content: '', is_active: true, sort_order: 0 }); setTplDialog(true); }} className="gap-1">➕ Tambah Template</Button>
+                  <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 sm:p-6">
+                    <CardTitle className="flex items-center gap-2 text-sm sm:text-base"><Layout className="h-4 w-4 sm:h-5 sm:w-5" /> Template DB ({templates.length})</CardTitle>
+                    <Button size="sm" onClick={() => { setEditTplId(null); setTplForm({ title: '', description: '', category: 'general', html_content: '', is_active: true, sort_order: 0 }); setTplDialog(true); }} className="gap-1 text-xs sm:text-sm w-full sm:w-auto">➕ Tambah</Button>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-3 sm:p-6 pt-0">
                     {templates.length === 0 ? (
                       <p className="text-center text-muted-foreground py-8">Belum ada template di database.</p>
                     ) : (
-                      <Table>
+                      <div className="overflow-x-auto"><Table>
                         <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Category</TableHead><TableHead>Status</TableHead><TableHead>Order</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow></TableHeader>
                         <TableBody>
                           {templates.map(tpl => (
@@ -472,14 +472,14 @@ export default function Admin() {
                             </TableRow>
                           ))}
                         </TableBody>
-                      </Table>
+                      </Table></div>
                     )}
                   </CardContent>
                 </Card>
 
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">📋 Template Bawaan ({sampleTemplates.length})</CardTitle>
+                  <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 sm:p-6">
+                    <CardTitle className="flex items-center gap-2 text-sm sm:text-base">📋 Bawaan ({sampleTemplates.length})</CardTitle>
                     <Button size="sm" variant="outline" onClick={async () => {
                       const existingTitles = templates.map(t => t.title);
                       const toInsert = sampleTemplates.filter(s => !existingTitles.includes(s.title));
@@ -489,19 +489,19 @@ export default function Admin() {
                       }
                       showToast({ title: `✅ ${toInsert.length} template ditambahkan ke database!` });
                       await fetchTemplates();
-                    }} className="gap-1">🚀 Push Semua ke Database</Button>
+                    }} className="gap-1 text-xs sm:text-sm w-full sm:w-auto">🚀 Push ke DB</Button>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <CardContent className="p-3 sm:p-6 pt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                       {sampleTemplates.map(tpl => (
                         <div key={tpl.id} className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-all group">
                           <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
                             <div className="w-full h-full overflow-hidden" style={{ pointerEvents: 'none' }}>
                               <iframe srcDoc={tpl.html_content} className="w-[400%] h-[400%] border-0" style={{ transform: 'scale(0.25)', transformOrigin: 'top left' }} title={tpl.title} sandbox="" loading="lazy" />
                             </div>
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                              <Button size="sm" variant="secondary" onClick={() => { adminScrollRef.current = window.scrollY; setPreviewTplHtml(tpl.html_content); setPreviewTplTitle(tpl.title); }}>👁 Preview & Edit</Button>
-                              <Button size="sm" onClick={() => { setEditTplId(null); setTplForm({ title: tpl.title, description: tpl.description, category: tpl.category, html_content: tpl.html_content, is_active: true, sort_order: 0 }); setTplDialog(true); }}>💾 Simpan ke DB</Button>
+                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/50 transition-all flex items-end justify-center gap-2 pb-3 cursor-pointer" onClick={() => { adminScrollRef.current = window.scrollY; setPreviewTplHtml(tpl.html_content); setPreviewTplTitle(tpl.title); }}>
+                              <Button size="sm" variant="secondary" className="text-xs" onClick={(e) => { e.stopPropagation(); adminScrollRef.current = window.scrollY; setPreviewTplHtml(tpl.html_content); setPreviewTplTitle(tpl.title); }}>👁 Preview</Button>
+                              <Button size="sm" className="text-xs" onClick={(e) => { e.stopPropagation(); setEditTplId(null); setTplForm({ title: tpl.title, description: tpl.description, category: tpl.category, html_content: tpl.html_content, is_active: true, sort_order: 0 }); setTplDialog(true); }}>💾 Simpan</Button>
                             </div>
                           </div>
                           <div className="p-3 space-y-1">
@@ -520,39 +520,39 @@ export default function Admin() {
 
           {/* USERS TAB */}
           <TabsContent value="users">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
               {[
-                { label: "Total User", count: users.length, icon: <Users className="h-8 w-8 text-primary" />, filter: "all" },
-                { label: "Pending", count: pendingCount, icon: <Clock className="h-8 w-8 text-amber-500" />, filter: "pending" },
-                { label: "Aktif", count: activeCount, icon: <UserCheck className="h-8 w-8 text-emerald-500" />, filter: "active" },
-                { label: "Ditolak", count: rejectedCount, icon: <UserX className="h-8 w-8 text-destructive" />, filter: "rejected" },
+                { label: "Total User", count: users.length, icon: <Users className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />, filter: "all" },
+                { label: "Pending", count: pendingCount, icon: <Clock className="h-5 w-5 sm:h-8 sm:w-8 text-amber-500" />, filter: "pending" },
+                { label: "Aktif", count: activeCount, icon: <UserCheck className="h-5 w-5 sm:h-8 sm:w-8 text-emerald-500" />, filter: "active" },
+                { label: "Ditolak", count: rejectedCount, icon: <UserX className="h-5 w-5 sm:h-8 sm:w-8 text-destructive" />, filter: "rejected" },
               ].map(s => (
                 <Card key={s.filter} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setFilterStatus(s.filter)}>
-                  <CardContent className="p-4 flex items-center gap-3">{s.icon}<div><p className="text-2xl font-bold text-foreground">{s.count}</p><p className="text-xs text-muted-foreground">{s.label}</p></div></CardContent>
+                  <CardContent className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">{s.icon}<div><p className="text-lg sm:text-2xl font-bold text-foreground">{s.count}</p><p className="text-[10px] sm:text-xs text-muted-foreground">{s.label}</p></div></CardContent>
                 </Card>
               ))}
             </div>
             <Card>
-              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Daftar User ({filteredUsers.length})</CardTitle>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <div className="relative flex-1 sm:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => setAddMemberDialog(true)}><UserPlus className="h-4 w-4" /> Add</Button>
-                  <Button variant="outline" size="icon" onClick={() => { fetchUsers(); fetchLogs(); }}><RefreshCw className="h-4 w-4" /></Button>
+              <CardHeader className="flex flex-col gap-2 p-3 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base"><Users className="h-4 w-4 sm:h-5 sm:w-5" /> User ({filteredUsers.length})</CardTitle>
+                <div className="flex items-center gap-2 w-full">
+                  <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 text-sm" /></div>
+                  <Button variant="outline" size="sm" className="gap-1 flex-shrink-0" onClick={() => setAddMemberDialog(true)}><UserPlus className="h-4 w-4" /> <span className="hidden sm:inline">Add</span></Button>
+                  <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => { fetchUsers(); fetchLogs(); }}><RefreshCw className="h-4 w-4" /></Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="flex gap-2 mb-4 flex-wrap items-center">
+              <CardContent className="p-3 sm:p-6 pt-0">
+                <div className="flex gap-1.5 sm:gap-2 mb-3 sm:mb-4 flex-wrap items-center">
                   {["all","pending","active","rejected"].map(s => (
-                    <Button key={s} size="sm" variant={filterStatus===s?"default":"outline"} onClick={() => setFilterStatus(s)} className="text-xs capitalize">{s==="all"?"Semua":s}</Button>
+                    <Button key={s} size="sm" variant={filterStatus===s?"default":"outline"} onClick={() => setFilterStatus(s)} className="text-[10px] sm:text-xs capitalize h-7 sm:h-8 px-2 sm:px-3">{s==="all"?"Semua":s}</Button>
                   ))}
                   {selectedUsers.size > 0 && (
-                    <div className="flex gap-1 ml-auto">
-                      <span className="text-xs text-muted-foreground self-center mr-1">{selectedUsers.size} dipilih</span>
-                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_paid' })} className="text-xs gap-1">⬆ Berbayar</Button>
-                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_free' })} className="text-xs gap-1">⬇ Gratis</Button>
-                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'reset_password' })} className="text-xs gap-1"><KeyRound className="h-3 w-3" /> Reset Sandi</Button>
-                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'delete' })} className="text-xs gap-1 text-destructive"><Trash2 className="h-3 w-3" /> Hapus</Button>
+                    <div className="flex gap-1 flex-wrap w-full sm:w-auto sm:ml-auto mt-1 sm:mt-0">
+                      <span className="text-[10px] sm:text-xs text-muted-foreground self-center mr-1">{selectedUsers.size} dipilih</span>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_paid' })} className="text-[10px] sm:text-xs gap-1 h-7">⬆ Bayar</Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_free' })} className="text-[10px] sm:text-xs gap-1 h-7">⬇ Gratis</Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'reset_password' })} className="text-[10px] sm:text-xs gap-1 h-7"><KeyRound className="h-3 w-3" /> Reset</Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'delete' })} className="text-[10px] sm:text-xs gap-1 h-7 text-destructive"><Trash2 className="h-3 w-3" /> Hapus</Button>
                     </div>
                   )}
                 </div>
@@ -616,23 +616,25 @@ export default function Admin() {
           {/* LOGS TAB */}
           <TabsContent value="logs">
             <Card>
-              <CardHeader><CardTitle>Provision Logs</CardTitle></CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader><TableRow><TableHead>Order ID</TableHead><TableHead>Email</TableHead><TableHead>Status</TableHead><TableHead>Message</TableHead><TableHead>Tanggal</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {logs.length===0 ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Belum ada log.</TableCell></TableRow>
-                    : logs.map(log => (
-                      <TableRow key={log.id}>
-                        <TableCell className="font-mono text-xs">{log.order_id||"-"}</TableCell>
-                        <TableCell className="text-sm">{log.email||"-"}</TableCell>
-                        <TableCell><StatusBadge status={log.status} /></TableCell>
-                        <TableCell className="text-xs max-w-[300px] truncate">{log.message||"-"}</TableCell>
-                        <TableCell className="text-xs">{new Date(log.created_at).toLocaleString("id-ID")}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <CardHeader className="p-3 sm:p-6"><CardTitle className="text-sm sm:text-base">Provision Logs</CardTitle></CardHeader>
+              <CardContent className="p-3 sm:p-6 pt-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader><TableRow><TableHead className="text-xs">Order ID</TableHead><TableHead className="text-xs">Email</TableHead><TableHead className="text-xs">Status</TableHead><TableHead className="text-xs hidden sm:table-cell">Message</TableHead><TableHead className="text-xs">Tanggal</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {logs.length===0 ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8 text-sm">Belum ada log.</TableCell></TableRow>
+                      : logs.map(log => (
+                        <TableRow key={log.id}>
+                          <TableCell className="font-mono text-[10px] sm:text-xs">{log.order_id?.slice(0, 8) || "-"}</TableCell>
+                          <TableCell className="text-[10px] sm:text-sm max-w-[100px] truncate">{log.email||"-"}</TableCell>
+                          <TableCell><StatusBadge status={log.status} /></TableCell>
+                          <TableCell className="text-xs max-w-[300px] truncate hidden sm:table-cell">{log.message||"-"}</TableCell>
+                          <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">{new Date(log.created_at).toLocaleDateString("id-ID")}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -766,7 +768,7 @@ export default function Admin() {
             <TabsContent value="metadata" className="space-y-3">
               <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Nama Template *</label><Input value={tplForm.title} onChange={(e) => setTplForm(p => ({ ...p, title: e.target.value }))} placeholder="Nama template..." /></div>
               <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Deskripsi</label><Textarea value={tplForm.description} onChange={(e) => setTplForm(p => ({ ...p, description: e.target.value }))} placeholder="Deskripsi singkat template ini..." className="min-h-[80px]" /></div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Kategori</label><Input value={tplForm.category} onChange={(e) => setTplForm(p => ({ ...p, category: e.target.value }))} /></div>
                 <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Urutan</label><Input type="number" value={tplForm.sort_order} onChange={(e) => setTplForm(p => ({ ...p, sort_order: Number(e.target.value) }))} /></div>
                 <div>
