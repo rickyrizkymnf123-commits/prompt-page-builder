@@ -24,10 +24,36 @@ const themeMap: Record<string, { bg: string; text: string; card: string }> = {
   'Pastel': { bg: '#fef9f3', text: '#3a3a5a', card: '#fff5ee' },
 };
 
+// Framework formula structures
+const frameworkFormulas: Record<string, { label: string; steps: string[] }> = {
+  'AIDCA': { label: 'AIDCA', steps: ['Attention', 'Interest', 'Desire', 'Conviction', 'Action'] },
+  'PAS (Problem–Agitate–Solution)': { label: 'PAS', steps: ['Problem', 'Agitate', 'Solution'] },
+  'BAB (Before–After–Bridge)': { label: 'BAB', steps: ['Before', 'After', 'Bridge'] },
+  '4P (Promise–Picture–Proof–Push)': { label: '4P', steps: ['Promise', 'Picture', 'Proof', 'Push'] },
+  'SLAP (Stop–Look–Act–Purchase)': { label: 'SLAP', steps: ['Stop', 'Look', 'Act', 'Purchase'] },
+  'StoryBrand': { label: 'StoryBrand', steps: ['Character', 'Problem', 'Guide', 'Plan', 'Action', 'Success'] },
+  'ABT (And–But–Therefore)': { label: 'ABT', steps: ['And', 'But', 'Therefore'] },
+  "Hero's Journey": { label: "Hero's Journey", steps: ['Ordinary', 'Call', 'Challenge', 'Transformation', 'Return'] },
+  'HSO (Hook–Story–Offer)': { label: 'HSO', steps: ['Hook', 'Story', 'Offer'] },
+  'QUEST': { label: 'QUEST', steps: ['Qualify', 'Understand', 'Educate', 'Stimulate', 'Transition'] },
+  'JTBD (Jobs To Be Done)': { label: 'JTBD', steps: ['Situation', 'Motivation', 'Outcome'] },
+  'Awareness Ladder': { label: 'Awareness', steps: ['Unaware', 'Problem', 'Solution', 'Product', 'Most Aware'] },
+  'FAB (Features–Advantages–Benefits)': { label: 'FAB', steps: ['Features', 'Advantages', 'Benefits'] },
+  'PASTOR': { label: 'PASTOR', steps: ['Person', 'Amplify', 'Story', 'Transform', 'Offer', 'Response'] },
+  'Problem–Promise–Proof': { label: 'PPP', steps: ['Problem', 'Promise', 'Proof'] },
+  'Useful–Urgent–Unique': { label: 'UUU', steps: ['Useful', 'Urgent', 'Unique'] },
+  'The 3 Reason Why': { label: '3 Why', steps: ['Why This', 'Why Now', 'Why You'] },
+  'Feature–Solution–Solution': { label: 'FSS', steps: ['Feature', 'Solution₁', 'Solution₂'] },
+  'Solution–Impact–Problem': { label: 'SIP', steps: ['Solution', 'Impact', 'Problem'] },
+  'Failed–Growth–Success': { label: 'FGS', steps: ['Failed', 'Growth', 'Success'] },
+  'Stop–Fear–Listen': { label: 'SFL', steps: ['Stop', 'Fear', 'Listen'] },
+};
+
 export function LivePreview({ form }: Props) {
   const accent = colorMap[form.warnaBrand] || '#6c63ff';
   const theme = themeMap[form.tema] || themeMap['Default'];
   const isDark = form.tema === 'Dark' || form.tema === 'Colorful';
+  const formula = frameworkFormulas[form.framework];
 
   const sections = useMemo(() => {
     const s: { key: string; label: string; icon: string }[] = [];
@@ -63,6 +89,30 @@ export function LivePreview({ form }: Props) {
       </div>
 
       <div className="px-3 py-2 space-y-2 max-h-[500px] overflow-y-auto" style={{ fontSize: '10px' }}>
+
+        {/* Framework Formula */}
+        {formula && (
+          <div className="rounded-lg p-2" style={{ background: accent + '11', border: `1px solid ${accent}33` }}>
+            <div className="text-[7px] font-bold text-center mb-1.5" style={{ color: accent }}>
+              📐 Formula: {formula.label}
+            </div>
+            <div className="flex items-center justify-center gap-0.5 flex-wrap">
+              {formula.steps.map((step, i) => (
+                <div key={step} className="flex items-center gap-0.5">
+                  <span
+                    className="text-[6px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ background: accent, color: '#fff' }}
+                  >
+                    {step}
+                  </span>
+                  {i < formula.steps.length - 1 && (
+                    <span className="text-[8px]" style={{ color: accent }}>→</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Countdown */}
         {form.countdown.enabled && form.elemenTambahan['Scarcity / Timer'] && (
