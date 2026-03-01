@@ -131,6 +131,27 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_usage: {
+        Row: {
+          id: string
+          updated_at: string | null
+          used_count: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          updated_at?: string | null
+          used_count?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          updated_at?: string | null
+          used_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       provision_logs: {
         Row: {
           created_at: string
