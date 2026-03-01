@@ -336,6 +336,33 @@ export const gayaDesainOptions: GroupedOption[] = [
   },
 ];
 
+export const warnaBrandOptions: GroupedOption[] = [
+  {
+    group: 'Warm',
+    options: ['Red / Merah', 'Orange / Oranye', 'Yellow / Kuning', 'Coral', 'Gold / Emas', 'Crimson'],
+  },
+  {
+    group: 'Cool',
+    options: ['Blue / Biru', 'Royal Blue', 'Navy', 'Teal', 'Cyan', 'Emerald / Hijau'],
+  },
+  {
+    group: 'Neutral & Dark',
+    options: ['Black / Hitam', 'White / Putih', 'Grey / Abu-abu', 'Charcoal'],
+  },
+  {
+    group: 'Vibrant',
+    options: ['Violet / Purple', 'Pink / Magenta', 'Lime / Hijau Muda', 'Turquoise'],
+  },
+];
+
+export const temaOptions: string[] = [
+  'Default',
+  'Dark',
+  'Light',
+  'Colorful',
+  'Pastel',
+];
+
 export const elemenTambahanOptions: string[] = [
   'Hero Section',
   'Social Proof',
