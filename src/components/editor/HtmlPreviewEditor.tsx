@@ -265,6 +265,24 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     return elements;
   }, []);
 
+  // Helper to serialize back to the same format as the original HTML (avoid wrapping in <html><head><body>)
+  const serializeDoc = useCallback((doc: Document): string => {
+    const root = doc.getElementById('lp-root');
+    if (root) {
+      // Collect scripts/styles from body that are outside lp-root
+      const extras: string[] = [];
+      Array.from(doc.body.children).forEach(child => {
+        if (child !== root) extras.push((child as HTMLElement).outerHTML);
+      });
+      // Collect head content
+      const headContent = doc.head.innerHTML.trim();
+      const headPart = headContent ? `<head>${headContent}</head>` : '';
+      return headPart + root.outerHTML + extras.join('');
+    }
+    // Fallback: return body innerHTML to avoid extra <html> wrapping
+    return doc.body.innerHTML;
+  }, []);
+
   // Reorder element by index - handles DnD from iframe
   const reorderElement = useCallback((fromIdx: number, toIdx: number, after: boolean) => {
     const parser = new DOMParser();
@@ -273,17 +291,24 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     const fromEl = allElements[fromIdx];
     const toEl = allElements[toIdx];
     if (!fromEl || !toEl || fromEl === toEl) return;
+
+    // Only allow reordering within the same parent to prevent structure corruption
+    if (fromEl.parentNode !== toEl.parentNode) {
+      toast({ title: '⚠️ Elemen hanya bisa dipindah dalam section yang sama', variant: 'destructive' });
+      return;
+    }
+
     if (after) {
       toEl.parentNode?.insertBefore(fromEl, toEl.nextSibling);
     } else {
       toEl.parentNode?.insertBefore(fromEl, toEl);
     }
-    const html = doc.documentElement.outerHTML;
+    const html = serializeDoc(doc);
     setPreviewHtml(html);
     setHtmlCode(html);
     toast({ title: '✅ Elemen dipindahkan!' });
     setTimeout(() => restoreScroll(), 200);
-  }, [previewHtml, restoreScroll, getEditableElements]);
+  }, [previewHtml, restoreScroll, getEditableElements, serializeDoc]);
 
   useEffect(() => {
     const handler = (e: MessageEvent) => {
@@ -327,7 +352,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       } else el.textContent = newValue;
       if (styles?.textColor) el.style.color = styles.textColor;
       if (styles?.bgColor) el.style.backgroundColor = styles.bgColor;
-      const updatedHtml = doc.documentElement.outerHTML;
+      const updatedHtml = serializeDoc(doc);
       setPreviewHtml(updatedHtml); setHtmlCode(updatedHtml);
       setTimeout(() => restoreScroll(), 200);
     }
@@ -342,7 +367,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     const targetEl = allElements[editTarget.index] || null;
     if (targetEl) {
       targetEl.remove();
-      const updatedHtml = doc.documentElement.outerHTML;
+      const updatedHtml = serializeDoc(doc);
       setPreviewHtml(updatedHtml); setHtmlCode(updatedHtml);
       toast({ title: 'Elemen dihapus' });
       setTimeout(() => restoreScroll(), 200);
@@ -357,7 +382,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     const children = Array.from(root.children).filter(c => c.tagName !== 'SCRIPT' && c.tagName !== 'STYLE' && c.id !== 'sn-popup');
     if (direction === 'up' && sectionIndex > 0) root.insertBefore(children[sectionIndex], children[sectionIndex - 1]);
     else if (direction === 'down' && sectionIndex < children.length - 1) root.insertBefore(children[sectionIndex + 1], children[sectionIndex]);
-    const html = doc.documentElement.outerHTML;
+    const html = serializeDoc(doc);
     setPreviewHtml(html); setHtmlCode(html);
     setTimeout(() => restoreScroll(), 200);
   };
@@ -380,7 +405,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     } else {
       root.insertBefore(moving, updatedChildren[toIndex]);
     }
-    const html = doc.documentElement.outerHTML;
+    const html = serializeDoc(doc);
     setPreviewHtml(html); setHtmlCode(html);
     toast({ title: '✅ Section dipindahkan!' });
     setTimeout(() => restoreScroll(), 200);
@@ -393,7 +418,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     const children = Array.from(root.children).filter(c => c.tagName !== 'SCRIPT' && c.tagName !== 'STYLE' && c.id !== 'sn-popup');
     if (children[sectionIndex]) {
       children[sectionIndex].remove();
-      const html = doc.documentElement.outerHTML;
+      const html = serializeDoc(doc);
       setPreviewHtml(html); setHtmlCode(html);
       toast({ title: 'Section dihapus' });
     }
@@ -406,7 +431,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     const children = Array.from(root.children).filter(c => c.tagName !== 'SCRIPT' && c.tagName !== 'STYLE' && c.id !== 'sn-popup');
     if (children[sectionIndex]) {
       (children[sectionIndex] as HTMLElement).style.backgroundColor = color;
-      const html = doc.documentElement.outerHTML;
+      const html = serializeDoc(doc);
       setPreviewHtml(html); setHtmlCode(html);
     }
   };
@@ -449,7 +474,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       if (snPopup) root.insertBefore(newSection, snPopup);
       else root.appendChild(newSection);
     }
-    const html = doc.documentElement.outerHTML;
+    const html = serializeDoc(doc);
     setPreviewHtml(html); setHtmlCode(html);
     setShowAddSection(false);
     toast({ title: `Section "${templateKey}" ditambahkan` });
@@ -558,7 +583,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     scriptEl.innerHTML = snScript;
     if (scriptEl.firstElementChild) doc.body.appendChild(scriptEl.firstElementChild);
 
-    const html = doc.documentElement.outerHTML;
+    const html = serializeDoc(doc);
     setPreviewHtml(html); setHtmlCode(html);
     toast({ title: '✅ Sales Notification diperbarui!' });
     setTimeout(() => restoreScroll(), 300);
@@ -569,7 +594,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     const doc = parser.parseFromString(previewHtml, 'text/html');
     doc.getElementById('sn-popup')?.remove();
     doc.querySelectorAll('script').forEach(s => { if ((s.textContent || '').includes('sn-popup') || (s.textContent || '').includes('showNotif')) s.remove(); });
-    const html = doc.documentElement.outerHTML;
+    const html = serializeDoc(doc);
     setPreviewHtml(html); setHtmlCode(html);
     toast({ title: 'Sales Notification dihapus' });
   };
@@ -597,7 +622,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     scriptEl.innerHTML = cdScript;
     if (scriptEl.firstElementChild) doc.body.appendChild(scriptEl.firstElementChild);
 
-    const html = doc.documentElement.outerHTML;
+    const html = serializeDoc(doc);
     setPreviewHtml(html); setHtmlCode(html);
     toast({ title: '✅ Countdown Timer diperbarui!' });
     setTimeout(() => restoreScroll(), 300);
@@ -608,7 +633,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     const doc = parser.parseFromString(previewHtml, 'text/html');
     doc.querySelectorAll('[data-section-type="countdown"]').forEach(el => el.remove());
     doc.querySelectorAll('script').forEach(s => { if ((s.textContent || '').includes('cd-days') || (s.textContent || '').includes('cd-hours')) s.remove(); });
-    const html = doc.documentElement.outerHTML;
+    const html = serializeDoc(doc);
     setPreviewHtml(html); setHtmlCode(html);
     toast({ title: 'Countdown Timer dihapus' });
   };
