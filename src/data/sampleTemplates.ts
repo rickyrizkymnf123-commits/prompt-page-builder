@@ -918,10 +918,221 @@ const rawTemplates: LpTemplate[] = [
   }
 ];
 
-const IMAGE_GALLERY = (bg: string, card: string, accent: string) =>
-  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;text-align:center;"><h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 24px;">📸 Galeri</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><img src="https://placehold.co/320x200/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+1" alt="Foto 1" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+2" alt="Foto 2" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+3" alt="Foto 3" style="width:100%;border-radius:12px;" /><img src="https://placehold.co/320x200/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+4" alt="Foto 4" style="width:100%;border-radius:12px;" /></div></section>`;
+// ──── VARIED PHOTO & EXTRA SECTION GENERATORS ────
 
-const galleryMap: Record<string, [string, string, string]> = {
+// Style 1: Full-width hero + 3 column grid
+const GALLERY_HERO_3COL = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;">
+<h2 style="font-size:22px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">📸 Dokumentasi</h2>
+<img src="https://placehold.co/620x320/${card.replace('#','')}/${accent.replace('#','')}?text=Highlight+Utama" alt="Highlight" style="width:100%;border-radius:16px;margin-bottom:12px;" />
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+<img src="https://placehold.co/200x160/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+1" alt="Foto 1" style="width:100%;border-radius:10px;" />
+<img src="https://placehold.co/200x160/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+2" alt="Foto 2" style="width:100%;border-radius:10px;" />
+<img src="https://placehold.co/200x160/${card.replace('#','')}/${accent.replace('#','')}?text=Foto+3" alt="Foto 3" style="width:100%;border-radius:10px;" />
+</div>
+</section>`;
+
+// Style 2: 1 large left + 2 stacked right (masonry)
+const GALLERY_MASONRY = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;">
+<h2 style="font-size:22px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">🖼️ Portfolio</h2>
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:12px;">
+<img src="https://placehold.co/380x400/${card.replace('#','')}/${accent.replace('#','')}?text=Karya+Utama" alt="Main" style="width:100%;height:100%;object-fit:cover;border-radius:14px;border:1px solid ${accent}33;" />
+<div style="display:flex;flex-direction:column;gap:12px;">
+<img src="https://placehold.co/280x190/${card.replace('#','')}/${accent.replace('#','')}?text=Detail+1" alt="Detail 1" style="width:100%;border-radius:14px;border:1px solid ${accent}33;" />
+<img src="https://placehold.co/280x190/${card.replace('#','')}/${accent.replace('#','')}?text=Detail+2" alt="Detail 2" style="width:100%;border-radius:14px;border:1px solid ${accent}33;" />
+</div>
+</div>
+</section>`;
+
+// Style 3: Before/After comparison cards
+const GALLERY_BEFORE_AFTER = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;">
+<h2 style="font-size:22px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">🔄 Hasil Nyata</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+<div style="text-align:center;">
+<img src="https://placehold.co/300x240/${card.replace('#','')}/ff4757?text=BEFORE" alt="Before" style="width:100%;border-radius:14px;border:2px solid #ff4757;" />
+<p style="color:#ff4757;font-weight:700;font-size:13px;margin:8px 0 0;">❌ Sebelum</p>
+</div>
+<div style="text-align:center;">
+<img src="https://placehold.co/300x240/${card.replace('#','')}/${accent.replace('#','')}?text=AFTER" alt="After" style="width:100%;border-radius:14px;border:2px solid ${accent};" />
+<p style="color:${accent};font-weight:700;font-size:13px;margin:8px 0 0;">✅ Sesudah</p>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+<div style="text-align:center;">
+<img src="https://placehold.co/300x240/${card.replace('#','')}/ff4757?text=BEFORE+2" alt="Before 2" style="width:100%;border-radius:14px;border:2px solid #ff4757;" />
+<p style="color:#ff4757;font-weight:700;font-size:13px;margin:8px 0 0;">❌ Sebelum</p>
+</div>
+<div style="text-align:center;">
+<img src="https://placehold.co/300x240/${card.replace('#','')}/${accent.replace('#','')}?text=AFTER+2" alt="After 2" style="width:100%;border-radius:14px;border:2px solid ${accent};" />
+<p style="color:${accent};font-weight:700;font-size:13px;margin:8px 0 0;">✅ Sesudah</p>
+</div>
+</div>
+</section>`;
+
+// Style 4: Product showcase carousel-like (horizontal cards)
+const GALLERY_PRODUCT_CARDS = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;">
+<h2 style="font-size:22px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">🛍️ Koleksi Produk</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+<div style="background:${card};border-radius:14px;overflow:hidden;border:1px solid ${accent}22;">
+<img src="https://placehold.co/320x280/${card.replace('#','')}/${accent.replace('#','')}?text=Produk+A" alt="Produk A" style="width:100%;aspect-ratio:1;object-fit:cover;" />
+<div style="padding:14px;"><p style="color:#fff;font-weight:700;margin:0 0 4px;font-size:14px;">Produk Unggulan A</p><p style="color:${accent};font-weight:800;margin:0;font-size:15px;">Rp 299.000</p></div>
+</div>
+<div style="background:${card};border-radius:14px;overflow:hidden;border:1px solid ${accent}22;">
+<img src="https://placehold.co/320x280/${card.replace('#','')}/${accent.replace('#','')}?text=Produk+B" alt="Produk B" style="width:100%;aspect-ratio:1;object-fit:cover;" />
+<div style="padding:14px;"><p style="color:#fff;font-weight:700;margin:0 0 4px;font-size:14px;">Produk Unggulan B</p><p style="color:${accent};font-weight:800;margin:0;font-size:15px;">Rp 399.000</p></div>
+</div>
+</div>
+<div style="margin-top:14px;">
+<div style="background:${card};border-radius:14px;overflow:hidden;border:1px solid ${accent}22;display:flex;align-items:center;gap:16px;">
+<img src="https://placehold.co/200x200/${card.replace('#','')}/${accent.replace('#','')}?text=Bundle" alt="Bundle" style="width:40%;aspect-ratio:1;object-fit:cover;" />
+<div style="padding:14px;flex:1;"><p style="color:${accent};font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 6px;">⭐ BEST SELLER</p><p style="color:#fff;font-weight:700;margin:0 0 4px;font-size:15px;">Paket Bundle Hemat</p><p style="color:${accent};font-weight:800;margin:0;font-size:17px;">Rp 549.000</p></div>
+</div>
+</div>
+</section>`;
+
+// Style 5: Full-width stacked with captions
+const GALLERY_STACKED_CAPTION = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;">
+<h2 style="font-size:22px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">📷 Momen Terbaik</h2>
+<div style="margin-bottom:16px;border-radius:14px;overflow:hidden;border:1px solid ${accent}33;">
+<img src="https://placehold.co/620x300/${card.replace('#','')}/${accent.replace('#','')}?text=Momen+Spesial+1" alt="Momen 1" style="width:100%;display:block;" />
+<div style="padding:14px;background:${card};"><p style="color:#fff;font-weight:600;margin:0 0 4px;font-size:14px;">✨ Pengalaman Tak Terlupakan</p><p style="color:#94a3b8;font-size:12px;margin:0;">Setiap momen dirancang untuk memberikan kesan mendalam</p></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+<div style="border-radius:14px;overflow:hidden;border:1px solid ${accent}33;">
+<img src="https://placehold.co/300x200/${card.replace('#','')}/${accent.replace('#','')}?text=Momen+2" alt="Momen 2" style="width:100%;display:block;" />
+<div style="padding:12px;background:${card};"><p style="color:#fff;font-weight:600;margin:0;font-size:13px;">🎯 Detail Sempurna</p></div>
+</div>
+<div style="border-radius:14px;overflow:hidden;border:1px solid ${accent}33;">
+<img src="https://placehold.co/300x200/${card.replace('#','')}/${accent.replace('#','')}?text=Momen+3" alt="Momen 3" style="width:100%;display:block;" />
+<div style="padding:12px;background:${card};"><p style="color:#fff;font-weight:600;margin:0;font-size:13px;">💎 Kualitas Premium</p></div>
+</div>
+</div>
+</section>`;
+
+// Style 6: Team/people showcase with round photos
+const GALLERY_TEAM = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;">
+<h2 style="font-size:22px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">👥 Tim Profesional</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center;">
+<div>
+<img src="https://placehold.co/140x140/${card.replace('#','')}/${accent.replace('#','')}?text=Team+1" alt="Team 1" style="width:100px;height:100px;border-radius:50%;border:3px solid ${accent};margin-bottom:10px;" />
+<p style="color:#fff;font-weight:700;font-size:14px;margin:0 0 2px;">Dr. Sarah</p>
+<p style="color:${accent};font-size:12px;margin:0;">Founder & CEO</p>
+</div>
+<div>
+<img src="https://placehold.co/140x140/${card.replace('#','')}/${accent.replace('#','')}?text=Team+2" alt="Team 2" style="width:100px;height:100px;border-radius:50%;border:3px solid ${accent};margin-bottom:10px;" />
+<p style="color:#fff;font-weight:700;font-size:14px;margin:0 0 2px;">Budi Santoso</p>
+<p style="color:${accent};font-size:12px;margin:0;">Head of Marketing</p>
+</div>
+<div>
+<img src="https://placehold.co/140x140/${card.replace('#','')}/${accent.replace('#','')}?text=Team+3" alt="Team 3" style="width:100px;height:100px;border-radius:50%;border:3px solid ${accent};margin-bottom:10px;" />
+<p style="color:#fff;font-weight:700;font-size:14px;margin:0 0 2px;">Rina Dewi</p>
+<p style="color:${accent};font-size:12px;margin:0;">Lead Designer</p>
+</div>
+</div>
+</section>`;
+
+// Style 7: Feature showcase with icon images
+const GALLERY_FEATURES_IMG = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;">
+<h2 style="font-size:22px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">🏆 Keunggulan Kami</h2>
+<div style="display:flex;flex-direction:column;gap:14px;">
+<div style="display:flex;gap:16px;align-items:center;padding:16px;background:${card};border-radius:14px;border:1px solid ${accent}22;">
+<img src="https://placehold.co/80x80/${card.replace('#','')}/${accent.replace('#','')}?text=✓" alt="Icon 1" style="width:70px;height:70px;border-radius:12px;flex-shrink:0;" />
+<div><p style="color:#fff;font-weight:700;margin:0 0 4px;font-size:15px;">Berpengalaman 10+ Tahun</p><p style="color:#94a3b8;font-size:13px;margin:0;">Sudah dipercaya ribuan klien dari berbagai industri.</p></div>
+</div>
+<div style="display:flex;gap:16px;align-items:center;padding:16px;background:${card};border-radius:14px;border:1px solid ${accent}22;">
+<img src="https://placehold.co/80x80/${card.replace('#','')}/${accent.replace('#','')}?text=★" alt="Icon 2" style="width:70px;height:70px;border-radius:12px;flex-shrink:0;" />
+<div><p style="color:#fff;font-weight:700;margin:0 0 4px;font-size:15px;">Rating 4.9/5 Bintang</p><p style="color:#94a3b8;font-size:13px;margin:0;">Konsistensi kualitas yang diakui pelanggan setia.</p></div>
+</div>
+<div style="display:flex;gap:16px;align-items:center;padding:16px;background:${card};border-radius:14px;border:1px solid ${accent}22;">
+<img src="https://placehold.co/80x80/${card.replace('#','')}/${accent.replace('#','')}?text=♥" alt="Icon 3" style="width:70px;height:70px;border-radius:12px;flex-shrink:0;" />
+<div><p style="color:#fff;font-weight:700;margin:0 0 4px;font-size:15px;">Garansi 100% Puas</p><p style="color:#94a3b8;font-size:13px;margin:0;">Tidak puas? Uang kembali tanpa ribet.</p></div>
+</div>
+</div>
+</section>`;
+
+// Extra section: Process/Steps
+const EXTRA_PROCESS = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;">
+<h2 style="font-size:22px;font-weight:700;color:#ffffff;text-align:center;margin:0 0 24px;">⚙️ Cara Kerjanya</h2>
+<div style="display:flex;flex-direction:column;gap:0;">
+<div style="display:flex;gap:16px;align-items:flex-start;padding:18px 0;">
+<div style="width:40px;height:40px;border-radius:50%;background:${accent};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">1</div>
+<div style="flex:1;border-bottom:1px solid ${accent}22;padding-bottom:18px;"><p style="color:#fff;font-weight:700;margin:0 0 4px;font-size:15px;">Konsultasi Gratis</p><p style="color:#94a3b8;font-size:13px;margin:0;">Ceritakan kebutuhan Anda, kami analisa dan berikan rekomendasi terbaik.</p></div>
+</div>
+<div style="display:flex;gap:16px;align-items:flex-start;padding:18px 0;">
+<div style="width:40px;height:40px;border-radius:50%;background:${accent};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">2</div>
+<div style="flex:1;border-bottom:1px solid ${accent}22;padding-bottom:18px;"><p style="color:#fff;font-weight:700;margin:0 0 4px;font-size:15px;">Proses Pengerjaan</p><p style="color:#94a3b8;font-size:13px;margin:0;">Tim kami mulai bekerja dengan update progress secara berkala.</p></div>
+</div>
+<div style="display:flex;gap:16px;align-items:flex-start;padding:18px 0;">
+<div style="width:40px;height:40px;border-radius:50%;background:${accent};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">3</div>
+<div style="flex:1;"><p style="color:#fff;font-weight:700;margin:0 0 4px;font-size:15px;">Serah Terima & Support</p><p style="color:#94a3b8;font-size:13px;margin:0;">Hasil final dikirim beserta panduan dan dukungan after-sales.</p></div>
+</div>
+</div>
+</section>`;
+
+// Extra section: Stats bar
+const EXTRA_STATS = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:40px 35px;background:${bg};box-sizing:border-box;">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;text-align:center;">
+<div style="padding:16px 8px;background:${card};border-radius:12px;">
+<p style="font-size:24px;font-weight:900;color:${accent};margin:0;">5K+</p>
+<p style="color:#94a3b8;font-size:11px;margin:4px 0 0;">Pelanggan</p>
+</div>
+<div style="padding:16px 8px;background:${card};border-radius:12px;">
+<p style="font-size:24px;font-weight:900;color:${accent};margin:0;">99%</p>
+<p style="color:#94a3b8;font-size:11px;margin:4px 0 0;">Puas</p>
+</div>
+<div style="padding:16px 8px;background:${card};border-radius:12px;">
+<p style="font-size:24px;font-weight:900;color:${accent};margin:0;">50+</p>
+<p style="color:#94a3b8;font-size:11px;margin:4px 0 0;">Kota</p>
+</div>
+<div style="padding:16px 8px;background:${card};border-radius:12px;">
+<p style="font-size:24px;font-weight:900;color:${accent};margin:0;">24/7</p>
+<p style="color:#94a3b8;font-size:11px;margin:4px 0 0;">Support</p>
+</div>
+</div>
+</section>`;
+
+// Extra: Social proof logos
+const EXTRA_SOCIAL_PROOF = (bg: string, card: string, accent: string) =>
+  `<section style="max-width:688px;margin:0 auto;padding:30px 35px;background:${bg};box-sizing:border-box;text-align:center;">
+<p style="color:#64748b;font-size:12px;font-weight:600;letter-spacing:2px;margin:0 0 16px;text-transform:uppercase;">Dipercaya Oleh</p>
+<div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;align-items:center;">
+<img src="https://placehold.co/100x40/${card.replace('#','')}/${accent.replace('#','')}?text=Brand+A" alt="Brand A" style="height:36px;opacity:0.6;border-radius:6px;" />
+<img src="https://placehold.co/100x40/${card.replace('#','')}/${accent.replace('#','')}?text=Brand+B" alt="Brand B" style="height:36px;opacity:0.6;border-radius:6px;" />
+<img src="https://placehold.co/100x40/${card.replace('#','')}/${accent.replace('#','')}?text=Brand+C" alt="Brand C" style="height:36px;opacity:0.6;border-radius:6px;" />
+<img src="https://placehold.co/100x40/${card.replace('#','')}/${accent.replace('#','')}?text=Brand+D" alt="Brand D" style="height:36px;opacity:0.6;border-radius:6px;" />
+</div>
+</section>`;
+
+// Map each template to different combinations of gallery + extra sections
+type SectionFn = (bg: string, card: string, accent: string) => string;
+const templateExtras: Record<string, SectionFn[]> = {
+  'tpl-ebook-1':     [EXTRA_SOCIAL_PROOF, GALLERY_STACKED_CAPTION, EXTRA_PROCESS],
+  'tpl-jasa-1':      [EXTRA_STATS, GALLERY_MASONRY, EXTRA_PROCESS],
+  'tpl-produk-1':    [GALLERY_BEFORE_AFTER, EXTRA_STATS, GALLERY_PRODUCT_CARDS],
+  'tpl-webinar-1':   [EXTRA_SOCIAL_PROOF, GALLERY_HERO_3COL, EXTRA_STATS],
+  'tpl-saas-1':      [EXTRA_SOCIAL_PROOF, GALLERY_FEATURES_IMG, EXTRA_STATS],
+  'tpl-fitness-1':   [GALLERY_BEFORE_AFTER, EXTRA_STATS, EXTRA_PROCESS],
+  'tpl-course-1':    [EXTRA_SOCIAL_PROOF, GALLERY_TEAM, EXTRA_STATS],
+  'tpl-fnb-1':       [GALLERY_PRODUCT_CARDS, EXTRA_STATS, GALLERY_STACKED_CAPTION],
+  'tpl-agency-1':    [EXTRA_SOCIAL_PROOF, GALLERY_MASONRY, GALLERY_TEAM],
+  'tpl-property-1':  [GALLERY_HERO_3COL, EXTRA_STATS, GALLERY_STACKED_CAPTION],
+  'tpl-fashion-1':   [GALLERY_PRODUCT_CARDS, EXTRA_SOCIAL_PROOF, GALLERY_STACKED_CAPTION],
+  'tpl-travel-1':    [GALLERY_HERO_3COL, EXTRA_STATS, GALLERY_STACKED_CAPTION],
+  'tpl-coaching-1':  [EXTRA_SOCIAL_PROOF, GALLERY_FEATURES_IMG, EXTRA_PROCESS],
+  'tpl-membership-1':[EXTRA_SOCIAL_PROOF, GALLERY_TEAM, EXTRA_STATS],
+  'tpl-healthcare-1':[GALLERY_BEFORE_AFTER, GALLERY_TEAM, EXTRA_STATS],
+  'tpl-undangan-1':  [GALLERY_STACKED_CAPTION, GALLERY_HERO_3COL],
+};
+
+const colorMap: Record<string, [string, string, string]> = {
   'tpl-ebook-1': ['#0f0d1a', '#1a1a2e', '#7C3AED'],
   'tpl-jasa-1': ['#0f0d1a', '#1a1a2e', '#38bdf8'],
   'tpl-produk-1': ['#13111c', '#1a1a2e', '#f59e0b'],
@@ -930,7 +1141,9 @@ const galleryMap: Record<string, [string, string, string]> = {
   'tpl-fitness-1': ['#111111', '#1a1a1a', '#ef4444'],
   'tpl-course-1': ['#0c0a09', '#1c1917', '#f97316'],
   'tpl-fnb-1': ['#121008', '#1c1917', '#eab308'],
+  'tpl-agency-1': ['#081820', '#0c2330', '#06b6d4'],
   'tpl-property-1': ['#110f08', '#1c1917', '#d4a017'],
+  'tpl-fashion-1': ['#0e0e14', '#18181f', '#ec4899'],
   'tpl-travel-1': ['#052a28', '#0c3835', '#14b8a6'],
   'tpl-coaching-1': ['#100a1e', '#1e1535', '#a855f7'],
   'tpl-membership-1': ['#0a1025', '#0f1a38', '#3b82f6'],
@@ -939,7 +1152,9 @@ const galleryMap: Record<string, [string, string, string]> = {
 };
 
 export const sampleTemplates: LpTemplate[] = rawTemplates.map(t => {
-  const cfg = galleryMap[t.id];
-  if (!cfg) return t;
-  return { ...t, html_content: t.html_content.replace('</div></body></html>', IMAGE_GALLERY(cfg[0], cfg[1], cfg[2]) + '</div></body></html>') };
+  const cfg = colorMap[t.id];
+  const extras = templateExtras[t.id];
+  if (!cfg || !extras) return t;
+  const extraHtml = extras.map(fn => fn(cfg[0], cfg[1], cfg[2])).join('');
+  return { ...t, html_content: t.html_content.replace('</div></body></html>', extraHtml + '</div></body></html>') };
 });
