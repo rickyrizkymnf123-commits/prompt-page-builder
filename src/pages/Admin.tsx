@@ -198,9 +198,11 @@ export default function Admin() {
     await fetchUsers(); setActionLoading(null);
   };
   const handleDelete = async (userId: string) => {
+    if (!confirm('Yakin hapus user ini?')) return;
     setActionLoading(userId);
-    await supabase.from("entitlements").delete().eq("user_id", userId);
-    showToast({ title: "Berhasil", description: "User dihapus." });
+    const { error } = await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: userId } });
+    if (error) showToast({ title: "Error", description: "Gagal menghapus user.", variant: "destructive" });
+    else showToast({ title: "Berhasil", description: "User dihapus." });
     await fetchUsers(); setActionLoading(null);
   };
   const handleResetPassword = async () => {
@@ -276,7 +278,7 @@ export default function Admin() {
       showToast({ title: `✅ Password ${ids.length} user direset` });
     } else if (bulkDialog.action === 'delete') {
       for (const uid of ids) {
-        await supabase.from("entitlements").delete().eq("user_id", uid);
+        await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: uid } });
       }
       showToast({ title: `✅ ${ids.length} user dihapus` });
     }
