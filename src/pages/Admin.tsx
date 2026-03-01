@@ -706,23 +706,54 @@ export default function Admin() {
         </DialogContent>
       </Dialog>
 
-      {/* Template Dialog */}
+      {/* Template Edit Dialog */}
       <Dialog open={tplDialog} onOpenChange={setTplDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editTplId ? '✏️ Edit Template' : '➕ Tambah Template'}</DialogTitle></DialogHeader>
-          <div className="space-y-3 py-2">
-            <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Title *</label><Input value={tplForm.title} onChange={(e) => setTplForm(p => ({ ...p, title: e.target.value }))} placeholder="Nama template..." /></div>
-            <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Description</label><Input value={tplForm.description} onChange={(e) => setTplForm(p => ({ ...p, description: e.target.value }))} placeholder="Deskripsi singkat..." /></div>
-            <div className="grid grid-cols-3 gap-3">
-              <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Category</label><Input value={tplForm.category} onChange={(e) => setTplForm(p => ({ ...p, category: e.target.value }))} /></div>
-              <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Sort Order</label><Input type="number" value={tplForm.sort_order} onChange={(e) => setTplForm(p => ({ ...p, sort_order: Number(e.target.value) }))} /></div>
-              <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Status</label><div className="flex gap-2"><button type="button" onClick={() => setTplForm(p => ({ ...p, is_active: !p.is_active }))} className={`px-3 py-2 rounded-lg text-sm border transition-all ${tplForm.is_active?'bg-emerald-500/10 text-emerald-500 border-emerald-500/30':'bg-secondary text-muted-foreground border-border'}`}>{tplForm.is_active?'✅ Aktif':'❌ Nonaktif'}</button></div></div>
-            </div>
-            <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">HTML Content *</label><Textarea value={tplForm.html_content} onChange={(e) => setTplForm(p => ({ ...p, html_content: e.target.value }))} placeholder="Paste kode HTML template..." className="min-h-[200px] font-mono text-xs" /></div>
-          </div>
-          <DialogFooter>
+          <Tabs defaultValue="metadata">
+            <TabsList className="mb-3">
+              <TabsTrigger value="metadata">📝 Info Template</TabsTrigger>
+              <TabsTrigger value="html">💻 HTML Code</TabsTrigger>
+              <TabsTrigger value="preview">👁 Preview</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="metadata" className="space-y-3">
+              <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Nama Template *</label><Input value={tplForm.title} onChange={(e) => setTplForm(p => ({ ...p, title: e.target.value }))} placeholder="Nama template..." /></div>
+              <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Deskripsi</label><Textarea value={tplForm.description} onChange={(e) => setTplForm(p => ({ ...p, description: e.target.value }))} placeholder="Deskripsi singkat template ini..." className="min-h-[80px]" /></div>
+              <div className="grid grid-cols-3 gap-3">
+                <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Kategori</label><Input value={tplForm.category} onChange={(e) => setTplForm(p => ({ ...p, category: e.target.value }))} /></div>
+                <div><label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Urutan</label><Input type="number" value={tplForm.sort_order} onChange={(e) => setTplForm(p => ({ ...p, sort_order: Number(e.target.value) }))} /></div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Status</label>
+                  <button type="button" onClick={() => setTplForm(p => ({ ...p, is_active: !p.is_active }))} className={`px-3 py-2 rounded-lg text-sm border transition-all ${tplForm.is_active?'bg-emerald-500/10 text-emerald-500 border-emerald-500/30':'bg-secondary text-muted-foreground border-border'}`}>{tplForm.is_active?'✅ Aktif':'❌ Nonaktif'}</button>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="html">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">HTML Content *</label>
+                  <span className="text-[10px] text-muted-foreground">{tplForm.html_content.length.toLocaleString()} karakter</span>
+                </div>
+                <Textarea value={tplForm.html_content} onChange={(e) => setTplForm(p => ({ ...p, html_content: e.target.value }))} placeholder="Paste kode HTML template..." className="min-h-[500px] font-mono text-xs leading-relaxed" />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="preview">
+              {tplForm.html_content ? (
+                <div className="rounded-lg border border-border overflow-hidden bg-secondary" style={{ height: '500px' }}>
+                  <iframe srcDoc={tplForm.html_content} className="w-full h-full border-0" title="Preview" sandbox="allow-scripts" />
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-16">Belum ada HTML untuk di-preview.</p>
+              )}
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setTplDialog(false)}>Batal</Button>
-            <Button onClick={handleSaveTemplate} disabled={tplLoading}>{tplLoading ? "..." : editTplId ? "Update" : "Simpan"}</Button>
+            <Button onClick={handleSaveTemplate} disabled={tplLoading}>{tplLoading ? "Menyimpan..." : editTplId ? "💾 Update Template" : "💾 Simpan Template"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
