@@ -68,11 +68,13 @@ Deno.serve(async (req) => {
         const { data: profiles } = await adminClient.from("profiles").select("*");
         const { data: entitlements } = await adminClient.from("entitlements").select("*");
         const { data: userRoles } = await adminClient.from("user_roles").select("*");
+        const { data: promptUsages } = await adminClient.from("prompt_usage").select("*");
 
         const users = allUsers?.users?.map((u: any) => {
           const profile = profiles?.find((p: any) => p.user_id === u.id);
           const ent = entitlements?.find((e: any) => e.user_id === u.id);
           const uRole = userRoles?.find((r: any) => r.user_id === u.id);
+          const usage = promptUsages?.find((pu: any) => pu.user_id === u.id);
           return {
             id: u.id,
             email: u.email,
@@ -85,6 +87,7 @@ Deno.serve(async (req) => {
             role: uRole?.role || "user",
             created_at: u.created_at,
             last_sign_in: u.last_sign_in_at,
+            prompt_used: usage?.used_count || 0,
           };
         }) || [];
 
@@ -104,6 +107,7 @@ Deno.serve(async (req) => {
         await adminClient.from("entitlements").delete().eq("user_id", user_id);
         await adminClient.from("profiles").delete().eq("user_id", user_id);
         await adminClient.from("user_roles").delete().eq("user_id", user_id);
+        await adminClient.from("prompt_usage").delete().eq("user_id", user_id);
         const { error } = await adminClient.auth.admin.deleteUser(user_id);
         if (error) {
           return new Response(JSON.stringify({ error: error.message }), {
@@ -162,7 +166,20 @@ Deno.serve(async (req) => {
         });
       }
 
-      // --- RESET PASSWORD ---
+      // --- RESET USAGE ---
+      if (action === "reset_usage") {
+        if (!user_id) {
+          return new Response(JSON.stringify({ error: "user_id required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        await adminClient.from("prompt_usage").upsert({ user_id, used_count: 0, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       if (action === "reset_password") {
         if (!user_id || !password) {
           return new Response(JSON.stringify({ error: "user_id and password required" }), {

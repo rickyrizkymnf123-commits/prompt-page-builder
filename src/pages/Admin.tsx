@@ -37,6 +37,7 @@ interface AdminUser {
   id: string; email: string; name: string | null; phone: string | null;
   status: string; entitlement_id: string | null; product_code: string | null;
   order_id: string | null; role: string; created_at: string; last_sign_in: string | null;
+  prompt_used: number;
 }
 interface ProvisionLog {
   id: string; order_id: string | null; email: string | null;
@@ -591,6 +592,7 @@ export default function Admin() {
                         <TableHead>Nama</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Tier</TableHead>
+                        <TableHead>Usage</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Role</TableHead>
                         <TableHead>Terdaftar</TableHead>
@@ -599,7 +601,7 @@ export default function Admin() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredUsers.length === 0 ? <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Tidak ada data.</TableCell></TableRow>
+                      {filteredUsers.length === 0 ? <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Tidak ada data.</TableCell></TableRow>
                       : filteredUsers.map(u => (
                         <TableRow key={u.id} className={`${u.status==="pending"?"bg-amber-500/5":""} ${selectedUsers.has(u.id) ? "bg-primary/5" : ""}`}>
                           <TableCell>
@@ -611,6 +613,18 @@ export default function Admin() {
                             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.product_code === 'LPE' ? 'text-primary bg-primary/10 border border-primary/30' : 'text-amber-500 bg-amber-500/10 border border-amber-500/30'}`}>
                               {u.product_code === 'LPE' ? '⭐ Berbayar' : '🆓 Gratis'}
                             </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <span className={`text-xs font-mono ${u.prompt_used >= 5 && u.product_code !== 'LPE' ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>{u.prompt_used}/5</span>
+                              {u.role !== 'admin' && u.prompt_used > 0 && (
+                                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-primary" title="Reset usage" onClick={async () => {
+                                  await supabase.functions.invoke("admin-users", { body: { action: "reset_usage", user_id: u.id } });
+                                  showToast({ title: '✅ Usage direset' });
+                                  fetchUsers();
+                                }}><RotateCcw className="h-3 w-3" /></Button>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell><StatusBadge status={u.status} /></TableCell>
                           <TableCell><span className={`text-xs font-medium ${u.role==="admin"?"text-primary":"text-muted-foreground"}`}>{u.role}</span></TableCell>
