@@ -85,12 +85,15 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl }: P
                   loading="lazy"
                 />
               </div>
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                <Button size="sm" variant="secondary" onClick={() => openPreview(tpl)}>👁 Preview</Button>
+              <div
+                className="absolute inset-0 bg-black/20 group-hover:bg-black/50 transition-all flex items-end justify-center gap-2 pb-4 cursor-pointer"
+                onClick={() => openPreview(tpl)}
+              >
+                <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); openPreview(tpl); }}>👁 Preview</Button>
                 {isPaid ? (
-                  <Button size="sm" onClick={() => onSelectTemplate(tpl.html_content)}>✅ Gunakan</Button>
+                  <Button size="sm" onClick={(e) => { e.stopPropagation(); onSelectTemplate(tpl.html_content); }}>✅ Gunakan</Button>
                 ) : (
-                  <Button size="sm" onClick={handleUpgrade} className="gap-1"><Lock className="h-3 w-3" /> Premium</Button>
+                  <Button size="sm" onClick={(e) => { e.stopPropagation(); handleUpgrade(); }} className="gap-1"><Lock className="h-3 w-3" /> Premium</Button>
                 )}
               </div>
             </div>
