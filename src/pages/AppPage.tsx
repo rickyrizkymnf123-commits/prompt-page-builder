@@ -17,7 +17,8 @@ import { TemplateGallery } from "@/components/templates/TemplateGallery";
 import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, BonusItem } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, ExternalLink, Lock } from "lucide-react";
+import { Zap, RotateCcw, Copy, ExternalLink, Lock, Eye, EyeOff } from "lucide-react";
+import { LivePreview } from "@/components/LivePreview";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -159,6 +160,7 @@ export default function AppPage() {
   const [userTier, setUserTier] = useState<'free' | 'paid'>('free');
   const [orderUrl, setOrderUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [promptUsage, setPromptUsage] = useState(0);
   const [usageLimitReached, setUsageLimitReached] = useState(false);
   const navigate = useNavigate();
@@ -361,73 +363,124 @@ export default function AppPage() {
             </motion.p>
           </section>
 
-          <div className="space-y-3 sm:space-y-4 pb-6">
-            <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
-            <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
-            <Step3Target levelAwareness={form.levelAwareness} targetAudience={form.targetAudience} onChange={handleChange} />
-            <Step4Detail
-              namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo}
-              hargaFinal={form.hargaFinal} keteranganDiskon={form.keteranganDiskon}
-              bonusList={form.bonusList}
-              deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama}
-              onChange={handleChange} onChangeBonusList={handleChangeBonusList}
-            />
-            <Step5Design warnaBrand={form.warnaBrand} tema={form.tema} gayaDesain={form.gayaDesain} onChange={handleChange} />
-            <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
-            <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
-            <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
-            
-            {/* Sales Notif & Countdown - visible for all, locked for free users */}
-            {isPaid ? (
-              <>
-                <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
-                <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
-              </>
-            ) : (
-              <div className="relative space-y-4">
-                <div className="pointer-events-none opacity-40 select-none">
+          <div className="flex gap-6 items-start">
+            {/* Form */}
+            <div className="flex-1 min-w-0 space-y-3 sm:space-y-4 pb-6">
+              <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
+              <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
+              <Step3Target levelAwareness={form.levelAwareness} targetAudience={form.targetAudience} onChange={handleChange} />
+              <Step4Detail
+                namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo}
+                hargaFinal={form.hargaFinal} keteranganDiskon={form.keteranganDiskon}
+                bonusList={form.bonusList}
+                deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama}
+                onChange={handleChange} onChangeBonusList={handleChangeBonusList}
+              />
+              <Step5Design warnaBrand={form.warnaBrand} tema={form.tema} gayaDesain={form.gayaDesain} onChange={handleChange} />
+              <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
+              <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
+              <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
+              
+              {/* Sales Notif & Countdown - visible for all, locked for free users */}
+              {isPaid ? (
+                <>
                   <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
                   <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <div className="bg-card/95 backdrop-blur border border-border rounded-xl p-5 text-center shadow-xl">
-                    <div className="flex items-center gap-2 justify-center mb-2">
-                      <Lock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-semibold text-muted-foreground">Sales Notification & Countdown Timer</span>
-                      <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">PREMIUM</span>
+                </>
+              ) : (
+                <div className="relative space-y-4">
+                  <div className="pointer-events-none opacity-40 select-none">
+                    <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
+                    <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="bg-card/95 backdrop-blur border border-border rounded-xl p-5 text-center shadow-xl">
+                      <div className="flex items-center gap-2 justify-center mb-2">
+                        <Lock className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-semibold text-muted-foreground">Sales Notification & Countdown Timer</span>
+                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">PREMIUM</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">Fitur ini hanya tersedia untuk pengguna berbayar.</p>
+                      {orderUrl && (
+                        <Button size="sm" onClick={handleUpgrade} className="gap-1">
+                          ⭐ Upgrade untuk Unlock
+                        </Button>
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground mb-3">Fitur ini hanya tersedia untuk pengguna berbayar.</p>
-                    {orderUrl && (
-                      <Button size="sm" onClick={handleUpgrade} className="gap-1">
-                        ⭐ Upgrade untuk Unlock
-                      </Button>
-                    )}
                   </div>
                 </div>
-              </div>
-            )}
-
-            <div className="space-y-2 pt-2">
-              {!isPaid && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Generate tersisa: <span className={`font-bold ${usageLimitReached ? 'text-destructive' : 'text-primary'}`}>{Math.max(0, FREE_LIMIT - promptUsage)}/{FREE_LIMIT}</span>
-                  {usageLimitReached && ' — Upgrade untuk unlimited'}
-                </p>
               )}
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
-                {!isPaid && usageLimitReached ? (
-                  <Button onClick={handleUpgrade} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2" size="lg">
-                    <Lock className="h-4 w-4" /> Upgrade untuk Generate ⭐
-                  </Button>
-                ) : (
-                  <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
-                    <Zap className="h-4 w-4" /> {isDirty ? "Generate Ulang" : "Generate Prompt ⚡"}
-                  </Button>
+
+              <div className="space-y-2 pt-2">
+                {!isPaid && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Generate tersisa: <span className={`font-bold ${usageLimitReached ? 'text-destructive' : 'text-primary'}`}>{Math.max(0, FREE_LIMIT - promptUsage)}/{FREE_LIMIT}</span>
+                    {usageLimitReached && ' — Upgrade untuk unlimited'}
+                  </p>
                 )}
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
+                  {!isPaid && usageLimitReached ? (
+                    <Button onClick={handleUpgrade} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2" size="lg">
+                      <Lock className="h-4 w-4" /> Upgrade untuk Generate ⭐
+                    </Button>
+                  ) : (
+                    <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
+                      <Zap className="h-4 w-4" /> {isDirty ? "Generate Ulang" : "Generate Prompt ⚡"}
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Desktop Live Preview - sticky sidebar */}
+            <div className="hidden lg:block w-[300px] xl:w-[340px] flex-shrink-0 sticky top-20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <Eye className="h-3.5 w-3.5" /> Live Preview
+                </span>
+                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Real-time</span>
+              </div>
+              <LivePreview form={form} />
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Mobile floating preview button */}
+      {currentStep === 1 && mode === 'manual' && (
+        <div className="lg:hidden fixed bottom-4 right-4 z-50">
+          <Button
+            onClick={() => setShowPreview(!showPreview)}
+            className="rounded-full w-12 h-12 shadow-xl gap-0 p-0"
+            style={{ background: showPreview ? undefined : undefined }}
+          >
+            {showPreview ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </Button>
+        </div>
+      )}
+
+      {/* Mobile preview slide-up panel */}
+      {currentStep === 1 && mode === 'manual' && showPreview && (
+        <div className="lg:hidden fixed inset-0 z-40 flex flex-col">
+          <div className="flex-1 bg-background/60 backdrop-blur-sm" onClick={() => setShowPreview(false)} />
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="bg-card border-t border-border rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" /> Live Preview
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)} className="text-xs">Tutup</Button>
+            </div>
+            <div className="max-w-[320px] mx-auto">
+              <LivePreview form={form} />
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
