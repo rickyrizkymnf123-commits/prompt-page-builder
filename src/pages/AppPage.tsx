@@ -21,6 +21,7 @@ import { Zap, RotateCcw, Copy, ExternalLink, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TypewriterText } from "@/components/TypewriterText";
 
 function Stepper({ current }: { current: number }) {
   return (
@@ -134,7 +135,7 @@ function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack
           <Button variant="outline" size="sm" onClick={handleCopy} className="gap-2"><Copy className="h-4 w-4" /> Copy</Button>
         </div>
         <ScrollArea className="h-64">
-          <pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-3 bg-secondary rounded-lg">{promptText}</pre>
+          <pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-3 bg-secondary rounded-lg"><TypewriterText text={promptText} /></pre>
         </ScrollArea>
       </div>
       <Button onClick={handleBuat} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
