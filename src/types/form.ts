@@ -46,6 +46,8 @@ export interface FormState {
   bonusList: BonusItem[];
   deskripsiBenefit: string;
   ctaUtama: string;
+  warnaBrand: string;
+  tema: string;
   gayaDesain: string;
   elemenTambahan: Record<string, boolean>;
   platformTarget: string;
@@ -72,6 +74,8 @@ export const initialFormState: FormState = {
   bonusList: [],
   deskripsiBenefit: '',
   ctaUtama: '',
+  warnaBrand: '',
+  tema: '',
   gayaDesain: '',
   elemenTambahan: {
     'Hero Section': true,

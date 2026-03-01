@@ -170,14 +170,41 @@ ${scalevDeviceRules[deviceTarget] || scalevDeviceRules['Mobile']}`,
 
 // Design block builder
 function buildDesignBlock(form: FormState): string {
+  const brand = form.warnaBrand || 'Violet / Purple';
+  const tema = form.tema || 'Default';
+
+  const temaMap: Record<string, string> = {
+    'Default': `- Tema: **Dark Mode** (background gelap, teks terang)
+- **KRITIS:** Background TIDAK BOLEH putih. Wrapper root dan setiap section WAJIB background gelap.
+- Warna background: \`#0a0a12\` (root), section bergantian: \`#0f0d1a\`, \`#13111c\`, \`#1a1a2e\`, \`#16132b\`
+- Teks: \`#e8e8f0\` / \`#ffffff\`, sekunder: \`#b0b0b0\` / \`#9ca3af\``,
+    'Dark': `- Tema: **Dark Mode** (background sangat gelap, teks terang)
+- **KRITIS:** Background TIDAK BOLEH putih. Wrapper root dan setiap section WAJIB background gelap.
+- Warna background: \`#0a0a12\` (root), section bergantian: \`#0f0d1a\`, \`#13111c\`, \`#1a1a2e\`, \`#16132b\`
+- Teks: \`#e8e8f0\` / \`#ffffff\`, sekunder: \`#b0b0b0\` / \`#9ca3af\``,
+    'Light': `- Tema: **Light Mode** (background terang, teks gelap)
+- **KRITIS:** Background WAJIB terang/putih. Wrapper root dan setiap section WAJIB background terang.
+- Warna background: \`#ffffff\` (root), section bergantian: \`#f9fafb\`, \`#f3f4f6\`, \`#e5e7eb\`, \`#ffffff\`
+- Teks: \`#111827\` / \`#1f2937\`, sekunder: \`#6b7280\` / \`#9ca3af\``,
+    'Colorful': `- Tema: **Colorful** (warna-warni cerah, playful)
+- Gunakan palet warna cerah dan kontras tinggi yang sesuai warna brand.
+- Background boleh gradien warna-warni lembut, section bergantian warna berbeda.
+- Teks gelap pada background terang, atau terang pada background gelap — pastikan kontras tinggi.`,
+    'Pastel': `- Tema: **Pastel** (warna lembut, elegan, soft)
+- Gunakan palet pastel lembut (soft pink, soft blue, lavender, mint, cream, dll).
+- Background: warna pastel sangat lembut, section bergantian pastel berbeda.
+- Teks: warna gelap lembut seperti \`#2d3748\` atau \`#4a5568\`.`,
+  };
+
+  const temaBlock = temaMap[tema] || temaMap['Default'];
+
   return `# 🎨 DESAIN VISUAL
 
 - Gaya: ${form.gayaDesain || 'Modern Minimalis'} (Premium)
-- Tema: **Dark Mode** (background gelap, teks terang)
-- **KRITIS:** Background TIDAK BOLEH putih. Wrapper root dan setiap section WAJIB background gelap.
-- Warna background: \`#0a0a12\` (root), section bergantian: \`#0f0d1a\`, \`#13111c\`, \`#1a1a2e\`, \`#16132b\`
-- Teks: \`#e8e8f0\` / \`#ffffff\`, sekunder: \`#b0b0b0\` / \`#9ca3af\`
-- CTA besar, kontras, centered. Setiap section background berbeda.`;
+- Warna Brand / Aksen Utama: **${brand}** — gunakan warna ini sebagai warna utama untuk CTA, heading aksen, border highlight, ikon, badge, dan elemen penting lainnya.
+${temaBlock}
+- CTA besar, kontras, centered. Setiap section background berbeda.
+- Pastikan warna brand (**${brand}**) terlihat dominan sebagai aksen di seluruh landing page.`;
 }
 
 // Copywriting block builder

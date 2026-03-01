@@ -258,7 +258,7 @@ export default function AppPage() {
               deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama}
               onChange={handleChange} onChangeBonusList={handleChangeBonusList}
             />
-            <Step5Design gayaDesain={form.gayaDesain} onChange={handleChange} />
+            <Step5Design warnaBrand={form.warnaBrand} tema={form.tema} gayaDesain={form.gayaDesain} onChange={handleChange} />
             <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
             <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
             <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
