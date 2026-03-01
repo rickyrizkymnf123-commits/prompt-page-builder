@@ -61,7 +61,7 @@ export function Step4Detail({
       {/* Pricing - 4 Layer Only (Normal → Promo → Harga Asli) */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-foreground">Struktur Harga (3 Layer)</label>
-        <p className="text-xs text-muted-foreground">Harga Normal (dicoret) → Harga Promo (dicoret) → Harga Asli (Final)</p>
+        <p className="text-xs text-muted-foreground">Harga Normal (dicoret) → Harga Promo (dicoret) → Harga Diskon (Beli Sekarang)</p>
 
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
@@ -73,7 +73,7 @@ export function Step4Detail({
             <Input type="number" placeholder="Rp" value={hargaPromo} onChange={(e) => onChange('hargaPromo', e.target.value)} className="bg-secondary border-border" />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-muted-foreground uppercase">Harga Asli <span className="text-primary text-[10px]">(Final)</span></label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase">Harga Diskon <span className="text-primary text-[10px]">(Beli Sekarang)</span></label>
             <Input type="number" placeholder="Rp" value={hargaFinal} onChange={(e) => onChange('hargaFinal', e.target.value)} className="bg-secondary border-border" />
           </div>
         </div>
@@ -97,7 +97,7 @@ export function Step4Detail({
           {keteranganDiskon && (
             <p className="text-xs text-muted-foreground mt-1">{keteranganDiskon}</p>
           )}
-          <p className="text-[10px] text-muted-foreground uppercase mt-1">Harga Final</p>
+          <p className="text-[10px] text-muted-foreground uppercase mt-1">🔥 Harga Diskon untuk kamu yang beli sekarang</p>
           <p className="text-2xl text-primary font-black">
             {hargaFinal ? `Rp ${Number(hargaFinal).toLocaleString('id-ID')}` : 'Rp -'}
           </p>

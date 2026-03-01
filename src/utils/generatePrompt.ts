@@ -198,7 +198,7 @@ function buildProductBlock(form: FormState, fmt: (v: string) => string): string 
   // Always 4-layer (3 prices: Normal, Promo, Final)
   let pricingInfo = `- Harga Normal: **${fmt(form.hargaNormal)}** (dicoret)`;
   pricingInfo += `\n- Harga Promo: **${fmt(form.hargaPromo)}** (dicoret)`;
-  pricingInfo += `\n- Harga Asli (Final): **${fmt(form.hargaFinal)}**`;
+  pricingInfo += `\n- 🔥 Harga Diskon (untuk kamu yang beli sekarang): **${fmt(form.hargaFinal)}**`;
   if (form.keteranganDiskon) pricingInfo += `\n- Keterangan: ${form.keteranganDiskon}`;
 
   let bonusInfo = '';
@@ -228,7 +228,7 @@ function buildPricingRules(form: FormState, fmt: (v: string) => string): string 
   return `- Harga normal dicoret: **${fmt(form.hargaNormal)}**
 - Harga promo dicoret: **${fmt(form.hargaPromo)}**
 - ${form.keteranganDiskon || 'Dengan diskon tambahan'}
-- **HARGA ASLI / FINAL (tidak dicoret, paling besar):** **${fmt(form.hargaFinal)}**
+- **🔥 HARGA DISKON untuk kamu yang beli sekarang (tidak dicoret, paling besar):** **${fmt(form.hargaFinal)}**
 - Tambahkan urgency wajar (tanpa overclaim)
 - Setiap CTA WAJIB ada micro-copy trust 1–2 baris di bawah tombol
 
@@ -236,7 +236,7 @@ function buildPricingRules(form: FormState, fmt: (v: string) => string): string 
 1. Harga tertinggi (coret, merah)
 2. Harga promo (coret juga)
 3. Keterangan diskon tambahan
-4. Harga asli / final (besar, bold, warna aksen, TIDAK dicoret)`;
+4. 🔥 Harga diskon untuk kamu yang beli sekarang (besar, bold, warna aksen, TIDAK dicoret)`;
 }
 
 // Referensi block builder
