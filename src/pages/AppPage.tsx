@@ -125,24 +125,24 @@ function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="max-w-4xl mx-auto p-6 space-y-6"
+      className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6"
     >
       <Stepper current={2} />
-      <p className="text-center text-sm text-muted-foreground">Copy prompt lalu buka AI favorit kamu</p>
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-foreground">📋 Prompt Siap Digunakan</h2>
-          <Button variant="outline" size="sm" onClick={handleCopy} className="gap-2"><Copy className="h-4 w-4" /> Copy</Button>
+      <p className="text-center text-xs sm:text-sm text-muted-foreground">Copy prompt lalu buka AI favorit kamu</p>
+      <div className="rounded-xl border border-border bg-card p-3 sm:p-5">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="text-sm sm:text-base font-semibold text-foreground">📋 Prompt Siap Digunakan</h2>
+          <Button variant="outline" size="sm" onClick={handleCopy} className="gap-2 text-xs sm:text-sm"><Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Copy</Button>
         </div>
-        <ScrollArea className="h-64">
-          <pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-3 bg-secondary rounded-lg"><TypewriterText text={promptText} /></pre>
+        <ScrollArea className="h-48 sm:h-64">
+          <pre className="text-xs sm:text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-2 sm:p-3 bg-secondary rounded-lg"><TypewriterText text={promptText} /></pre>
         </ScrollArea>
       </div>
-      <Button onClick={handleBuat} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
+      <Button onClick={handleBuat} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2 text-sm" size="lg">
         <ExternalLink className="h-4 w-4" /> Buat Landing Page
       </Button>
-      <Button variant="outline" onClick={onNext} className="w-full gap-2" size="lg">Lanjut ke Preview & Edit HTML →</Button>
-      <Button variant="outline" onClick={onBack} className="w-full">← Kembali Edit Form</Button>
+      <Button variant="outline" onClick={onNext} className="w-full gap-2 text-sm" size="lg">Lanjut ke Preview & Edit HTML →</Button>
+      <Button variant="outline" onClick={onBack} className="w-full text-sm">← Kembali Edit Form</Button>
     </motion.div>
   );
 }
@@ -259,14 +259,14 @@ export default function AppPage() {
 
       {/* Upgrade banner for free users */}
       {!isPaid && currentStep === 1 && (
-        <div className="max-w-[1440px] mx-auto px-6 pt-4">
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex items-center justify-between flex-wrap gap-3">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4">
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
             <div>
-              <p className="text-sm font-semibold text-foreground">🆓 Mode Gratis — Fitur terbatas</p>
-              <p className="text-xs text-muted-foreground">Upgrade untuk akses Template, Edit Mode, Countdown, Sales Notification, dan Pixel ID</p>
+              <p className="text-xs sm:text-sm font-semibold text-foreground">🆓 Mode Gratis — Fitur terbatas</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Upgrade untuk akses Template, Edit Mode, Countdown, Sales Notification, dan Pixel ID</p>
             </div>
             {orderUrl && (
-              <Button size="sm" onClick={handleUpgrade} className="gap-1">
+              <Button size="sm" onClick={handleUpgrade} className="gap-1 w-full sm:w-auto">
                 ⭐ Upgrade Sekarang
               </Button>
             )}
@@ -276,16 +276,16 @@ export default function AppPage() {
 
       {/* Tab Navigation for mode */}
       {currentStep === 1 && (
-        <div className="max-w-[1440px] mx-auto px-6 pt-6">
-          <div className="flex gap-2 mb-6">
-            <button type="button" onClick={() => setMode('manual')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all ${mode === 'manual' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border-border hover:border-primary/40'}`}>
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
+          <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+            <button type="button" onClick={() => setMode('manual')} className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold border transition-all ${mode === 'manual' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border-border hover:border-primary/40'}`}>
               ⚡ Buat Manual
             </button>
-            <button type="button" onClick={() => setMode('template')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all ${mode === 'template' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border-border hover:border-primary/40'}`}>
-              📋 Gunakan Template {!isPaid && <Lock className="h-3 w-3" />}
+            <button type="button" onClick={() => setMode('template')} className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold border transition-all ${mode === 'template' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border-border hover:border-primary/40'}`}>
+              📋 Template {!isPaid && <Lock className="h-3 w-3" />}
             </button>
             {!isPaid && (
-              <button type="button" onClick={handleUpgrade} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-all ml-auto cursor-pointer">
+              <button type="button" onClick={handleUpgrade} className="flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-all ml-auto cursor-pointer">
                 🔒 Premium
               </button>
             )}
@@ -309,26 +309,26 @@ export default function AppPage() {
       )}
 
       {currentStep === 1 && mode === 'template' && (
-        <div className="max-w-[1440px] mx-auto px-6 pb-12">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pb-12">
           <TemplateGallery onSelectTemplate={handleSelectTemplate} isPaid={isPaid} orderUrl={orderUrl} />
         </div>
       )}
 
       {currentStep === 1 && mode === 'manual' && (
-        <div className="max-w-[1440px] mx-auto p-6">
-          <section className="text-center py-12 px-6 mb-6 rounded-lg border border-border bg-card">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-6">
+        <div className="max-w-[1440px] mx-auto px-3 sm:p-6">
+          <section className="text-center py-8 sm:py-12 px-4 sm:px-6 mb-4 sm:mb-6 rounded-lg border border-border bg-card">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-4 sm:mb-6">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />V11 — New Release 🚀
             </motion.div>
-            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight max-w-3xl mx-auto">
-              Buat Landing Page professional cuman dalam{" "}<span className="text-primary">Hitungan menit</span> <Zap className="inline h-8 w-8 text-primary" />
+            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight max-w-3xl mx-auto">
+              Buat Landing Page professional cuman dalam{" "}<span className="text-primary">Hitungan menit</span> <Zap className="inline h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             </motion.h2>
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="mt-4 text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
+            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="mt-3 sm:mt-4 text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
               Generate Landing Page dari format yang benar, karena landing page yang gagal biasanya bukan salah katanya, tapi salah strukturnya.
             </motion.p>
           </section>
 
-          <div className="space-y-4 pb-6">
+          <div className="space-y-3 sm:space-y-4 pb-6">
             <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
             <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
             <Step3Target levelAwareness={form.levelAwareness} targetAudience={form.targetAudience} onChange={handleChange} />

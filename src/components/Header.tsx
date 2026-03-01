@@ -17,24 +17,24 @@ export function Header({ darkMode, onToggleDark }: Props) {
   };
 
   return (
-    <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-          <Rocket className="h-5 w-5 text-primary-foreground" />
+    <header className="border-b border-border bg-card px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
+          <Rocket className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
         </div>
-        <div className="flex flex-col">
-          <h1 className="text-xl font-bold text-foreground">
+        <div className="flex flex-col min-w-0">
+          <h1 className="text-sm sm:text-xl font-bold text-foreground truncate">
             Landing Page <span className="text-primary">Builder V.11</span>
           </h1>
-          <span className="text-xs text-muted-foreground">By Digital Strategi</span>
+          <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">By Digital Strategi</span>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={onToggleDark}>
-          {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+      <div className="flex items-center gap-1 sm:gap-2">
+        <Button variant="ghost" size="icon" onClick={onToggleDark} className="h-8 w-8 sm:h-9 sm:w-9">
+          {darkMode ? <Sun className="h-4 w-4 sm:h-5 sm:w-5" /> : <Moon className="h-4 w-4 sm:h-5 sm:w-5" />}
         </Button>
-        <Button variant="ghost" size="icon" onClick={handleLogout}>
-          <LogOut className="h-5 w-5" />
+        <Button variant="ghost" size="icon" onClick={handleLogout} className="h-8 w-8 sm:h-9 sm:w-9">
+          <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
       </div>
     </header>
