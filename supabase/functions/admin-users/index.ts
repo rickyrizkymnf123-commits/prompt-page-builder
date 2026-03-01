@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -22,13 +22,15 @@ Deno.serve(async (req) => {
       const callerClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
-      const { data: { user: caller } } = await callerClient.auth.getUser();
-      if (!caller) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims?.sub) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      const callerId = claimsData.claims.sub;
 
       const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
@@ -38,7 +40,7 @@ Deno.serve(async (req) => {
       const { data: roles } = await adminClient
         .from("user_roles")
         .select("role")
-        .eq("user_id", caller.id);
+        .eq("user_id", callerId);
       const isAdmin = roles?.some((r: any) => r.role === "admin");
       if (!isAdmin) {
         return new Response(JSON.stringify({ error: "Forbidden" }), {
