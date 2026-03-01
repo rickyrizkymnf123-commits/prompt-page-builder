@@ -253,26 +253,26 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     }, 100);
   }, []);
 
+  // Build element list using SAME tag iteration order as getEditableHtml
+  const getEditableElements = useCallback((doc: Document): Element[] => {
+    const editableTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'span', 'li', 'button', 'img', 'iframe'];
+    const elements: Element[] = [];
+    editableTags.forEach(tag => {
+      doc.querySelectorAll(tag).forEach(el => {
+        if (!el.closest('#sn-popup')) elements.push(el);
+      });
+    });
+    return elements;
+  }, []);
+
   // Reorder element by index - handles DnD from iframe
   const reorderElement = useCallback((fromIdx: number, toIdx: number, after: boolean) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
-    const editableTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'span', 'li', 'button', 'img', 'iframe'];
-    const allElements: Element[] = [];
-    editableTags.forEach(tag => {
-      doc.querySelectorAll(tag).forEach(el => {
-        if (!el.closest('#sn-popup')) allElements.push(el);
-      });
-    });
-    // Sort by document order
-    allElements.sort((a, b) => {
-      const pos = a.compareDocumentPosition(b);
-      return pos & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : pos & Node.DOCUMENT_POSITION_PRECEDING ? 1 : 0;
-    });
+    const allElements = getEditableElements(doc);
     const fromEl = allElements[fromIdx];
     const toEl = allElements[toIdx];
     if (!fromEl || !toEl || fromEl === toEl) return;
-    // Move element
     if (after) {
       toEl.parentNode?.insertBefore(fromEl, toEl.nextSibling);
     } else {
@@ -283,7 +283,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     setHtmlCode(html);
     toast({ title: '✅ Elemen dipindahkan!' });
     setTimeout(() => restoreScroll(), 200);
-  }, [previewHtml, restoreScroll]);
+  }, [previewHtml, restoreScroll, getEditableElements]);
 
   useEffect(() => {
     const handler = (e: MessageEvent) => {
@@ -308,15 +308,8 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     if (!editTarget) return;
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
-    const editableTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'span', 'li', 'button', 'img', 'iframe'];
-    let idx = 0; let targetEl: Element | null = null;
-    editableTags.forEach(tag => {
-      doc.querySelectorAll(tag).forEach(el => {
-        if (el.closest('#sn-popup')) { idx++; return; }
-        if (idx === editTarget.index) targetEl = el;
-        idx++;
-      });
-    });
+    const allElements = getEditableElements(doc);
+    const targetEl = allElements[editTarget.index] || null;
     if (targetEl) {
       const el = targetEl as HTMLElement;
       if (editTarget.type === 'video') el.setAttribute('src', newValue);
@@ -336,7 +329,6 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       if (styles?.bgColor) el.style.backgroundColor = styles.bgColor;
       const updatedHtml = doc.documentElement.outerHTML;
       setPreviewHtml(updatedHtml); setHtmlCode(updatedHtml);
-      // Restore scroll after re-render instead of toggling editMode
       setTimeout(() => restoreScroll(), 200);
     }
     setEditTarget(null);
@@ -346,15 +338,8 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     if (!editTarget) return;
     const parser = new DOMParser();
     const doc = parser.parseFromString(previewHtml, 'text/html');
-    const editableTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'span', 'li', 'button', 'img', 'iframe'];
-    let idx = 0; let targetEl: Element | null = null;
-    editableTags.forEach(tag => {
-      doc.querySelectorAll(tag).forEach(el => {
-        if (el.closest('#sn-popup')) { idx++; return; }
-        if (idx === editTarget.index) targetEl = el;
-        idx++;
-      });
-    });
+    const allElements = getEditableElements(doc);
+    const targetEl = allElements[editTarget.index] || null;
     if (targetEl) {
       targetEl.remove();
       const updatedHtml = doc.documentElement.outerHTML;
