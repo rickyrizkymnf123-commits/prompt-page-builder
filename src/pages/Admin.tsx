@@ -31,6 +31,7 @@ import { generatePrompt } from "@/utils/generatePrompt";
 import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { sampleTemplates } from "@/data/sampleTemplates";
 import { motion } from "framer-motion";
+import { TypewriterText } from "@/components/TypewriterText";
 
 interface AdminUser {
   id: string; email: string; name: string | null; phone: string | null;
@@ -420,7 +421,7 @@ export default function Admin() {
                     <h2 className="text-base font-semibold text-foreground">📋 Prompt</h2>
                     <Button variant="outline" size="sm" onClick={async () => { await navigator.clipboard.writeText(promptText); toast({ title: 'Disalin!' }); }} className="gap-2"><Copy className="h-4 w-4" /> Copy</Button>
                   </div>
-                  <ScrollArea className="h-64"><pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-3 bg-secondary rounded-lg">{promptText}</pre></ScrollArea>
+                  <ScrollArea className="h-64"><pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-3 bg-secondary rounded-lg"><TypewriterText text={promptText} /></pre></ScrollArea>
                 </div>
                 <Button onClick={async () => { try { await navigator.clipboard.writeText(promptText); } catch {} window.open('https://chat.z.ai/', '_blank'); toast({ title: '✅ Prompt disalin!' }); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg"><ExternalLink className="h-4 w-4" /> Buat Landing Page</Button>
                 <Button variant="outline" onClick={() => { setToolStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="w-full gap-2" size="lg">Lanjut ke Preview →</Button>
