@@ -246,6 +246,12 @@ export default function AppPage() {
         await supabase.from('prompt_usage').upsert({ user_id: session.user.id, used_count: newCount, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
         setPromptUsage(newCount);
         if (newCount >= FREE_LIMIT) setUsageLimitReached(true);
+        // Warning at 3rd generate
+        if (newCount === 3) {
+          toast({ title: '⚠️ Sisa 2x Generate', description: 'Kamu sudah pakai 3 dari 5 generate gratis. Upgrade untuk unlimited!' });
+        } else if (newCount === 4) {
+          toast({ title: '⚠️ Sisa 1x Generate!', description: 'Ini generate ke-4. Setelah ini tinggal 1x lagi!', variant: 'destructive' });
+        }
       }
     }
 
