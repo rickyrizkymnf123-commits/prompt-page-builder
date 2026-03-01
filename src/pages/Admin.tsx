@@ -30,6 +30,7 @@ import { StepCountdown } from "@/components/steps/StepCountdown";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { sampleTemplates } from "@/data/sampleTemplates";
+import { motion } from "framer-motion";
 
 interface AdminUser {
   id: string; email: string; name: string | null; phone: string | null;
@@ -56,8 +57,45 @@ function StatusBadge({ status }: { status: string }) {
   const s = map[status] || { label: status, className: "text-muted-foreground bg-muted border-border", icon: null };
   return <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${s.className}`}>{s.icon}{s.label}</span>;
 }
-
+function AdminGeneratingLoader() {
+  const steps = [
+    { icon: '🔍', text: 'Menganalisis profil produk...' },
+    { icon: '✍️', text: 'Menyusun framework copywriting...' },
+    { icon: '🎨', text: 'Menerapkan gaya desain...' },
+    { icon: '🧱', text: 'Membangun struktur section...' },
+    { icon: '⚡', text: 'Finalisasi prompt...' },
+  ];
+  const [activeStep, setActiveStep] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <div className="max-w-md mx-auto p-6 flex flex-col items-center justify-center min-h-[40vh]">
+      <motion.div className="relative w-20 h-20 mb-8" animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
+        <div className="absolute inset-0 rounded-full border-4 border-muted" />
+        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary" />
+      </motion.div>
+      <div className="space-y-3 w-full">
+        {steps.map((step, i) => (
+          <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: i <= activeStep ? 1 : 0.3, x: i <= activeStep ? 0 : -20 }} transition={{ duration: 0.4, delay: i * 0.1 }}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${i === activeStep ? 'bg-primary/10 border border-primary/30' : i < activeStep ? 'bg-muted/30' : ''}`}>
+            <span className="text-lg">{i < activeStep ? '✅' : step.icon}</span>
+            <span className={`text-sm font-medium ${i === activeStep ? 'text-primary' : i < activeStep ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>{step.text}</span>
+            {i === activeStep && <motion.div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 0.8, repeat: Infinity }} />}
+          </motion.div>
+        ))}
+      </div>
+      <motion.p className="mt-8 text-xs text-muted-foreground text-center" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}>
+        Generating prompt berkualitas tinggi...
+      </motion.p>
+    </div>
+  );
+}
 export default function Admin() {
+
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -78,6 +116,7 @@ export default function Admin() {
   const [promptText, setPromptText] = useState("");
   const [toolStep, setToolStep] = useState(1);
   const [isDirty, setIsDirty] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   // Bulk selection
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [bulkDialog, setBulkDialog] = useState<{ open: boolean; action: string }>({ open: false, action: '' });
@@ -278,11 +317,15 @@ export default function Admin() {
     if (toolStep > 1) setIsDirty(true);
   }, [toolStep]);
   const handleGenerate = () => {
-    const prompt = generatePrompt(form);
-    setPromptText(prompt);
-    setIsDirty(false);
+    setIsGenerating(true);
     setToolStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      const prompt = generatePrompt(form);
+      setPromptText(prompt);
+      setIsDirty(false);
+      setIsGenerating(false);
+    }, 3000);
   };
   const handleReset = () => { setForm({ ...initialFormState }); setPromptText(""); setToolStep(1); setIsDirty(false); };
 
@@ -367,8 +410,10 @@ export default function Admin() {
               </div>
             )}
 
-            {toolStep === 2 && (
-              <div className="max-w-4xl mx-auto space-y-6">
+            {toolStep === 2 && isGenerating && <AdminGeneratingLoader />}
+
+            {toolStep === 2 && !isGenerating && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-4xl mx-auto space-y-6">
                 <p className="text-center text-sm text-muted-foreground">Copy prompt lalu buka AI favorit kamu</p>
                 <div className="rounded-xl border border-border bg-card p-5">
                   <div className="flex items-center justify-between mb-4">
@@ -380,7 +425,7 @@ export default function Admin() {
                 <Button onClick={async () => { try { await navigator.clipboard.writeText(promptText); } catch {} window.open('https://chat.z.ai/', '_blank'); toast({ title: '✅ Prompt disalin!' }); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg"><ExternalLink className="h-4 w-4" /> Buat Landing Page</Button>
                 <Button variant="outline" onClick={() => { setToolStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="w-full gap-2" size="lg">Lanjut ke Preview →</Button>
                 <Button variant="outline" onClick={() => setToolStep(1)} className="w-full">← Kembali</Button>
-              </div>
+              </motion.div>
             )}
 
             {toolStep === 3 && <HtmlPreviewEditor onBack={() => setToolStep(2)} isPaid={true} />}
