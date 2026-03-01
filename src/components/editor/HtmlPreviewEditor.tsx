@@ -45,7 +45,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
   const [sections, setSections] = useState<SectionInfo[]>([]);
   const [showSectionPanel, setShowSectionPanel] = useState(false);
   const [showAddSection, setShowAddSection] = useState(false);
-  const reorderSyncRef = useRef(false);
+  const [dragSectionIdx, setDragSectionIdx] = useState<number | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const scrollPosRef = useRef(0);
 
@@ -123,14 +123,12 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
         if (el.closest('#sn-popup')) { idx++; return; }
         el.setAttribute('data-edit-idx', String(idx));
         el.setAttribute('data-edit-tag', tag.toUpperCase());
-        if (tag !== 'iframe') el.setAttribute('draggable', 'true');
         if (tag === 'a') el.setAttribute('data-edit-href', (el as HTMLAnchorElement).getAttribute('href') || '');
         if (tag === 'iframe') {
           const wrapper = doc.createElement('div');
           wrapper.setAttribute('data-edit-idx', String(idx));
           wrapper.setAttribute('data-edit-tag', 'IFRAME');
           wrapper.setAttribute('data-edit-src', (el as HTMLIFrameElement).getAttribute('src') || '');
-          wrapper.setAttribute('draggable', 'true');
           wrapper.setAttribute('style', 'position:relative;cursor:pointer;');
           el.parentNode?.insertBefore(wrapper, el);
           wrapper.appendChild(el);
@@ -147,17 +145,11 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       });
     });
 
-    const dragStyle = doc.createElement('style');
-    dragStyle.textContent = `
-      [data-edit-idx][draggable="true"] { transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
-      [data-edit-idx][draggable="true"]:hover { outline: 2px solid rgba(124,58,237,0.8) !important; outline-offset: 2px; cursor: grab; }
-      [data-edit-idx].dragging { opacity: 0.25 !important; transform: scale(0.96) !important; outline: 2px dashed rgba(124,58,237,0.4) !important; }
-      .drop-indicator { outline: none !important; position: relative; }
-      .drop-indicator::before { content: ''; position: absolute; left: 0; right: 0; top: -3px; height: 4px; background: linear-gradient(90deg, #7C3AED, #ff4757, #7C3AED); border-radius: 4px; animation: dropPulse 0.8s ease-in-out infinite; z-index: 9999; pointer-events: none; }
-      .drop-indicator-after::before { top: auto !important; bottom: -3px !important; }
-      @keyframes dropPulse { 0%, 100% { opacity: 0.6; transform: scaleX(0.95); } 50% { opacity: 1; transform: scaleX(1); } }
+    const editStyle = doc.createElement('style');
+    editStyle.textContent = `
+      [data-edit-idx]:hover { outline: 2px solid rgba(124,58,237,0.8) !important; outline-offset: 2px; cursor: pointer; }
     `;
-    doc.head.appendChild(dragStyle);
+    doc.head.appendChild(editStyle);
 
     const script = doc.createElement('script');
     script.textContent = `
@@ -169,61 +161,8 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       var _lastScroll = 0;
       window.addEventListener('scroll', function() { _lastScroll = window.pageYOffset || document.documentElement.scrollTop; window.parent.postMessage({ type: 'SCROLL_POS', top: _lastScroll }, '*'); }, true);
       window.addEventListener('message', function(e) { if (e.data && e.data.type === 'SET_SCROLL') { window.scrollTo(0, e.data.top); } });
-      
-      var dragSrc = null;
-      document.addEventListener('dragstart', function(e) {
-        var el = e.target.closest ? e.target.closest('[data-edit-idx]') : e.target;
-        if (!el || !el.hasAttribute('data-edit-idx')) return;
-        dragSrc = el; el.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', el.getAttribute('data-edit-idx'));
-        var ghost = el.cloneNode(true);
-        ghost.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0.85;transform:scale(0.9) rotate(-1deg);border-radius:8px;box-shadow:0 12px 40px rgba(124,58,237,0.35);pointer-events:none;max-width:300px;overflow:hidden;z-index:99999;';
-        document.body.appendChild(ghost);
-        e.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, 20);
-        setTimeout(function() { document.body.removeChild(ghost); }, 0);
-      }, true);
-      document.addEventListener('dragover', function(e) {
-        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
-        var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
-        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { x.classList.remove('drop-indicator'); x.classList.remove('drop-indicator-after'); });
-        if (target && target !== dragSrc) {
-          var rect = target.getBoundingClientRect(); var midY = rect.top + rect.height / 2;
-          if (e.clientY > midY) { target.classList.add('drop-indicator'); target.classList.add('drop-indicator-after'); }
-          else { target.classList.add('drop-indicator'); }
-        }
-      }, true);
-      document.addEventListener('dragleave', function(e) {
-        var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
-        if (target) { target.classList.remove('drop-indicator'); target.classList.remove('drop-indicator-after'); }
-      }, true);
-      document.addEventListener('drop', function(e) {
-        e.preventDefault(); var isAfter = false;
-        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { if (x.classList.contains('drop-indicator-after')) isAfter = true; x.classList.remove('drop-indicator'); x.classList.remove('drop-indicator-after'); });
-        if (!dragSrc) return; dragSrc.classList.remove('dragging');
-        var dropTarget = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
-        if (!dropTarget || dropTarget === dragSrc) { dragSrc = null; return; }
-        if (isAfter && dropTarget.nextSibling) { dropTarget.parentNode.insertBefore(dragSrc, dropTarget.nextSibling); }
-        else if (isAfter) { dropTarget.parentNode.appendChild(dragSrc); }
-        else { dropTarget.parentNode.insertBefore(dragSrc, dropTarget); }
-        var clone = document.documentElement.cloneNode(true);
-        clone.querySelectorAll('[data-edit-idx]').forEach(function(el) {
-          el.removeAttribute('data-edit-idx'); el.removeAttribute('data-edit-tag'); el.removeAttribute('data-edit-href'); el.removeAttribute('draggable');
-          el.classList.remove('dragging'); el.classList.remove('drop-indicator'); el.classList.remove('drop-indicator-after');
-          var s = el.getAttribute('style') || '';
-          s = s.replace(/;?cursor:pointer;?/g, '').replace(/;?outline:2px dashed rgba\\(59,130,246,0\\.5\\);?/g, '').replace(/;?outline-offset:2px;?/g, '');
-          if (s.trim()) el.setAttribute('style', s); else el.removeAttribute('style');
-        });
-        clone.querySelectorAll('script').forEach(function(s) { s.remove(); });
-        clone.querySelectorAll('style').forEach(function(s) { if ((s.textContent || '').indexOf('drop-indicator') !== -1) s.remove(); });
-        window.parent.postMessage({ type: 'REORDER_HTML', html: clone.outerHTML }, '*');
-        dragSrc = null;
-      }, true);
-      document.addEventListener('dragend', function(e) {
-        if (dragSrc) dragSrc.classList.remove('dragging');
-        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { x.classList.remove('drop-indicator'); x.classList.remove('drop-indicator-after'); });
-        dragSrc = null;
-      }, true);
+
+      // Click to edit only - NO drag and drop inside iframe
       document.addEventListener('click', function(e) {
         e.preventDefault(); e.stopPropagation();
         var el = e.target;
@@ -265,13 +204,6 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
           pixelEvent: e.data.pixelEvent || '', imgWidth: e.data.imgWidth || 0, imgHeight: e.data.imgHeight || 0,
           bgColor: e.data.bgColor || '', textColor: e.data.textColor || '',
         });
-      } else if (e.data?.type === 'REORDER_HTML') {
-        reorderSyncRef.current = true;
-        setHtmlCode(e.data.html);
-        setPreviewHtml(e.data.html);
-        toast({ title: '✅ Elemen dipindahkan!' });
-        // Restore scroll after reorder
-        setTimeout(() => restoreScroll(), 200);
       } else if (e.data?.type === 'SCROLL_POS') {
         scrollPosRef.current = e.data.top;
       }
@@ -350,6 +282,30 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     else if (direction === 'down' && sectionIndex < children.length - 1) root.insertBefore(children[sectionIndex + 1], children[sectionIndex]);
     const html = doc.documentElement.outerHTML;
     setPreviewHtml(html); setHtmlCode(html);
+    setTimeout(() => restoreScroll(), 200);
+  };
+
+  const reorderSection = (fromIndex: number, toIndex: number) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    const root = doc.getElementById('lp-root') || doc.body;
+    const children = Array.from(root.children).filter(c => c.tagName !== 'SCRIPT' && c.tagName !== 'STYLE' && c.id !== 'sn-popup');
+    if (!children[fromIndex] || !children[toIndex]) return;
+    const moving = children[fromIndex];
+    moving.remove();
+    // Re-get filtered children after removal
+    const updatedChildren = Array.from(root.children).filter(c => c.tagName !== 'SCRIPT' && c.tagName !== 'STYLE' && c.id !== 'sn-popup');
+    if (toIndex >= updatedChildren.length) {
+      // Insert before sn-popup or at end
+      const snPopup = doc.getElementById('sn-popup');
+      if (snPopup) root.insertBefore(moving, snPopup);
+      else root.appendChild(moving);
+    } else {
+      root.insertBefore(moving, updatedChildren[toIndex]);
+    }
+    const html = doc.documentElement.outerHTML;
+    setPreviewHtml(html); setHtmlCode(html);
+    toast({ title: '✅ Section dipindahkan!' });
     setTimeout(() => restoreScroll(), 200);
   };
 
@@ -628,10 +584,26 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
             <div className="w-64 flex-shrink-0 sticky top-4 self-start max-h-[85vh] overflow-y-auto">
               <div className="rounded-xl border border-border bg-card p-3 space-y-2">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">📦 Sections ({sections.length})</h3>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {sections.map((sec, i) => (
-                    <div key={i} className="rounded-lg bg-secondary border border-border p-2 space-y-1">
-                      <p className="text-xs font-medium text-foreground truncate" title={sec.name}>{sec.name}</p>
+                    <div
+                      key={`${i}-${sec.name}`}
+                      draggable
+                      onDragStart={() => setDragSectionIdx(i)}
+                      onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('ring-2', 'ring-primary'); }}
+                      onDragLeave={(e) => { e.currentTarget.classList.remove('ring-2', 'ring-primary'); }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.currentTarget.classList.remove('ring-2', 'ring-primary');
+                        if (dragSectionIdx !== null && dragSectionIdx !== i) {
+                          reorderSection(dragSectionIdx, i);
+                        }
+                        setDragSectionIdx(null);
+                      }}
+                      onDragEnd={() => setDragSectionIdx(null)}
+                      className={`rounded-lg bg-secondary border border-border p-2 space-y-1 cursor-grab active:cursor-grabbing transition-all ${dragSectionIdx === i ? 'opacity-40 scale-95' : ''}`}
+                    >
+                      <p className="text-xs font-medium text-foreground truncate" title={sec.name}>☰ {sec.name}</p>
                       <div className="flex items-center gap-1">
                         <button type="button" onClick={() => moveSection(i, 'up')} disabled={i === 0} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬆</button>
                         <button type="button" onClick={() => moveSection(i, 'down')} disabled={i === sections.length - 1} className="px-1 py-0.5 rounded text-xs text-muted-foreground hover:bg-primary/10 disabled:opacity-30">⬇</button>
