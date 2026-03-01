@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
       }
 
 
-      const { action, user_id, email, password, name, role, tier } = await req.json();
+      const { action, user_id, email, password, name, role, tier, members } = await req.json();
 
       // Check admin role (skip for initial setup)
       const { data: roles } = await adminClient
@@ -196,14 +196,12 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        // Add entitlement with status based on request
         await adminClient.from("entitlements").insert({
           user_id: newMember.user.id,
           status: "active",
           order_id: `MANUAL_${Date.now()}`,
           product_code: tier === "free" ? "LPE_FREE" : "LPE",
         });
-        // Add role if specified
         if (role && role === "admin") {
           await adminClient.from("user_roles").insert({
             user_id: newMember.user.id,
@@ -211,6 +209,52 @@ Deno.serve(async (req) => {
           });
         }
         return new Response(JSON.stringify({ success: true, user_id: newMember.user.id }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // --- BULK ADD MEMBERS ---
+      if (action === "bulk_add_members") {
+        if (!members || !Array.isArray(members) || members.length === 0) {
+          return new Response(JSON.stringify({ error: "members array required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const results: { email: string; success: boolean; error?: string }[] = [];
+        for (const m of members) {
+          try {
+            const mEmail = (m.email || '').trim().toLowerCase();
+            const mName = (m.name || '').trim();
+            const mPassword = (m.password || '').trim();
+            if (!mEmail || !mPassword || mPassword.length < 6) {
+              results.push({ email: mEmail, success: false, error: "Email/password invalid atau password < 6 karakter" });
+              continue;
+            }
+            const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
+              email: mEmail,
+              password: mPassword,
+              email_confirm: true,
+              user_metadata: { name: mName },
+            });
+            if (createErr || !newUser.user) {
+              results.push({ email: mEmail, success: false, error: createErr?.message || "Gagal membuat user" });
+              continue;
+            }
+            await adminClient.from("entitlements").insert({
+              user_id: newUser.user.id,
+              status: "active",
+              order_id: `BULK_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+              product_code: tier === "free" ? "LPE_FREE" : "LPE",
+            });
+            results.push({ email: mEmail, success: true });
+          } catch (err) {
+            results.push({ email: m.email || '', success: false, error: (err as Error).message });
+          }
+        }
+        const successCount = results.filter(r => r.success).length;
+        const failCount = results.filter(r => !r.success).length;
+        return new Response(JSON.stringify({ success: true, results, successCount, failCount }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
