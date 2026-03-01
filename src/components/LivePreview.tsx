@@ -484,11 +484,22 @@ export function LivePreview({ form }: Props) {
 
       <div className="px-3 py-2 space-y-2 max-h-[500px] overflow-y-auto" style={{ fontSize: '10px' }}>
 
-        {/* Disclaimer note */}
-        <div className="rounded-lg px-2.5 py-2 flex items-start gap-1.5" style={{ background: isDark ? '#1a1a3a' : '#f0f0ff', border: `1px dashed ${accent}55` }}>
-          <span className="text-[10px] mt-px">✨</span>
-          <div className="text-[7px] leading-relaxed" style={{ color: isDark ? '#b0b0d0' : '#555577' }}>
-            <span className="font-bold" style={{ color: accent }}>Preview Mode</span> — Ini hanya gambaran kasar struktur landing page kamu. Hasil akhir dari AI akan <span className="font-bold">jauh lebih bagus</span>, lengkap dengan desain profesional, copywriting persuasif, dan visual yang menarik.
+        {/* Floating sticky note */}
+        <div className="sticky top-0 z-10 animate-fade-in" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))' }}>
+          <div
+            className="rounded-md px-2.5 py-1.5 flex items-start gap-1.5 relative"
+            style={{
+              background: isDark ? 'linear-gradient(135deg, #2a2a4e, #1e1e3a)' : 'linear-gradient(135deg, #fffde7, #fff9c4)',
+              border: `1px solid ${isDark ? '#3a3a5e' : '#f0e68c'}`,
+              boxShadow: isDark ? '0 3px 10px rgba(0,0,0,0.4)' : '0 3px 10px rgba(0,0,0,0.08)',
+              transform: 'rotate(-0.5deg)',
+            }}
+          >
+            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full" style={{ background: accent, boxShadow: `0 1px 3px ${accent}66` }} />
+            <span className="text-[10px] mt-px">✨</span>
+            <div className="text-[7px] leading-relaxed" style={{ color: isDark ? '#d0d0e0' : '#665500' }}>
+              <span className="font-bold" style={{ color: accent }}>Preview Mode</span> — Ini gambaran kasar struktur LP. Hasil akhir AI akan <span className="font-bold">jauh lebih bagus</span> ✨
+            </div>
           </div>
         </div>
 
