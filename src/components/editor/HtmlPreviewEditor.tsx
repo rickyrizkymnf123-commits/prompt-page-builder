@@ -123,6 +123,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
         if (el.closest('#sn-popup')) { idx++; return; }
         el.setAttribute('data-edit-idx', String(idx));
         el.setAttribute('data-edit-tag', tag.toUpperCase());
+        if (tag !== 'iframe') el.setAttribute('draggable', 'true');
         if (tag === 'a') el.setAttribute('data-edit-href', (el as HTMLAnchorElement).getAttribute('href') || '');
         if (tag === 'iframe') {
           const wrapper = doc.createElement('div');
@@ -147,23 +148,80 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
 
     const editStyle = doc.createElement('style');
     editStyle.textContent = `
-      [data-edit-idx]:hover { outline: 2px solid rgba(124,58,237,0.8) !important; outline-offset: 2px; cursor: pointer; }
+      [data-edit-idx]:hover { outline: 2px solid rgba(124,58,237,0.8) !important; outline-offset: 2px; }
+      [data-edit-idx][draggable="true"] { cursor: grab; }
+      [data-edit-idx][draggable="true"]:active { cursor: grabbing; }
+      [data-edit-idx].dragging { opacity: 0.3 !important; }
+      .drop-indicator { position: relative; }
+      .drop-indicator::before { content: ''; position: absolute; left: 0; right: 0; top: -2px; height: 3px; background: #7C3AED; border-radius: 2px; z-index: 9999; pointer-events: none; }
+      .drop-indicator-after::before { top: auto !important; bottom: -2px !important; }
     `;
     doc.head.appendChild(editStyle);
 
     const script = doc.createElement('script');
     script.textContent = `
-      // Prevent all button/link clicks
       document.querySelectorAll('a,button').forEach(function(a) { a.addEventListener('click', function(e) { e.preventDefault(); }); });
       document.addEventListener('submit', function(e) { e.preventDefault(); });
       
-      // Track scroll position and report to parent
       var _lastScroll = 0;
       window.addEventListener('scroll', function() { _lastScroll = window.pageYOffset || document.documentElement.scrollTop; window.parent.postMessage({ type: 'SCROLL_POS', top: _lastScroll }, '*'); }, true);
       window.addEventListener('message', function(e) { if (e.data && e.data.type === 'SET_SCROLL') { window.scrollTo(0, e.data.top); } });
 
-      // Click to edit only - NO drag and drop inside iframe
+      var _dragIdx = null;
+      var _isClick = true;
+      
+      document.addEventListener('dragstart', function(e) {
+        var el = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
+        if (!el) return;
+        _dragIdx = Number(el.getAttribute('data-edit-idx'));
+        _isClick = false;
+        el.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(_dragIdx));
+      }, true);
+
+      document.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { x.classList.remove('drop-indicator','drop-indicator-after'); });
+        var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
+        if (target && Number(target.getAttribute('data-edit-idx')) !== _dragIdx) {
+          var rect = target.getBoundingClientRect();
+          if (e.clientY > rect.top + rect.height / 2) { target.classList.add('drop-indicator','drop-indicator-after'); }
+          else { target.classList.add('drop-indicator'); }
+        }
+      }, true);
+
+      document.addEventListener('dragleave', function(e) {
+        var target = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
+        if (target) target.classList.remove('drop-indicator','drop-indicator-after');
+      }, true);
+
+      document.addEventListener('drop', function(e) {
+        e.preventDefault();
+        var isAfter = false;
+        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) {
+          if (x.classList.contains('drop-indicator-after')) isAfter = true;
+          x.classList.remove('drop-indicator','drop-indicator-after');
+        });
+        document.querySelectorAll('.dragging').forEach(function(x) { x.classList.remove('dragging'); });
+        var dropTarget = e.target.closest ? e.target.closest('[data-edit-idx]') : null;
+        if (!dropTarget || _dragIdx === null) { _dragIdx = null; return; }
+        var dropIdx = Number(dropTarget.getAttribute('data-edit-idx'));
+        if (dropIdx === _dragIdx) { _dragIdx = null; return; }
+        window.parent.postMessage({ type: 'REORDER_ELEMENT', fromIdx: _dragIdx, toIdx: dropIdx, after: isAfter }, '*');
+        _dragIdx = null;
+      }, true);
+
+      document.addEventListener('dragend', function() {
+        document.querySelectorAll('.dragging').forEach(function(x) { x.classList.remove('dragging'); });
+        document.querySelectorAll('.drop-indicator,.drop-indicator-after').forEach(function(x) { x.classList.remove('drop-indicator','drop-indicator-after'); });
+        _dragIdx = null;
+      }, true);
+
+      document.addEventListener('mousedown', function() { _isClick = true; });
       document.addEventListener('click', function(e) {
+        if (!_isClick) { _isClick = true; return; }
         e.preventDefault(); e.stopPropagation();
         var el = e.target;
         if (el.tagName === 'IMG' && el.hasAttribute('data-edit-idx')) { }
@@ -195,6 +253,38 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     }, 100);
   }, []);
 
+  // Reorder element by index - handles DnD from iframe
+  const reorderElement = useCallback((fromIdx: number, toIdx: number, after: boolean) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    const editableTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'span', 'li', 'button', 'img', 'iframe'];
+    const allElements: Element[] = [];
+    editableTags.forEach(tag => {
+      doc.querySelectorAll(tag).forEach(el => {
+        if (!el.closest('#sn-popup')) allElements.push(el);
+      });
+    });
+    // Sort by document order
+    allElements.sort((a, b) => {
+      const pos = a.compareDocumentPosition(b);
+      return pos & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : pos & Node.DOCUMENT_POSITION_PRECEDING ? 1 : 0;
+    });
+    const fromEl = allElements[fromIdx];
+    const toEl = allElements[toIdx];
+    if (!fromEl || !toEl || fromEl === toEl) return;
+    // Move element
+    if (after) {
+      toEl.parentNode?.insertBefore(fromEl, toEl.nextSibling);
+    } else {
+      toEl.parentNode?.insertBefore(fromEl, toEl);
+    }
+    const html = doc.documentElement.outerHTML;
+    setPreviewHtml(html);
+    setHtmlCode(html);
+    toast({ title: '✅ Elemen dipindahkan!' });
+    setTimeout(() => restoreScroll(), 200);
+  }, [previewHtml, restoreScroll]);
+
   useEffect(() => {
     const handler = (e: MessageEvent) => {
       if (e.data?.type === 'EDIT_ELEMENT') {
@@ -204,13 +294,15 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
           pixelEvent: e.data.pixelEvent || '', imgWidth: e.data.imgWidth || 0, imgHeight: e.data.imgHeight || 0,
           bgColor: e.data.bgColor || '', textColor: e.data.textColor || '',
         });
+      } else if (e.data?.type === 'REORDER_ELEMENT') {
+        reorderElement(e.data.fromIdx, e.data.toIdx, e.data.after);
       } else if (e.data?.type === 'SCROLL_POS') {
         scrollPosRef.current = e.data.top;
       }
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, [restoreScroll]);
+  }, [restoreScroll, reorderElement]);
 
   const handleSaveEdit = (newValue: string, newHref?: string, pixelEvent?: string, styles?: { bgColor?: string; textColor?: string }) => {
     if (!editTarget) return;
