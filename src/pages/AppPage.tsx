@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
@@ -41,6 +41,74 @@ function Stepper({ current }: { current: number }) {
   );
 }
 
+function GeneratingLoader() {
+  const steps = [
+    { icon: '🔍', text: 'Menganalisis profil produk...' },
+    { icon: '✍️', text: 'Menyusun framework copywriting...' },
+    { icon: '🎨', text: 'Menerapkan gaya desain...' },
+    { icon: '🧱', text: 'Membangun struktur section...' },
+    { icon: '⚡', text: 'Finalisasi prompt...' },
+  ];
+  const [activeStep, setActiveStep] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="max-w-md mx-auto p-6 flex flex-col items-center justify-center min-h-[60vh]">
+      {/* Spinner */}
+      <motion.div
+        className="relative w-20 h-20 mb-8"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+      >
+        <div className="absolute inset-0 rounded-full border-4 border-muted" />
+        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary" />
+      </motion.div>
+
+      {/* Steps */}
+      <div className="space-y-3 w-full">
+        {steps.map((step, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{
+              opacity: i <= activeStep ? 1 : 0.3,
+              x: i <= activeStep ? 0 : -20,
+            }}
+            transition={{ duration: 0.4, delay: i * 0.1 }}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${i === activeStep ? 'bg-primary/10 border border-primary/30' : i < activeStep ? 'bg-muted/30' : ''}`}
+          >
+            <span className="text-lg">{i < activeStep ? '✅' : step.icon}</span>
+            <span className={`text-sm font-medium ${i === activeStep ? 'text-primary' : i < activeStep ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>
+              {step.text}
+            </span>
+            {i === activeStep && (
+              <motion.div
+                className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+              />
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      <motion.p
+        className="mt-8 text-xs text-muted-foreground text-center"
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        Generating prompt berkualitas tinggi...
+      </motion.p>
+    </div>
+  );
+}
+
 function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack: () => void; onNext: () => void }) {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(promptText);
@@ -52,7 +120,12 @@ function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack
     toast({ title: '✅ Prompt sudah disalin!', description: 'Paste prompt lalu tekan Enter.' });
   };
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-4xl mx-auto p-6 space-y-6"
+    >
       <Stepper current={2} />
       <p className="text-center text-sm text-muted-foreground">Copy prompt lalu buka AI favorit kamu</p>
       <div className="rounded-xl border border-border bg-card p-5">
@@ -69,7 +142,7 @@ function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack
       </Button>
       <Button variant="outline" onClick={onNext} className="w-full gap-2" size="lg">Lanjut ke Preview & Edit HTML →</Button>
       <Button variant="outline" onClick={onBack} className="w-full">← Kembali Edit Form</Button>
-    </div>
+    </motion.div>
   );
 }
 
@@ -84,6 +157,7 @@ export default function AppPage() {
   const [templateHtml, setTemplateHtml] = useState('');
   const [userTier, setUserTier] = useState<'free' | 'paid'>('free');
   const [orderUrl, setOrderUrl] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
 
   const isPaid = userTier === 'paid';
@@ -143,11 +217,16 @@ export default function AppPage() {
   }, [currentStep]);
 
   const handleGenerate = () => {
-    const prompt = generatePrompt(form);
-    setPromptText(prompt);
-    setIsDirty(false);
+    setIsGenerating(true);
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Simulate generation with delay for animation
+    setTimeout(() => {
+      const prompt = generatePrompt(form);
+      setPromptText(prompt);
+      setIsDirty(false);
+      setIsGenerating(false);
+    }, 3000);
   };
 
   const handleReset = () => {
@@ -213,7 +292,8 @@ export default function AppPage() {
         </div>
       )}
 
-      {currentStep === 2 && <PromptStep promptText={promptText} onBack={() => setCurrentStep(1)} onNext={() => setCurrentStep(3)} />}
+      {currentStep === 2 && isGenerating && <GeneratingLoader />}
+      {currentStep === 2 && !isGenerating && <PromptStep promptText={promptText} onBack={() => setCurrentStep(1)} onNext={() => setCurrentStep(3)} />}
 
       {currentStep === 3 && (
         <HtmlPreviewEditor
