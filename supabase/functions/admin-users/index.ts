@@ -19,20 +19,33 @@ Deno.serve(async (req) => {
 
     // If auth header present, verify admin
     if (authHeader) {
-      const callerClient = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
+      const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+      // Extract user ID from the JWT token using admin client
       const token = authHeader.replace("Bearer ", "");
-      const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
-      if (claimsError || !claimsData?.claims?.sub) {
+      // Decode JWT payload to get user ID (base64url decode)
+      let callerId: string;
+      try {
+        const payloadB64 = token.split(".")[1];
+        const payload = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
+        callerId = payload.sub;
+        if (!callerId) throw new Error("No sub in token");
+      } catch {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const callerId = claimsData.claims.sub;
 
-      const adminClient = createClient(supabaseUrl, serviceRoleKey);
+      // Verify user actually exists via admin API
+      const { data: userData, error: userErr } = await adminClient.auth.admin.getUserById(callerId);
+      if (userErr || !userData?.user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
 
       const { action, user_id, email, password, name, role, tier } = await req.json();
 
