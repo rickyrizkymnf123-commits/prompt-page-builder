@@ -559,7 +559,7 @@ export default function Admin() {
                   <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 text-sm" /></div>
                   <Button variant="outline" size="sm" className="gap-1 flex-shrink-0" onClick={() => setAddMemberDialog(true)}><UserPlus className="h-4 w-4" /> <span className="hidden sm:inline">Add</span></Button>
                   <Button variant="outline" size="sm" className="gap-1 flex-shrink-0" onClick={() => { setBulkAddDialog(true); setBulkAddResults(null); setBulkAddRows([{ email: '', name: '', password: '' }]); }}><Users className="h-4 w-4" /> <span className="hidden sm:inline">Bulk</span></Button>
-                  <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => { fetchUsers(); fetchLogs(); }}><RefreshCw className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="sm" className="gap-1 flex-shrink-0" onClick={() => { fetchUsers(); fetchLogs(); }}><RefreshCw className="h-4 w-4" /></Button>
                 </div>
               </CardHeader>
               <CardContent className="p-3 sm:p-6 pt-0">
