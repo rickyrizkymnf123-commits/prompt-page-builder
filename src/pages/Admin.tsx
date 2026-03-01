@@ -112,6 +112,12 @@ export default function Admin() {
   const [showAddMemberPassword, setShowAddMemberPassword] = useState(false);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [addMemberTier, setAddMemberTier] = useState<'free' | 'paid'>('free');
+  // Bulk add members
+  const [bulkAddDialog, setBulkAddDialog] = useState(false);
+  const [bulkAddText, setBulkAddText] = useState('');
+  const [bulkAddTier, setBulkAddTier] = useState<'free' | 'paid'>('free');
+  const [bulkAddLoading, setBulkAddLoading] = useState(false);
+  const [bulkAddResults, setBulkAddResults] = useState<{ email: string; success: boolean; error?: string }[] | null>(null);
   const [darkMode, setDarkMode] = useState(true);
   const [form, setForm] = useState<FormState>({ ...initialFormState });
   const [promptText, setPromptText] = useState("");
@@ -236,6 +242,24 @@ export default function Admin() {
     } else {
       setSelectedUsers(new Set(filteredUsers.filter(u => u.role !== 'admin').map(u => u.id)));
     }
+  };
+  const handleBulkAddMembers = async () => {
+    const lines = bulkAddText.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+    const members = lines.map(line => {
+      const parts = line.split(/[,\t;]+/).map(p => p.trim());
+      return { email: parts[0] || '', name: parts[1] || '', password: parts[2] || '' };
+    }).filter(m => m.email);
+    if (members.length === 0) { showToast({ title: "Error", description: "Tidak ada data member yang valid.", variant: "destructive" }); return; }
+    setBulkAddLoading(true);
+    setBulkAddResults(null);
+    const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "bulk_add_members", members, tier: bulkAddTier } });
+    if (error) { showToast({ title: "Gagal", description: error.message, variant: "destructive" }); }
+    else {
+      setBulkAddResults(data.results || []);
+      showToast({ title: `✅ ${data.successCount} berhasil, ${data.failCount} gagal` });
+      await fetchUsers();
+    }
+    setBulkAddLoading(false);
   };
   const handleBulkAction = async () => {
     if (selectedUsers.size === 0) return;
@@ -538,6 +562,7 @@ export default function Admin() {
                 <div className="flex items-center gap-2 w-full">
                   <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 text-sm" /></div>
                   <Button variant="outline" size="sm" className="gap-1 flex-shrink-0" onClick={() => setAddMemberDialog(true)}><UserPlus className="h-4 w-4" /> <span className="hidden sm:inline">Add</span></Button>
+                  <Button variant="outline" size="sm" className="gap-1 flex-shrink-0" onClick={() => { setBulkAddDialog(true); setBulkAddResults(null); setBulkAddText(''); }}><Users className="h-4 w-4" /> <span className="hidden sm:inline">Bulk</span></Button>
                   <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => { fetchUsers(); fetchLogs(); }}><RefreshCw className="h-4 w-4" /></Button>
                 </div>
               </CardHeader>
@@ -802,6 +827,54 @@ export default function Admin() {
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setTplDialog(false)}>Batal</Button>
             <Button onClick={handleSaveTemplate} disabled={tplLoading}>{tplLoading ? "Menyimpan..." : editTplId ? "💾 Update Template" : "💾 Simpan Template"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Add Members Dialog */}
+      <Dialog open={bulkAddDialog} onOpenChange={(open) => { if (!open) { setBulkAddDialog(false); setBulkAddResults(null); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Tambah Member Massal</DialogTitle>
+            <DialogDescription>Masukkan data member, satu per baris. Format: <code className="text-xs bg-muted px-1 py-0.5 rounded">email, nama, password</code></DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Textarea
+              value={bulkAddText}
+              onChange={(e) => setBulkAddText(e.target.value)}
+              placeholder={`contoh@email.com, Nama Lengkap, password123\nuser2@email.com, User Dua, pass456\n# baris dengan # akan diabaikan`}
+              className="min-h-[200px] font-mono text-xs leading-relaxed"
+            />
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Tier Akses</label>
+                <div className="flex gap-2">
+                  {(['free', 'paid'] as const).map(t => (
+                    <button key={t} type="button" onClick={() => setBulkAddTier(t)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${bulkAddTier === t ? 'bg-primary/10 text-primary border-primary' : 'bg-secondary text-muted-foreground border-border'}`}>
+                      {t === 'paid' ? '⭐ Berbayar' : '🆓 Gratis'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">{bulkAddText.split('\n').filter(l => l.trim() && !l.trim().startsWith('#')).length} member</p>
+            </div>
+            {bulkAddResults && (
+              <div className="rounded-lg border border-border p-3 max-h-[200px] overflow-y-auto space-y-1">
+                <p className="text-xs font-semibold text-foreground mb-2">Hasil:</p>
+                {bulkAddResults.map((r, i) => (
+                  <div key={i} className={`text-xs flex items-center gap-2 ${r.success ? 'text-emerald-500' : 'text-destructive'}`}>
+                    {r.success ? <CheckCircle className="h-3 w-3 flex-shrink-0" /> : <XCircle className="h-3 w-3 flex-shrink-0" />}
+                    <span className="truncate">{r.email}</span>
+                    {r.error && <span className="text-muted-foreground truncate">— {r.error}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkAddDialog(false)}>Tutup</Button>
+            <Button onClick={handleBulkAddMembers} disabled={bulkAddLoading}>{bulkAddLoading ? "Memproses..." : "🚀 Tambah Semua"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
