@@ -484,6 +484,14 @@ export function LivePreview({ form }: Props) {
 
       <div className="px-3 py-2 space-y-2 max-h-[500px] overflow-y-auto" style={{ fontSize: '10px' }}>
 
+        {/* Disclaimer note */}
+        <div className="rounded-lg px-2.5 py-2 flex items-start gap-1.5" style={{ background: isDark ? '#1a1a3a' : '#f0f0ff', border: `1px dashed ${accent}55` }}>
+          <span className="text-[10px] mt-px">✨</span>
+          <div className="text-[7px] leading-relaxed" style={{ color: isDark ? '#b0b0d0' : '#555577' }}>
+            <span className="font-bold" style={{ color: accent }}>Preview Mode</span> — Ini hanya gambaran kasar struktur landing page kamu. Hasil akhir dari AI akan <span className="font-bold">jauh lebih bagus</span>, lengkap dengan desain profesional, copywriting persuasif, dan visual yang menarik.
+          </div>
+        </div>
+
         {/* Countdown */}
         {form.countdown.enabled && form.elemenTambahan['Scarcity / Timer'] && (
           <div className="rounded-md px-2 py-1.5 text-center" style={{ background: form.countdown.bgColor, color: form.countdown.textColor }}>
