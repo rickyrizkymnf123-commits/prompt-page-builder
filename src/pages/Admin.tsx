@@ -234,9 +234,18 @@ export default function Admin() {
     if (!addMemberForm.email || !addMemberForm.password) { showToast({ title: "Error", description: "Email dan password wajib.", variant: "destructive" }); return; }
     if (addMemberForm.password.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); return; }
     setAddMemberLoading(true);
-    const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "add_member", email: addMemberForm.email, password: addMemberForm.password, name: addMemberForm.name, role: addMemberForm.role, tier: addMemberTier } });
-    if (error || data?.error) showToast({ title: "Gagal", description: data?.error || error?.message, variant: "destructive" });
-    else { showToast({ title: "Berhasil", description: `Member ${addMemberForm.email} ditambahkan.` }); setAddMemberDialog(false); setAddMemberForm({ email: '', password: '', name: '', role: 'user' }); setAddMemberTier('free'); await fetchUsers(); }
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "add_member", email: addMemberForm.email, password: addMemberForm.password, name: addMemberForm.name, role: addMemberForm.role, tier: addMemberTier } });
+      const errMsg = data?.error || error?.message;
+      if (errMsg) {
+        const friendlyMsg = errMsg.includes("already been registered") ? "Email sudah terdaftar. Gunakan email lain." : errMsg;
+        showToast({ title: "Gagal", description: friendlyMsg, variant: "destructive" });
+      } else {
+        showToast({ title: "Berhasil", description: `Member ${addMemberForm.email} ditambahkan.` }); setAddMemberDialog(false); setAddMemberForm({ email: '', password: '', name: '', role: 'user' }); setAddMemberTier('free'); await fetchUsers();
+      }
+    } catch (e: any) {
+      showToast({ title: "Gagal", description: e?.message || "Terjadi kesalahan.", variant: "destructive" });
+    }
     setAddMemberLoading(false);
   };
 
