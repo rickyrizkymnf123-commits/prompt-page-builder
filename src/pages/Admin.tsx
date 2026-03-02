@@ -144,6 +144,12 @@ export default function Admin() {
 
   // Settings state
   const [orderUrl, setOrderUrl] = useState('');
+  // Tutorials state
+  const [tutorialsList, setTutorialsList] = useState<{ id: string; title: string; description: string | null; youtube_url: string; sort_order: number; is_active: boolean }[]>([]);
+  const [tutDialog, setTutDialog] = useState(false);
+  const [tutForm, setTutForm] = useState({ title: '', description: '', youtube_url: '', sort_order: 0, is_active: true });
+  const [editTutId, setEditTutId] = useState<string | null>(null);
+  const [tutLoading, setTutLoading] = useState(false);
 
   const navigate = useNavigate();
   const { toast: showToast } = useToast();
@@ -172,6 +178,10 @@ export default function Admin() {
       }
     } catch {}
   };
+  const fetchTutorials = async () => {
+    const { data } = await supabase.from('tutorials').select('*').order('sort_order', { ascending: true });
+    if (data) setTutorialsList(data as any[]);
+  };
 
   useEffect(() => {
     const check = async () => {
@@ -180,7 +190,7 @@ export default function Admin() {
       const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).maybeSingle();
       if (roleData?.role !== "admin") { navigate("/app"); return; }
       setAuthorized(true);
-      await Promise.all([fetchUsers(), fetchLogs(), fetchTemplates(), fetchSettings()]);
+      await Promise.all([fetchUsers(), fetchLogs(), fetchTemplates(), fetchSettings(), fetchTutorials()]);
       setLoading(false);
     };
     check();
@@ -702,11 +712,117 @@ export default function Admin() {
                     <li>🔄 <strong>Auto-Upgrade</strong> — Ketika user gratis membeli via Scalev, tier otomatis berubah ke Berbayar.</li>
                   </ul>
                 </div>
+
+                {/* Tutorial Management */}
+                <div className="border-t border-border pt-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">📺 Video Tutorial</h3>
+                      <p className="text-xs text-muted-foreground">Kelola video tutorial yang ditampilkan di dashboard user</p>
+                    </div>
+                    <Button size="sm" onClick={() => { setEditTutId(null); setTutForm({ title: '', description: '', youtube_url: '', sort_order: 0, is_active: true }); setTutDialog(true); }}>
+                      + Tambah Video
+                    </Button>
+                  </div>
+
+                  {tutorialsList.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-8">Belum ada video tutorial.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {tutorialsList.map((tut) => (
+                        <div key={tut.id} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary">
+                          <span className="text-xs text-muted-foreground font-mono w-6 text-center">{tut.sort_order}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{tut.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{tut.youtube_url}</p>
+                          </div>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${tut.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>
+                            {tut.is_active ? 'Aktif' : 'Nonaktif'}
+                          </span>
+                          <Button variant="outline" size="sm" onClick={() => {
+                            setEditTutId(tut.id);
+                            setTutForm({ title: tut.title, description: tut.description || '', youtube_url: tut.youtube_url, sort_order: tut.sort_order, is_active: tut.is_active });
+                            setTutDialog(true);
+                          }}>Edit</Button>
+                          <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={async () => {
+                            if (!confirm('Hapus video tutorial ini?')) return;
+                            await supabase.from('tutorials').delete().eq('id', tut.id);
+                            showToast({ title: 'Video tutorial dihapus.' });
+                            await fetchTutorials();
+                          }}>🗑</Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Tutorial Dialog */}
+      <Dialog open={tutDialog} onOpenChange={setTutDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editTutId ? '✏️ Edit Video Tutorial' : '➕ Tambah Video Tutorial'}</DialogTitle>
+            <DialogDescription>Masukkan link YouTube dan informasi video tutorial.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Judul Video *</label>
+              <Input value={tutForm.title} onChange={(e) => setTutForm(p => ({ ...p, title: e.target.value }))} placeholder="Cara Generate Prompt..." />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Deskripsi</label>
+              <Textarea value={tutForm.description} onChange={(e) => setTutForm(p => ({ ...p, description: e.target.value }))} placeholder="Deskripsi singkat..." className="min-h-[60px]" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">URL YouTube *</label>
+              <Input value={tutForm.youtube_url} onChange={(e) => setTutForm(p => ({ ...p, youtube_url: e.target.value }))} placeholder="https://www.youtube.com/watch?v=..." />
+              {tutForm.youtube_url && (() => {
+                const match = tutForm.youtube_url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                if (match) return (
+                  <div className="mt-2 rounded-lg overflow-hidden border border-border aspect-video">
+                    <iframe src={`https://www.youtube.com/embed/${match[1]}`} className="w-full h-full" allowFullScreen title="Preview" />
+                  </div>
+                );
+                return null;
+              })()}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Urutan</label>
+                <Input type="number" value={tutForm.sort_order} onChange={(e) => setTutForm(p => ({ ...p, sort_order: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">Status</label>
+                <button type="button" onClick={() => setTutForm(p => ({ ...p, is_active: !p.is_active }))} className={`px-3 py-2 rounded-lg text-sm border transition-all ${tutForm.is_active ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' : 'bg-secondary text-muted-foreground border-border'}`}>
+                  {tutForm.is_active ? '✅ Aktif' : '❌ Nonaktif'}
+                </button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTutDialog(false)}>Batal</Button>
+            <Button disabled={tutLoading} onClick={async () => {
+              if (!tutForm.title || !tutForm.youtube_url) { showToast({ title: 'Error', description: 'Judul dan URL YouTube wajib diisi.', variant: 'destructive' }); return; }
+              setTutLoading(true);
+              if (editTutId) {
+                await supabase.from('tutorials').update({ title: tutForm.title, description: tutForm.description || null, youtube_url: tutForm.youtube_url, sort_order: tutForm.sort_order, is_active: tutForm.is_active }).eq('id', editTutId);
+                showToast({ title: 'Video tutorial diupdate!' });
+              } else {
+                await supabase.from('tutorials').insert({ title: tutForm.title, description: tutForm.description || null, youtube_url: tutForm.youtube_url, sort_order: tutForm.sort_order, is_active: tutForm.is_active });
+                showToast({ title: 'Video tutorial ditambahkan!' });
+              }
+              setTutDialog(false);
+              setEditTutId(null);
+              await fetchTutorials();
+              setTutLoading(false);
+            }}>{tutLoading ? 'Menyimpan...' : editTutId ? '💾 Update' : '💾 Simpan'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Reset Password Dialog */}
       <Dialog open={resetDialog.open} onOpenChange={(open) => { if (!open) { setResetDialog({ open: false, userId: "", email: "" }); setShowNewPassword(false); } }}>
