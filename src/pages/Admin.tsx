@@ -32,7 +32,6 @@ import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { sampleTemplates } from "@/data/sampleTemplates";
 import { motion } from "framer-motion";
 import { TypewriterText } from "@/components/TypewriterText";
-import { LivePreview } from "@/components/LivePreview";
 
 interface AdminUser {
   id: string; email: string; name: string | null; phone: string | null;
