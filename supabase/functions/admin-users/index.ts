@@ -207,9 +207,10 @@ Deno.serve(async (req) => {
           email_confirm: true,
           user_metadata: { name: name || '' },
         });
-        if (createErr || !newMember.user) {
+        if (createErr || !newMember?.user) {
+          const status = createErr?.message?.includes("already been registered") ? 409 : 500;
           return new Response(JSON.stringify({ error: createErr?.message || "Failed to create user" }), {
-            status: 500,
+            status,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
