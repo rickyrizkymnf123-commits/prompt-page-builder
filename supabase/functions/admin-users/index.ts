@@ -65,13 +65,23 @@ Deno.serve(async (req) => {
 
       // --- LIST USERS ---
       if (action === "list") {
-        const { data: allUsers } = await adminClient.auth.admin.listUsers();
+        // Fetch all users with pagination (default limit is 50)
+        let allAuthUsers: any[] = [];
+        let page = 1;
+        const perPage = 1000;
+        while (true) {
+          const { data: batch } = await adminClient.auth.admin.listUsers({ page, perPage });
+          if (!batch?.users?.length) break;
+          allAuthUsers = allAuthUsers.concat(batch.users);
+          if (batch.users.length < perPage) break;
+          page++;
+        }
         const { data: profiles } = await adminClient.from("profiles").select("*");
         const { data: entitlements } = await adminClient.from("entitlements").select("*");
         const { data: userRoles } = await adminClient.from("user_roles").select("*");
         const { data: promptUsages } = await adminClient.from("prompt_usage").select("*");
 
-        const users = allUsers?.users?.map((u: any) => {
+        const users = allAuthUsers.map((u: any) => {
           const profile = profiles?.find((p: any) => p.user_id === u.id);
           const ent = entitlements?.find((e: any) => e.user_id === u.id);
           const uRole = userRoles?.find((r: any) => r.user_id === u.id);
