@@ -22,6 +22,7 @@ import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TypewriterText } from "@/components/TypewriterText";
+import { CostBreakdownModal } from "@/components/CostBreakdownModal";
 
 function Stepper({ current }: { current: number }) {
   return (
@@ -408,11 +409,14 @@ export default function AppPage() {
             )}
 
             <div className="space-y-2 pt-2">
-              {!isPaid && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Generate tersisa: <span className={`font-bold ${usageLimitReached ? 'text-destructive' : 'text-primary'}`}>{Math.max(0, FREE_LIMIT - promptUsage)}/{FREE_LIMIT}</span>
-                  {usageLimitReached && ' — Upgrade untuk unlimited'}
-                </p>
+            {!isPaid && (
+                <div className="text-center space-y-1.5">
+                  <p className="text-xs text-muted-foreground">
+                    Generate tersisa: <span className={`font-bold ${usageLimitReached ? 'text-destructive' : 'text-primary'}`}>{Math.max(0, FREE_LIMIT - promptUsage)}/{FREE_LIMIT}</span>
+                    {usageLimitReached && ' — Upgrade untuk unlimited'}
+                  </p>
+                  <CostBreakdownModal />
+                </div>
               )}
               <div className="flex gap-3">
                 <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
