@@ -208,9 +208,8 @@ Deno.serve(async (req) => {
           user_metadata: { name: name || '' },
         });
         if (createErr || !newMember?.user) {
-          const status = createErr?.message?.includes("already been registered") ? 409 : 500;
-          return new Response(JSON.stringify({ error: createErr?.message || "Failed to create user" }), {
-            status,
+          return new Response(JSON.stringify({ success: false, error: createErr?.message || "Failed to create user" }), {
+            status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
