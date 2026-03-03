@@ -737,7 +737,7 @@ export default function Admin() {
                 <div className="border-t border-border pt-6 space-y-4">
                   <div>
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🌐 Webhook URL</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Gunakan URL ini sebagai Webhook Endpoint di Scalev untuk menerima notifikasi pembayaran.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Berikan URL ini kepada partner Anda untuk digunakan sebagai Webhook Endpoint di akun Scalev mereka. Subscribe ke event <strong>order.payment_status_changed</strong>.</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Input readOnly value="https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision" className="font-mono text-xs bg-muted" />
