@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Landing Page Builder — Bikin LP Profesional Tanpa Coding</title>
+  <meta name="description" content="Bikin landing page profesional dalam hitungan menit. Tanpa coding, tanpa bayar developer mahal. Cuma modal klik, langsung jadi." />
+  <link rel="canonical" href="https://what-u-read.lovable.app" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" /></noscript>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        container: { center: true, padding: '1.5rem', screens: { '2xl': '1200px' } },
+        extend: {
+          fontFamily: {
+            heading: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+            body: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            border: 'hsl(250 20% 18%)',
+            background: 'hsl(250 30% 5%)',
+            foreground: 'hsl(0 0% 95%)',
+            primary: { DEFAULT: 'hsl(265 85% 60%)', foreground: 'hsl(0 0% 100%)' },
+            secondary: { DEFAULT: 'hsl(250 25% 14%)', foreground: 'hsl(0 0% 90%)' },
+            muted: { DEFAULT: 'hsl(250 20% 15%)', foreground: 'hsl(250 10% 55%)' },
+            accent: { DEFAULT: 'hsl(280 80% 65%)', foreground: 'hsl(0 0% 100%)' },
+            destructive: { DEFAULT: 'hsl(0 84% 60%)', foreground: 'hsl(0 0% 100%)' },
+            gold: 'hsl(45 90% 55%)',
+            success: 'hsl(145 65% 50%)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; border-color: hsl(250 20% 18%); }
+    html { scroll-behavior: smooth; }
+    body { background: hsl(250 30% 5%); color: hsl(0 0% 95%); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; margin: 0; }
+    .font-heading { font-family: 'Space Grotesk', system-ui, sans-serif; }
+
+    .text-gradient-primary {
+      background-image: linear-gradient(135deg, hsl(265 85% 65%), hsl(280 80% 70%), hsl(300 75% 65%));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .bg-gradient-hero {
+      background-color: hsl(250 30% 5%);
+      background-image: radial-gradient(ellipse 80% 60% at 50% 0%, hsl(265 85% 30% / 0.4), transparent),
+                        radial-gradient(ellipse 60% 50% at 80% 20%, hsl(280 80% 25% / 0.3), transparent),
+                        radial-gradient(ellipse 60% 50% at 20% 80%, hsl(265 85% 20% / 0.2), transparent);
+    }
+    .bg-gradient-section {
+      background-color: hsl(250 30% 5%);
+      background-image: radial-gradient(ellipse 70% 50% at 50% 50%, hsl(265 85% 15% / 0.15), transparent);
+    }
+    .glass {
+      background: hsl(250 25% 12% / 0.6); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid hsl(250 20% 18% / 0.5);
+    }
+    .glass-strong {
+      background: hsl(250 25% 12% / 0.8); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+      border: 1px solid hsl(250 20% 18% / 0.7);
+    }
+    .glow-primary {
+      box-shadow: 0 0 40px -10px hsl(265 85% 60% / 0.4), 0 0 80px -20px hsl(280 80% 65% / 0.2);
+    }
+    .glow-sm { box-shadow: 0 0 20px -5px hsl(265 85% 60% / 0.3); }
+    .gradient-border { position: relative; }
+    .gradient-border::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+      background: linear-gradient(135deg, hsl(265 85% 60% / 0.5), hsl(280 80% 65% / 0.3), transparent);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+    }
+
+    .btn-primary {
+      background: hsl(265 85% 60%); color: white; font-weight: 700; border-radius: 0.75rem;
+      padding: 0.875rem 2.5rem; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 0.5rem;
+      border: none; cursor: pointer; transition: transform 0.2s;
+    }
+    .btn-primary:hover { transform: scale(1.05); }
+
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @keyframes marquee-reverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px -5px hsl(265 85% 60% / 0.3); } 50% { box-shadow: 0 0 40px -5px hsl(265 85% 60% / 0.6); } }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .animate-marquee { animation: marquee 30s linear infinite; width: max-content; }
+    .animate-marquee-reverse { animation: marquee-reverse 30s linear infinite; width: max-content; }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+
+    .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .faq-answer.open { max-height: 500px; }
+    .faq-chevron { transition: transform 0.3s; }
+    .faq-chevron.open { transform: rotate(180deg); }
+
+    #sales-notification { transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); position: fixed; top: 1rem; right: 1rem; z-index: 9999; }
+    #sales-notification.show { transform: translateX(0); }
+
+    .step-line-fill { height: 0; transition: height 0.1s linear; }
+
+    /* Hard stack layout for Scalev compatibility (always one column) */
+    #demo-grid,
+    #comparison-grid,
+    #testimonials-grid {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 1rem !important;
+      width: 100% !important;
+      max-width: 48rem !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+
+    #demo-grid > *,
+    #comparison-grid > *,
+    #testimonials-grid > * {
+      width: 100% !important;
+      margin: 0 !important;
+    }
+
+    /* Mobile fixes */
+    @media (max-width: 900px) {
+      .container { padding-left: 1rem; padding-right: 1rem; }
+      h1 { font-size: 1.75rem !important; }
+      h2 { font-size: 1.5rem !important; }
+      #sales-notification { max-width: 260px; top: 0.5rem; right: 0.5rem; }
+      .animate-float { animation: none !important; }
+    }
+
+    /* Demo Modal */
+    #demo-modal { display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center; padding:1rem; }
+    #demo-modal.active { display:flex; }
+    #demo-modal .modal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); }
+    #demo-modal .modal-content { position:relative; width:100%; max-width:64rem; max-height:90vh; border-radius:1rem; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); background:#111; animation:modalIn 0.25s ease; }
+    @keyframes modalIn { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+
+    /* View Mode Toggle */
+    .view-toggle { display:flex; align-items:center; gap:2px; background:rgba(255,255,255,0.05); border-radius:8px; padding:3px; }
+    .view-toggle button { display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:6px; border:none; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s; background:transparent; color:rgba(255,255,255,0.4); }
+    .view-toggle button:hover { color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.05); }
+    .view-toggle button.active { background:hsl(265 85% 60%); color:white; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+    .view-toggle button svg { width:14px; height:14px; }
+    .view-toggle button span { display:none; }
+    @media(min-width:640px) { .view-toggle button span { display:inline; } }
+    #demo-iframe-wrapper { display:flex; justify-content:center; width:100%; height:calc(90vh - 48px); background:transparent; transition:background 0.2s; }
+    #demo-iframe-wrapper.framed { background:#1a1a1a; }
+    #demo-iframe { transition:width 0.3s ease, box-shadow 0.3s ease; }
+
+    #lp-root { min-height: 100vh; background: hsl(250 30% 5%); color: hsl(0 0% 95%); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+
+    /* YouTube lazy facade */
+    .yt-facade { position:relative; width:100%; height:100%; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .yt-facade img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:1rem; opacity:0.6; }
+    .yt-facade .play-btn { position:relative; z-index:2; width:4rem; height:4rem; background:hsl(265 85% 60%/0.9); border-radius:50%; display:flex; align-items:center; justify-content:center; transition:transform 0.2s; box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+    .yt-facade:hover .play-btn { transform:scale(1.1); }
+    .yt-facade .play-btn svg { width:2rem; height:2rem; fill:white; margin-left:3px; }
+  </style>
+</head>
+<body>
+<div id="lp-root" class="min-h-screen overflow-x-hidden">
+
+<!-- Sales Notification -->
+<div id="sales-notification" class="glass-strong rounded-xl p-3 md:p-4 gradient-border shadow-2xl" style="max-width:280px">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 text-sm md:text-base" style="background:hsl(265 85% 60%/0.2)">🔥</div>
+    <div>
+      <p class="text-xs md:text-sm font-medium"><strong id="notif-name">Dani A.</strong> dari <span id="notif-city">Jakarta</span></p>
+      <p class="text-[10px] md:text-xs" style="color:hsl(250 10% 55%)">Baru saja membeli LP Builder · <span id="notif-time">2 menit lalu</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HERO ===== -->
+<section class="relative min-h-screen flex flex-col items-center justify-center pt-12 pb-0 overflow-hidden bg-gradient-hero">
+  <div class="absolute top-20 left-10 w-72 h-72 rounded-full blur-[120px] animate-float" style="background:hsl(265 85% 60%/0.1)"></div>
+  <div class="absolute bottom-40 right-10 w-96 h-96 rounded-full blur-[150px] animate-float" style="background:hsl(280 80% 65%/0.1);animation-delay:3s"></div>
+
+  <div class="container relative z-10 text-center px-4">
+    <div class="inline-flex items-center gap-2 glass px-5 py-2 rounded-full mb-8">
+      <span class="text-sm font-medium" style="color:hsl(250 10% 55%)">🇮🇩 Dibuat Khusus untuk Business Owner Indonesia</span>
+    </div>
+
+    <h1 class="text-4xl md:text-5xl lg:text-7xl font-heading font-bold leading-tight mb-6 max-w-5xl mx-auto">
+      Bikin Landing Page <span id="typing-text" class="text-gradient-primary inline-block min-w-[200px] md:min-w-[320px]">Professional<span style="display:inline-block;width:3px;height:0.8em;background:hsl(265 85% 60%);margin-left:4px;vertical-align:middle;border-radius:9999px;animation:blink 1s infinite"></span></span>
+      <br>
+      Cuma Modal Klik, Langsung Jadi ⚡
+    </h1>
+
+    <p class="text-lg md:text-xl max-w-2xl mx-auto mb-10" style="color:hsl(250 10% 55%)">
+      Gak perlu bayar developer jutaan. Gak perlu skill coding.
+      <strong style="color:hsl(0 0% 95%)">Tinggal isi form → klik generate → landing page profesional langsung jadi.</strong>
+      Siap dipasang iklan, siap closing.
+    </p>
+
+    <a href="#solution">
+      <button class="btn-primary glow-primary w-full max-w-sm md:max-w-none md:w-auto">
+        Lihat Cara Kerjanya — Gampang Banget 👇
+      </button>
+    </a>
+
+    <div class="flex items-center justify-center gap-2 mt-6">
+      <div class="flex">
+        <span style="color:hsl(45 90% 55%)">★★★★★</span>
+      </div>
+      <span class="text-sm" style="color:hsl(250 10% 55%)">4.9/5 rating dari 100+ business owner Indonesia</span>
+    </div>
+  </div>
+
+  <!-- Marquee -->
+  <div class="w-full mt-16 py-6 border-y" style="background:hsl(250 25% 14%/0.3);border-color:hsl(250 20% 18%/0.3)">
+    <div class="space-y-4">
+      <div class="flex overflow-hidden"><div class="flex gap-3 animate-marquee" id="marquee1"></div></div>
+      <div class="flex overflow-hidden"><div class="flex gap-3 animate-marquee-reverse" id="marquee2"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROBLEM ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden" id="problem">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">⚠️ Masalah Nyata</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">😱 Pernah Ngalamin Ini? Pasti Frustasi...</h2>
+
+    <div class="max-w-2xl mx-auto glass rounded-2xl p-8 gradient-border">
+      <p class="mb-4" style="color:hsl(250 10% 55%)">Lo udah siap jualan, produknya udah ada, tapi <strong style="color:hsl(0 0% 95%)">stuck di landing page — gak jadi-jadi launching</strong>.</p>
+      <p class="mb-6" style="color:hsl(250 10% 55%)">Uang terus keluar buat bayar developer. Hasilnya? <strong style="color:hsl(0 0% 95%)">Gak sesuai ekspektasi, revisi molor, dan penjualan tertunda.</strong></p>
+      <ul class="space-y-3 mb-6">
+        <li class="flex items-start gap-3" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">⚠</span> Bayar developer jutaan, hasilnya gak konversi.</li>
+        <li class="flex items-start gap-3" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">⚠</span> Copywriting asal-asalan, visitor datang tapi gak beli.</li>
+        <li class="flex items-start gap-3" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">⚠</span> Momentum launching hilang karena teknis yang berlarut-larut.</li>
+      </ul>
+      <div class="flex items-center gap-3 p-4 rounded-xl" style="background:hsl(0 84% 60%/0.1);border:1px solid hsl(0 84% 60%/0.2)">
+        <span style="color:hsl(0 84% 60%)">⏳</span>
+        <p class="text-sm">Setiap hari lo tunda launching = uang yang harusnya masuk, malah diambil kompetitor.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SOLUTION ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden bg-gradient-section" id="solution">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">🚀 Solusi Lo Ada Di Sini</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">Ini Dia, <span class="text-gradient-primary">AI Landing Page Builder</span></h2>
+    <p class="text-center text-lg max-w-2xl mx-auto mb-12" style="color:hsl(250 10% 55%)">Mesin yang bikin landing page <strong style="color:hsl(0 0% 95%)">kelas profesional dalam hitungan menit</strong> — tanpa skill coding, tanpa bayar developer mahal. Tinggal isi form, beres.</p>
+
+    <div class="max-w-3xl mx-auto rounded-2xl overflow-hidden glow-primary gradient-border">
+      <div class="aspect-video" style="position:relative" id="yt-container">
+        <div class="yt-facade" id="yt-facade">
+          <img src="https://img.youtube.com/vi/LW12zGyz6BQ/hqdefault.jpg" alt="Video thumbnail" loading="lazy" width="480" height="360" />
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+      </div>
+    </div>
+    <p class="text-center text-sm mt-4" style="color:hsl(250 10% 55%)">Tonton langsung, segampang apa prosesnya</p>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden" id="features">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">🎯 All-in-One Platform</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">Semua yang Lo Butuhkan, Ada Di Sini 🔥</h2>
+    <p class="text-center text-lg max-w-2xl mx-auto mb-12" style="color:hsl(250 10% 55%)">Gak perlu beli tools terpisah. Semua kebutuhan digital bisnis lo, <strong style="color:hsl(0 0% 95%)">udah lengkap di satu tempat.</strong></p>
+
+    <div class="space-y-10 max-w-5xl mx-auto" id="features-container"></div>
+  </div>
+</section>
+
+<!-- ===== PRODUCT CATEGORIES ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden">
+  <div class="container relative z-10">
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">Mau Jualan Apapun? Engine Ini Bisa Handle 🔥</h2>
+    <p class="text-center mb-10" style="color:hsl(250 10% 55%)">Dari produk digital sampai fisik, dari jasa sampai event — semua bisa dibuatin landing page yang siap closing.</p>
+    <div class="space-y-4">
+      <div class="flex overflow-hidden"><div class="flex gap-3 animate-marquee" id="cat-marquee1"></div></div>
+      <div class="flex overflow-hidden"><div class="flex gap-3 animate-marquee-reverse" id="cat-marquee2"></div></div>
+      <div class="flex overflow-hidden"><div class="flex gap-3 animate-marquee" id="cat-marquee3"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STEPS ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden bg-gradient-section" id="steps">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">⚡ Super Gampang</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">Bahkan Orang yang Gaptek Pun Bisa Pakai Ini 🤫</h2>
+    <p class="text-center text-lg max-w-2xl mx-auto mb-12" style="color:hsl(250 10% 55%)">Serius, cuma isi form → klik → jadi. Ini se-simple itu.</p>
+
+    <div class="max-w-3xl mx-auto relative" id="steps-container">
+      <div class="absolute left-[19px] md:left-[24px] top-0 bottom-0 w-[2px] z-0 rounded-full" style="background:hsl(250 20% 18%/0.2)">
+        <div class="step-line-fill w-full rounded-full" style="background:linear-gradient(to bottom, hsl(265 85% 60%), hsl(280 80% 65%), hsl(265 85% 60%))"></div>
+      </div>
+      <div class="space-y-5 md:space-y-6 relative z-10" id="steps-list"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DEMO SHOWCASE ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden bg-gradient-section" id="demo-showcase">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">🔥 Bukti Nyata</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">Ini Bukan Template Murahan — Ini Level Agency 👀</h2>
+    <p class="text-center text-lg max-w-2xl mx-auto mb-12" style="color:hsl(250 10% 55%)">100% dihasilkan engine, tanpa coding — hasilnya? Lo nilai sendiri.</p>
+
+    <div class="space-y-4 max-w-3xl mx-auto" id="demo-grid" style="display:flex;flex-direction:column;gap:1rem;width:100%;max-width:48rem;margin:0 auto"></div>
+  </div>
+</section>
+
+<!-- ===== COMPARISON ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden" id="comparison">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">💡 Bandingkan Sendiri</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">Lo Mau Terus Buang Jutaan? Atau Mulai Kerja Cerdas? 🧠</h2>
+    <p class="text-center text-lg max-w-2xl mx-auto mb-12" style="color:hsl(250 10% 55%)">Jangan asal pilih. Bandingkan sendiri mana yang paling hemat, cepat, dan terbukti hasilnya.</p>
+
+    <div id="comparison-grid" class="space-y-4 max-w-3xl mx-auto" style="display:flex;flex-direction:column;gap:1rem;width:100%;max-width:48rem;margin:0 auto">
+      <!-- Agency -->
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-heading font-bold text-lg mb-4">❌ Sewa Agency Digital</h3>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-2 text-sm" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">✕</span> Keluar 3jt - 10jt cuma buat 1 halaman</li>
+          <li class="flex items-start gap-2 text-sm" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">✕</span> Nunggu 1-3 minggu belum tentu sesuai harapan</li>
+          <li class="flex items-start gap-2 text-sm" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">✕</span> Revisi terbatas — mau ubah dikit, kena biaya lagi</li>
+          <li class="flex items-start gap-2 text-sm" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">✕</span> Project baru? Bayar lagi dari awal</li>
+        </ul>
+      </div>
+      <!-- Freelancer -->
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-heading font-bold text-lg mb-4">❌ Hire Freelancer</h3>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-2 text-sm" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">✕</span> Habis 1.5jt - 3jt per project</li>
+          <li class="flex items-start gap-2 text-sm" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">✕</span> Chat dibales besok, lusa, atau gak pernah</li>
+          <li class="flex items-start gap-2 text-sm" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">✕</span> Kualitas untung-untungan — gak ada standar</li>
+          <li class="flex items-start gap-2 text-sm" style="color:hsl(250 10% 55%)"><span style="color:hsl(0 84% 60%)">✕</span> Mau bikin LP baru? Bayar lagi, negosiasi lagi</li>
+        </ul>
+      </div>
+      <!-- Winner -->
+      <div class="glass rounded-2xl p-6 gradient-border glow-primary relative">
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span class="px-4 py-1 rounded-full text-xs font-bold flex items-center gap-1" style="background:hsl(265 85% 60%);color:white">🏆 PILIHAN TERBAIK</span>
+        </div>
+        <h3 class="font-heading font-bold text-lg mb-4 text-gradient-primary">🏆 AI Landing Page Builder</h3>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> Hemat Puluhan Juta Per Tahun</li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> Landing Page Jadi Dalam Hitungan Menit</li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> Framework Copywriting Teruji</li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> Desain Premium & Mobile Friendly</li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> Unlimited Generate, Tanpa Batas</li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> Update & Fitur Baru Gratis Selamanya</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden bg-gradient-section">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">💬 Kata Mereka</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">Business Owner Lain Udah Duluan Pakai ⭐</h2>
+
+    <div id="testimonials-grid" class="space-y-4 max-w-3xl mx-auto" style="display:flex;flex-direction:column;gap:1rem;width:100%;max-width:48rem;margin:0 auto">
+      <div class="glass rounded-2xl p-6 gradient-border">
+        <div class="flex gap-0.5 mb-4" style="color:hsl(45 90% 55%)">★★★★★</div>
+        <p class="text-sm italic mb-6" style="color:hsl(250 10% 55%)">"Gila sih ini tools. Gue yang gaptek bisa bikin landing page pro dalam 10 menit. Yang biasanya bayar 5 juta ke agency, sekarang bisa bikin sendiri. Anti ribet!"</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style="background:hsl(265 85% 60%/0.2);color:hsl(265 85% 60%)">DA</div>
+          <div><p class="font-semibold text-sm">Dani A.</p><p class="text-xs" style="color:hsl(250 10% 55%)">Business Owner</p></div>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-6 gradient-border">
+        <div class="flex gap-0.5 mb-4" style="color:hsl(45 90% 55%)">★★★★★</div>
+        <p class="text-sm italic mb-6" style="color:hsl(250 10% 55%)">"Sebelum pake ini, landing page gue conversion rate-nya under 1%. Sekarang setelah pake engine ini, naik ke 4.2%. The copywriting formula is legit!"</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style="background:hsl(265 85% 60%/0.2);color:hsl(265 85% 60%)">FS</div>
+          <div><p class="font-semibold text-sm">Farhan S.</p><p class="text-xs" style="color:hsl(250 10% 55%)">Digital Marketer</p></div>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-6 gradient-border">
+        <div class="flex gap-0.5 mb-4" style="color:hsl(45 90% 55%)">★★★★★</div>
+        <p class="text-sm italic mb-6" style="color:hsl(250 10% 55%)">"Worth every penny. Udah generate belasan landing page buat berbagai produk gue. Lifetime access itu game changer. Gak perlu mikir biaya lagi."</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style="background:hsl(265 85% 60%/0.2);color:hsl(265 85% 60%)">RP</div>
+          <div><p class="font-semibold text-sm">Rina P.</p><p class="text-xs" style="color:hsl(250 10% 55%)">Online Seller</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden bg-gradient-section" id="pricing">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">🔥 Penawaran Terbatas</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">Sekali Bayar, Senjata Bisnis Lo Aktif Selamanya 💰</h2>
+    <p class="text-center text-lg max-w-2xl mx-auto mb-12" style="color:hsl(250 10% 55%)">Harga segelas kopi per hari untuk tools yang bisa hasilin jutaan. Serius ini gak masuk akal murahnya.</p>
+
+    <!-- Countdown -->
+    <div class="flex items-center justify-center gap-2 md:gap-3 mb-6">
+      <span class="text-xs md:text-sm font-medium" style="color:hsl(250 10% 55%)">⏰ Promo berakhir dalam:</span>
+      <div class="flex gap-1.5 md:gap-2">
+        <div class="glass rounded-lg px-2.5 py-1.5 md:px-3 md:py-2 text-center min-w-[40px] md:min-w-[48px]">
+          <div class="text-base md:text-xl font-heading font-bold text-gradient-primary" id="cd-min">10</div>
+          <div class="text-[10px] md:text-xs" style="color:hsl(250 10% 55%)">Mnt</div>
+        </div>
+        <div class="glass rounded-lg px-2.5 py-1.5 md:px-3 md:py-2 text-center min-w-[40px] md:min-w-[48px]">
+          <div class="text-base md:text-xl font-heading font-bold text-gradient-primary" id="cd-sec">00</div>
+          <div class="text-[10px] md:text-xs" style="color:hsl(250 10% 55%)">Dtk</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing Card -->
+    <div class="max-w-lg mx-auto glass rounded-3xl p-8 md:p-10 gradient-border glow-primary relative">
+      <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+        <span class="px-6 py-2 rounded-full text-sm font-bold animate-pulse-glow" style="background:hsl(265 85% 60%);color:white">BEST DEAL 🏆</span>
+      </div>
+
+      <div class="text-center mb-8">
+        <h3 class="font-heading text-2xl font-bold mb-3">AI Landing Page Builder + Bonus</h3>
+        
+        <p class="text-sm mb-1" style="color:hsl(250 10% 55%)">Dari Harga</p>
+        <div class="flex items-center justify-center gap-3 mb-1">
+          <span class="text-2xl line-through" style="color:hsl(250 10% 55%)">Rp 660.000</span>
+          <span class="text-sm font-bold px-3 py-1 rounded-full" style="background:hsl(145 65% 50%/0.2);color:hsl(145 65% 50%)">Hemat 78%</span>
+        </div>
+        
+        <p class="text-sm mt-3 mb-0" style="color:hsl(250 10% 55%)">Jadi</p>
+        <div class="text-3xl md:text-4xl font-heading font-bold mb-3" style="color:hsl(0 0% 95%)">
+          <span class="line-through">Rp 299.000</span>
+        </div>
+
+        <div class="p-3 rounded-xl mb-3" style="background:hsl(265 85% 60%/0.05);border:1px solid hsl(265 85% 60%/0.2)">
+          <p class="text-sm mb-1" style="color:hsl(250 10% 55%)">Pakai Kode Voucher</p>
+          <span class="inline-block font-heading font-bold text-lg px-4 py-1 rounded-lg tracking-wider" style="background:hsl(265 85% 60%/0.2);color:hsl(265 85% 60%)">"DIGITOOLS"</span>
+          <p class="text-sm mt-2" style="color:hsl(250 10% 55%)">Ada Potongan Harga Jadi</p>
+        </div>
+
+        <div class="text-5xl md:text-6xl font-heading font-bold text-gradient-primary">Rp 159.000</div>
+        <p class="text-sm mt-2" style="color:hsl(250 10% 55%)">
+          Hemat <span class="line-through" style="color:hsl(0 84% 60%/0.7)">Rp 501.000</span> · Akses selamanya · Unlimited generate
+        </p>
+      </div>
+
+      <div class="mb-6">
+        <h4 class="font-heading font-bold text-sm mb-3 uppercase tracking-wider" style="color:hsl(250 10% 55%)">🎁 Yang Lo Dapet:</h4>
+        <ul class="space-y-2.5">
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> <span style="color:hsl(250 10% 55%)">Akses Dashboard Engine: Generate desain instan & otomatis.</span></li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> <span style="color:hsl(250 10% 55%)">Video Tutorial Lengkap: Panduan implementasi langkah demi langkah.</span></li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> <span style="color:hsl(250 10% 55%)">Kumpulan Prompt Revisi: Optimasi hasil hingga maksimal.</span></li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> <span style="color:hsl(250 10% 55%)">Kumpulan Prompt Design: Variasi estetika visual yang beragam.</span></li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(145 65% 50%)">✓</span> <span style="color:hsl(250 10% 55%)">Tutorial Implementasi: Integrasi mudah ke berbagai platform.</span></li>
+        </ul>
+      </div>
+
+      <div class="mb-8 p-4 rounded-xl" style="background:hsl(45 90% 55%/0.05);border:1px solid hsl(45 90% 55%/0.2)">
+        <h4 class="font-heading font-bold text-sm mb-3" style="color:hsl(45 90% 55%)">✨ Bonus Spesial:</h4>
+        <ul class="space-y-2">
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(45 90% 55%)">✓</span> <span style="color:hsl(250 10% 55%)">Free Prompt Animasi Interaktif</span></li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(45 90% 55%)">✓</span> <span style="color:hsl(250 10% 55%)">Free Prompt Animasi non Interaktif</span></li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(45 90% 55%)">✓</span> <span style="color:hsl(250 10% 55%)">Checklist Best Practice LP</span></li>
+          <li class="flex items-start gap-2 text-sm"><span style="color:hsl(45 90% 55%)">✓</span> <span style="color:hsl(250 10% 55%)">Puluhan Template Landing Page Winning Siap Pakai</span></li>
+        </ul>
+      </div>
+
+      <a href="#checkout" class="block w-full"><button class="btn-primary glow-primary w-full justify-center">⚡ AMANKAN AKSES SEKARANG</button></a>
+
+      <div class="flex items-center justify-center gap-2 mt-4 text-xs" style="color:hsl(250 10% 55%)">🔒 Transaksi 100% Aman & Terenkripsi</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CHECKOUT ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden" id="checkout" style="background: radial-gradient(ellipse 70% 50% at 50% 50%, hsl(265 85% 15% / 0.15), transparent);">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">💳 Checkout</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-6 leading-tight" style="font-family:'Space Grotesk',sans-serif;">Amankan Akses Lo <span class="text-gradient-primary">Sekarang</span></h2>
+    <p class="text-center text-lg max-w-2xl mx-auto mb-12" style="color:hsl(250 10% 55%)">Isi data di bawah, pilih metode pembayaran, dan langsung dapatkan akses penuh ke AI Landing Page Builder + semua bonusnya.</p>
+    <div class="max-w-3xl mx-auto rounded-3xl overflow-visible glow-primary gradient-border glass" style="padding:0.75rem;">
+      <iframe id="scalev-checkout" frameborder="0" scrolling="no" src="https://akademi-digital-trade.myscalev.com/lpe" title="Checkout - AI Landing Page Builder" style="width:100%;min-height:1800px;border:0;border-radius:1rem;background:transparent;filter:invert(0.92) hue-rotate(180deg) saturate(1.5);overflow:hidden" allow="payment"></iframe>
+    </div>
+    <script>
+    (function(){
+      var iframe=document.getElementById('scalev-checkout');
+      function isUrl(s){try{new URL(s);return true}catch(_){return false}}
+      function isJSONObject(s){try{var p=JSON.parse(s);return typeof p==='object'&&p!==null}catch(e){return false}}
+      function isIframeSameOrigin(){try{iframe.contentDocument||iframe.contentWindow.document;return true}catch(e){return false}}
+      window.addEventListener('message',function(e){
+        if(e.origin==='https://akademi-digital-trade.myscalev.com'){
+          if(isUrl(e.data)){location.href=e.data}
+          if(isJSONObject(e.data)&&!isIframeSameOrigin()){var msg=JSON.parse(e.data);if(msg.type==='resize'){iframe.style.height=msg.height+'px'}}
+        }
+      },false);
+      var obs=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){iframe.src=iframe.src;obs.disconnect()}})});
+      obs.observe(iframe);
+    })();
+    </script>
+    <p class="text-center text-sm mt-4" style="color:hsl(250 10% 55%)">🔒 Transaksi 100% aman & terenkripsi</p>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="relative py-20 md:py-28 overflow-hidden" id="faq">
+  <div class="container relative z-10">
+    <div class="flex justify-center mb-6">
+      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">Q&A</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 leading-tight">❓ Masih Ada Keraguan? Baca Ini Dulu</h2>
+
+    <div class="max-w-2xl mx-auto space-y-3" id="faq-container"></div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="relative py-24 overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-hero"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[150px]" style="background:hsl(265 85% 60%/0.15)"></div>
+
+  <div class="container relative z-10 text-center">
+    <h2 class="text-3xl md:text-5xl font-heading font-bold mb-6 leading-tight max-w-3xl mx-auto">🔥 Coba Bayangin Ini...</h2>
+    <p class="text-lg max-w-2xl mx-auto mb-4" style="color:hsl(250 10% 55%)">
+      Jam 11 malam. Ide produk baru <strong style="color:hsl(0 0% 95%)">tiba-tiba muncul</strong>. Lo buka laptop, isi form 5 menit, dan <strong style="color:hsl(0 0% 95%)">BOOM</strong> — landing page profesional udah siap dipasang iklan.
+    </p>
+    <p class="text-xl font-heading font-bold text-gradient-primary mb-10">Besok pagi, uang udah masuk.</p>
+
+    <div class="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto mb-12">
+      <div class="glass rounded-2xl p-6 text-left">
+        <h3 class="font-heading font-bold mb-3" style="color:hsl(0 84% 60%)">❌ Cara Lama</h3>
+        <ul class="space-y-2 text-sm" style="color:hsl(250 10% 55%)">
+          <li>• Bayar developer 3-10 juta, hasilnya belum tentu konversi</li>
+          <li>• Nunggu berminggu-minggu cuma buat satu halaman</li>
+          <li>• Momentum hilang. Kompetitor udah duluan closing</li>
+        </ul>
+      </div>
+      <div class="glass rounded-2xl p-6 text-left gradient-border glow-sm">
+        <h3 class="font-heading font-bold text-gradient-primary mb-3">⚡ Cara Lo Sekarang</h3>
+        <ul class="space-y-2 text-sm">
+          <li>• Landing page siap jual dalam menit, bukan minggu</li>
+          <li>• Mau launch 10 produk sekaligus? Gas, unlimited</li>
+          <li>• Lo fokus ke strategi & closing — bukan ngurusin teknis</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="mb-8 max-w-xl mx-auto" style="color:hsl(250 10% 55%)">💎 <strong style="color:hsl(0 0% 95%)">Ini Bukan Pengeluaran — Ini Investasi.</strong> Satu kali bayar hari ini = senjata bisnis yang bisa lo pakai selamanya.</p>
+
+    <a href="#checkout" class="block w-full max-w-sm md:max-w-none md:w-auto mx-auto">
+      <button class="btn-primary glow-primary w-full md:w-auto">⚡ AMANKAN AKSES SEKARANG →</button>
+    </a>
+    <p class="text-sm mt-6" style="color:hsl(250 10% 55%)">Setiap menit lo tunda, kompetitor lo udah launch duluan 🚀</p>
+  </div>
+</section>
+
+<!-- Demo Preview Modal -->
+<div id="demo-modal">
+  <div class="modal-backdrop" onclick="closeDemo()"></div>
+  <div class="modal-content">
+    <div class="flex items-center justify-between px-4 py-3" style="background:#0a0a0a;border-bottom:1px solid rgba(255,255,255,0.1)">
+      <div class="flex items-center gap-3">
+        <div class="flex gap-1.5">
+          <div class="w-3 h-3 rounded-full" style="background:rgba(239,68,68,0.7)"></div>
+          <div class="w-3 h-3 rounded-full" style="background:rgba(234,179,8,0.7)"></div>
+          <div class="w-3 h-3 rounded-full" style="background:rgba(34,197,94,0.7)"></div>
+        </div>
+        <span class="text-xs font-medium" id="demo-modal-title" style="color:rgba(255,255,255,0.4)">Live Preview</span>
+      </div>
+
+      <!-- View Mode Toggle -->
+      <div class="view-toggle" id="view-toggle">
+        <button class="active" onclick="setViewMode('desktop')" id="btn-desktop">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span>Desktop</span>
+        </button>
+        <button onclick="setViewMode('tablet')" id="btn-tablet">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+          <span>Tablet</span>
+        </button>
+        <button onclick="setViewMode('mobile')" id="btn-mobile">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+          <span>Mobile</span>
+        </button>
+      </div>
+
+      <button onclick="closeDemo()" class="p-1 transition-colors" style="color:rgba(255,255,255,0.4)" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">✕</button>
+    </div>
+    <div id="demo-iframe-wrapper" style="position:relative">
+      <!-- Loading Spinner -->
+      <div id="demo-loader" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#111;z-index:10">
+        <div style="width:48px;height:48px;border:3px solid rgba(255,255,255,0.1);border-top-color:hsl(265 85% 60%);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+      </div>
+      <iframe id="demo-iframe" src="" style="width:100%;height:100%;border:none;background:#111" allowfullscreen onload="document.getElementById('demo-loader').style.display='none'"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="py-8" style="border-top:1px solid hsl(250 20% 18%/0.3)">
+  <div class="container text-center">
+    <p class="text-sm" style="color:hsl(250 10% 55%)">© 2026 Landing Page Builder by Digital Strategi. All rights reserved.</p>
+  </div>
+</footer>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// === Typing Text ===
+(function(){
+  const words = ["Professional","High-Converting","Premium","Powerful"];
+  let wi=0, ci=0, del=false;
+  const el = document.getElementById('typing-text');
+  function tick(){
+    const w = words[wi];
+    if(!del){
+      ci++;
+      if(ci > w.length){ setTimeout(()=>{del=true;tick()},1800); return; }
+    } else {
+      ci--;
+      if(ci < 0){ ci=0; del=false; wi=(wi+1)%words.length; }
+    }
+    el.innerHTML = w.slice(0,ci) + '<span style="display:inline-block;width:3px;height:0.8em;background:hsl(265 85% 60%);margin-left:4px;vertical-align:middle;border-radius:9999px;animation:blink 1s infinite"></span>';
+    setTimeout(tick, del ? 40 : 80);
+  }
+  setTimeout(tick, 2000);
+})();
+
+// === Countdown Timer ===
+(function(){
+  let s = 600;
+  setInterval(()=>{
+    s = s <= 0 ? 600 : s-1;
+    document.getElementById('cd-min').textContent = String(Math.floor(s/60)).padStart(2,'0');
+    document.getElementById('cd-sec').textContent = String(s%60).padStart(2,'0');
+  },1000);
+})();
+
+// === Sales Notification ===
+(function(){
+  const names=["Dani A.","Rina S.","Budi P.","Sari M.","Andi K.","Dewi L.","Fajar R.","Maya W.","Riko H.","Lina T."];
+  const cities=["Jakarta","Bandung","Surabaya","Yogyakarta","Medan","Bali","Semarang","Makassar","Malang","Solo"];
+  const el=document.getElementById('sales-notification');
+  function show(){
+    document.getElementById('notif-name').textContent=names[Math.floor(Math.random()*names.length)];
+    document.getElementById('notif-city').textContent=cities[Math.floor(Math.random()*cities.length)];
+    document.getElementById('notif-time').textContent=(Math.floor(Math.random()*15)+1)+' menit lalu';
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'),4000);
+  }
+  setTimeout(show,5000);
+  setInterval(show,12000);
+})();
+
+// === Marquee Badges ===
+(function(){
+  const r1=["⚡ Jadi dalam 2 Menit","🎨 Desain Premium","📈 High Converting","🧠 Anti Ribet","✅ Struktur Rapi","🧬 Formula Copywriting Teruji","💰 Hemat Jutaan Rupiah","📱 Mobile Friendly"];
+  const r2=["🎯 Tanpa skill Coding","💎 Naikin penjualan","🔗 Satu Klik jadi","💸 Life time acces","🛠️ Full Control","🔥 Hook viral","🏹 Targeting Presisi","🔒 Unlimited generate"];
+  function fill(id,items){
+    const c=document.getElementById(id);
+    if(!c) return;
+    c.innerHTML='';
+    [...items,...items].forEach(t=>{const s=document.createElement('span');s.className='glass-strong px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap';s.textContent=t;c.appendChild(s);});
+  }
+  fill('marquee1',r1);fill('marquee2',r2);
+})();
+
+// === Product Category Marquees ===
+(function(){
+  const r1=["📱 Produk Digital","📚 E-book","🎓 Kursus Online","🎨 Template","💻 Software","🔌 Plugin","📸 Stock Photo","🎵 Music/Audio"];
+  const r2=["📦 Produk Fisik","🧴 Skincare","💄 Kosmetik","👗 Fashion","🍪 Makanan","🥤 Minuman","🎁 Souvenir","🛍️ Dropship"];
+  const r3=["🤝 Jasa","🗣️ Konsultasi","🧠 Coaching","✍️ Freelance","🎨 Desain Grafis","🎬 Video Editor","🎟️ Tiket Event","👥 Membership"];
+  function fill(id,items){
+    const c=document.getElementById(id);
+    if(!c) return;
+    c.innerHTML='';
+    [...items,...items].forEach(t=>{const s=document.createElement('span');s.className='glass px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap';s.textContent=t;c.appendChild(s);});
+  }
+  fill('cat-marquee1',r1);fill('cat-marquee2',r2);fill('cat-marquee3',r3);
+})();
+
+// === Features ===
+(function(){
+  const groups=[
+    {emoji:"🚀",title:"Prompt Generator Engine",items:[
+      {icon:"📝",title:"12-Step Prompt Generator",desc:"Framework, Tone, Produk, Target, Detail, Desain, Platform — semua tersusun."},
+      {icon:"📂",title:"Grouped Dropdown",desc:"Kategori terstruktur untuk setiap pilihan yang rapi."},
+      {icon:"💲",title:"4-Layer Harga",desc:"Harga Normal, Harga Promo, Harga Khusus (Final)."},
+      {icon:"🔘",title:"Elemen Tambahan (Toggle)",desc:"Social Proof, Testimonial, FAQ, Bonus, Guarantee, Scarcity, Comparison."},
+      {icon:"🌐",title:"Multi-Platform Target",desc:"Scalev, Lynk.id, WordPress, Shopify, Copy HTML."},
+      {icon:"📋",title:"Generate & Copy Prompt",desc:"Salin otomatis + langsung buka chat AI."},
+    ]},
+    {emoji:"✏️",title:"Visual Editor (Premium)",items:[
+      {icon:"✏️",title:"Edit Mode",desc:"Klik elemen untuk edit teks, gambar, link, video langsung di preview."},
+      {icon:"↕️",title:"Drag & Drop Reorder",desc:"Pindahkan section naik/turun sesuka hati."},
+      {icon:"➕",title:"Add Section",desc:"Single Image, Image Gallery, Countdown Timer, Sales Notification."},
+      {icon:"🗑️",title:"Delete Section",desc:"Hapus section yang tidak diperlukan dengan 1 klik."},
+      {icon:"🎨",title:"Color Picker per Element",desc:"Ubah warna teks & background tiap elemen."},
+      {icon:"🔗",title:"Link Disabling in Preview",desc:"Tombol tidak bisa diklik saat mode edit."},
+      {icon:"📌",title:"Scroll Preservation",desc:"Posisi scroll tetap saat edit atau drag."},
+    ]},
+    {emoji:"📋",title:"Template Gallery (Premium)",items:[
+      {icon:"🖼️",title:"16+ Template Bawaan",desc:"Dengan preview live via iframe — tinggal pilih."},
+      {icon:"👁️",title:"Preview Modal",desc:"Lihat template full-screen sebelum memilih."},
+      {icon:"📁",title:"Kategori Template",desc:"SaaS, E-Commerce, Kursus, Agency, dll."},
+    ]},
+    {emoji:"🔔",title:"Sales Notification (Premium)",items:[
+      {icon:"🔔",title:"Popup Notifikasi Penjualan",desc:"Kustomisasi posisi, emoji, warna, teks, ukuran, interval."},
+    ]},
+    {emoji:"⏱",title:"Countdown Timer (Premium)",items:[
+      {icon:"⏰",title:"Timer Urgency",desc:"Tambahkan countdown ke landing page untuk scarcity."},
+    ]},
+    {emoji:"🎯",title:"Tracking & Pixel (Premium)",items:[
+      {icon:"📊",title:"Facebook Pixel Event",desc:"Pasang event pixel per tombol/link."},
+      {icon:"🔍",title:"Pixel ID Integration",desc:"Input Facebook Pixel ID langsung dari dashboard."},
+    ]},
+  ];
+  const c=document.getElementById('features-container');
+  if(!c) return;
+  c.innerHTML='';
+  groups.forEach(g=>{
+    let h='<h3 class="font-heading font-bold text-lg md:text-2xl mb-4 md:mb-5 flex items-center gap-2"><span class="text-xl md:text-2xl">'+g.emoji+'</span> '+g.title+'</h3>';
+    h+='<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">';
+    g.items.forEach(f=>{
+      h+='<div class="glass rounded-xl md:rounded-2xl p-4 md:p-5 gradient-border cursor-default hover:-translate-y-1 transition-transform">';
+      h+='<div class="w-10 h-10 rounded-lg flex items-center justify-center mb-3 text-xl" style="background:hsl(265 85% 60%/0.1)">'+f.icon+'</div>';
+      h+='<h4 class="font-heading font-bold text-sm md:text-base mb-1">'+f.title+'</h4>';
+      h+='<p class="text-xs md:text-sm" style="color:hsl(250 10% 55%)">'+f.desc+'</p>';
+      h+='</div>';
+    });
+    h+='</div>';
+    const d=document.createElement('div');d.innerHTML=h;c.appendChild(d);
+  });
+})();
+
+// === Steps ===
+(function(){
+  const IMGBASE='https://what-u-read.lovable.app/images/';
+  const steps=[
+    {num:1,title:"Framework & Tone",desc:"Pilih framework copywriting dan gaya bahasa (formal/santai).",img:IMGBASE+"step-1.png"},
+    {num:2,title:"Produk & Tujuan",desc:"Tentukan tipe produk (Ebook, Course, Jasa) dan tujuan utama LP.",img:IMGBASE+"step-2.png"},
+    {num:3,title:"Target Market",desc:"Pilih level awareness dan target audience kamu.",img:IMGBASE+"step-3.png"},
+    {num:4,title:"Detail Produk & Pricing",desc:"Isi nama produk, struktur harga 3 layer, bonus, deskripsi & CTA.",img:IMGBASE+"step-4.png"},
+    {num:5,title:"Visual & Desain",desc:"Pilih warna brand, tema, dan gaya desain (Apple Style, dll).",img:IMGBASE+"step-5.png"},
+    {num:6,title:"Elemen Tambahan",desc:"Centang section yang mau ditambahin: Hero, FAQ, Testimoni, dll.",img:IMGBASE+"step-6.png"},
+    {num:7,title:"Platform & Device",desc:"Pilih platform (Scalev, WordPress, Shopify) dan target device.",img:IMGBASE+"step-7.png"},
+    {num:8,title:"Sales Notification",desc:"Aktifkan notifikasi penjualan otomatis untuk social proof real-time.",img:IMGBASE+"step-8.png"},
+    {num:9,title:"Countdown Timer",desc:"Tambahkan countdown timer untuk menciptakan urgency & scarcity.",img:IMGBASE+"step-9.png"},
+    {num:10,title:"Edit Mode",desc:"Edit dan sesuaikan setiap elemen LP langsung dari dashboard.",img:IMGBASE+"step-10.png"},
+    {num:11,title:"Event Pixel & Gambar",desc:"Pasang tracking pixel (FB, TikTok, dll) dan upload gambar produk.",img:IMGBASE+"step-11.png"},
+    {num:12,title:"Generate & Selesai! 🚀",desc:"Klik generate, LP siap dalam hitungan menit. Tinggal pasang!",img:null},
+  ];
+  const list=document.getElementById('steps-list');
+  if(!list) return;
+  list.innerHTML='';
+  steps.forEach(s=>{
+    const d=document.createElement('div');d.className='relative';
+    let imgHtml = s.img ? '<div class="mt-3 md:mt-4"><img src="'+s.img+'" alt="Preview '+s.title+'" width="1200" height="675" class="w-full rounded-lg" style="border:1px solid hsl(250 20% 18%/0.3)" loading="lazy" decoding="async"></div>' : '';
+    d.innerHTML='<div class="absolute left-0 top-4 md:top-5 w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center font-heading font-bold text-sm md:text-base glow-sm z-20 -translate-x-[1px]" style="border-color:hsl(265 85% 60%);background:hsl(250 30% 5%);color:hsl(265 85% 60%)">'+s.num+'</div>'
+    +'<div class="glass rounded-xl md:rounded-2xl p-4 md:p-5 gradient-border ml-14 md:ml-16">'
+    +'<h3 class="font-heading font-bold text-base md:text-lg">'+s.title+'</h3>'
+    +'<p class="text-xs md:text-sm" style="color:hsl(250 10% 55%)">'+s.desc+'</p>'
+    +imgHtml
+    +'</div>';
+    list.appendChild(d);
+  });
+
+  // Scroll-driven line
+  const container=document.getElementById('steps-container');
+  const line=container.querySelector('.step-line-fill');
+  window.addEventListener('scroll',()=>{
+    const rect=container.getBoundingClientRect();
+    const vh=window.innerHeight;
+    const start=rect.top-vh/2;
+    const end=rect.bottom-vh/2;
+    const total=end-start;
+    const progress=Math.max(0,Math.min(1,(-start)/total));
+    line.style.height=(progress*100)+'%';
+  });
+})();
+
+// === Demo Grid ===
+(function(){
+  const BASE='https://what-u-read.lovable.app';
+  const demos=[
+    {id:1,type:"Coffee Shop",style:"Style 1 — Dark Luxury Cafe",desc:"Website kafe premium dengan estetika dark & gold.",img:BASE+"/images/demo-1.webp"},
+    {id:2,type:"Skincare",style:"Style 2 — Editorial Beauty",desc:"Brand skincare mewah dengan layout editorial.",img:BASE+"/images/demo-2.webp"},
+    {id:3,type:"Crypto Trading",style:"Style 3 — Trading Platform",desc:"Platform trading crypto dengan dashboard & live prices.",img:BASE+"/images/demo-3.webp"},
+    {id:4,type:"Photography",style:"Style 4 — Photography Studio",desc:"Studio fotografi profesional dengan portfolio & packages.",img:BASE+"/images/demo-4.webp"},
+    {id:5,type:"Coffee Shop",style:"Style 5 — Artisan Coffee",desc:"Kafe artisan dengan menu, lokasi, dan cerita brand.",img:BASE+"/images/demo-5.webp"},
+    {id:6,type:"Wedding",style:"Style 6 — Digital Invitation",desc:"Undangan pernikahan digital cantik & modern.",img:BASE+"/images/demo-6.webp"},
+    {id:7,type:"Yoga Studio",style:"Style 7 — Wellness & Yoga",desc:"Yoga studio premium di Bali dengan kelas & retreat.",img:BASE+"/images/demo-7.webp"},
+    {id:8,type:"Law Firm",style:"Style 8 — Corporate Legal",desc:"Kantor hukum profesional dengan team & practice areas.",img:BASE+"/images/demo-8.webp"},
+  ];
+  const grid=document.getElementById('demo-grid');
+  if(!grid) return;
+  grid.innerHTML='';
+  grid.style.setProperty('display','flex','important');
+  grid.style.setProperty('flex-direction','column','important');
+  grid.style.setProperty('gap','1rem','important');
+  grid.style.setProperty('width','100%','important');
+  grid.style.setProperty('max-width','48rem','important');
+  grid.style.setProperty('margin','0 auto','important');
+
+  demos.forEach((d, index)=>{
+    const div=document.createElement('div');
+    div.className='glass rounded-xl overflow-hidden gradient-border group block cursor-pointer hover:-translate-y-1 transition-transform';
+    div.style.setProperty('width','100%','important');
+    div.style.setProperty('display','block','important');
+    div.style.setProperty('margin','0','important');
+    div.onclick=function(){openDemo(BASE+'/demo/'+d.id,d.style)};
+    div.innerHTML='<div class="px-3 md:px-4 pt-3 md:pt-4 pb-0"><p class="text-xs md:text-sm font-bold" style="color:hsl(265 85% 60%)">Section '+(index+1)+' · Style '+d.id+'</p></div>'
+    +'<div class="aspect-[3/4] overflow-hidden"><img src="'+d.img+'" alt="'+d.style+'" width="900" height="1200" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" fetchpriority="low"></div>'
+    +'<div class="p-3 md:p-4">'
+    +'<div class="flex items-center justify-between mb-1.5">'
+    +'<span class="text-[10px] md:text-xs font-bold uppercase tracking-wider px-2 md:px-3 py-0.5 md:py-1 rounded-full" style="color:hsl(265 85% 60%);background:hsl(265 85% 60%/0.1)">'+d.type+'</span>'
+    +'<span style="color:hsl(250 10% 55%)">↗</span>'
+    +'</div>'
+    +'<h3 class="font-heading font-bold text-xs md:text-sm mb-0.5">'+d.style+'</h3>'
+    +'<p class="text-[10px] md:text-xs" style="color:hsl(250 10% 55%)">'+d.desc+'</p>'
+    +'</div>';
+    grid.appendChild(div);
+  });
+})();
+
+function openDemo(url,title){
+  document.getElementById('demo-modal-title').textContent=title+' — Live Preview';
+  document.getElementById('demo-loader').style.display='flex';
+  document.getElementById('demo-iframe').src=url;
+  document.getElementById('demo-modal').classList.add('active');
+  document.body.style.overflow='hidden';
+  setViewMode('desktop');
+}
+function closeDemo(){
+  document.getElementById('demo-modal').classList.remove('active');
+  document.getElementById('demo-iframe').src='';
+  document.body.style.overflow='';
+}
+function setViewMode(mode){
+  var widths={desktop:'100%',tablet:'768px',mobile:'390px'};
+  var iframe=document.getElementById('demo-iframe');
+  var wrapper=document.getElementById('demo-iframe-wrapper');
+  var btns=document.querySelectorAll('.view-toggle button');
+  btns.forEach(function(b){b.classList.remove('active')});
+  document.getElementById('btn-'+mode).classList.add('active');
+  iframe.style.width=widths[mode];
+  if(mode!=='desktop'){
+    wrapper.classList.add('framed');
+    iframe.style.boxShadow='0 0 40px rgba(0,0,0,0.5)';
+  } else {
+    wrapper.classList.remove('framed');
+    iframe.style.boxShadow='none';
+  }
+}
+window.addEventListener('message',function(e){
+  if(e.data&&e.data.type==='closeDemo') closeDemo();
+});
+
+(function lockStackLayout(){
+  ['demo-grid','comparison-grid','testimonials-grid'].forEach((id)=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.style.setProperty('display','flex','important');
+    el.style.setProperty('flex-direction','column','important');
+    el.style.setProperty('gap','1rem','important');
+    el.style.setProperty('width','100%','important');
+    el.style.setProperty('max-width','48rem','important');
+    el.style.setProperty('margin','0 auto','important');
+    Array.from(el.children).forEach((child)=>{
+      child.style.setProperty('width','100%','important');
+      child.style.setProperty('margin','0','important');
+      child.style.setProperty('display','block','important');
+    });
+  });
+})();
+
+// === FAQ Accordion ===
+(function(){
+  const faqs=[
+    {q:"Saya sama sekali gak ngerti coding, apakah tetap bisa pakai?",a:"100% bisa. Engine ini dirancang khusus untuk pebisnis yang bukan programmer. Prosesnya sesimpel mengisi formulir — Anda cukup masukkan data produk, pilih gaya desain, lalu klik generate. Sudah ada 100+ business owner yang berhasil pakai tanpa kendala."},
+    {q:"Apakah ini berlangganan bulanan? Ada biaya tersembunyi?",a:"Tidak ada biaya langganan, tidak ada biaya tersembunyi. Ini pembayaran satu kali (one-time payment) dengan akses seumur hidup (lifetime access). Semua update dan fitur baru di masa depan juga gratis untuk Anda selamanya."},
+    {q:"Berapa banyak landing page yang bisa saya buat?",a:"Tidak terbatas — unlimited selamanya. Mau buat 10, 100, bahkan 1.000 landing page? Silakan. Tidak ada batasan jumlah generate."},
+    {q:"Bagaimana proses pengiriman aksesnya setelah bayar?",a:"Instan dan otomatis. Begitu pembayaran terkonfirmasi, sistem langsung mengirimkan link akses dashboard beserta seluruh bonus ke email yang Anda daftarkan — dalam hitungan detik."},
+    {q:"Apakah ada garansi jika saya mengalami kendala?",a:"Ya, kami memberikan garansi akses penuh. Jika Anda mengalami kendala teknis, tim support kami akan langsung menangani hingga masalah terselesaikan."},
+  ];
+  const c=document.getElementById('faq-container');
+  if(!c) return;
+  c.innerHTML='';
+  faqs.forEach((f,i)=>{
+    const div=document.createElement('div');
+    div.className='glass rounded-xl px-6 gradient-border';
+    div.innerHTML='<button class="w-full flex items-center justify-between py-5 text-left font-heading font-semibold text-sm md:text-base" onclick="toggleFaq('+i+')">'
+    +f.q+'<span class="faq-chevron" id="faq-chev-'+i+'">▼</span></button>'
+    +'<div class="faq-answer text-sm pb-0" id="faq-ans-'+i+'" style="color:hsl(250 10% 55%)"><div class="pb-5">'+f.a+'</div></div>';
+    c.appendChild(div);
+  });
+})();
+
+function toggleFaq(i){
+  const ans=document.getElementById('faq-ans-'+i);
+  const chev=document.getElementById('faq-chev-'+i);
+  ans.classList.toggle('open');
+  chev.classList.toggle('open');
+  // Close others
+  document.querySelectorAll('.faq-answer').forEach((el,j)=>{
+    if(j!==i){el.classList.remove('open');document.getElementById('faq-chev-'+j).classList.remove('open');}
+  });
+}
+
+// === YouTube Lazy Autoplay ===
+(function(){
+  var container = document.getElementById('yt-container');
+  var facade = document.getElementById('yt-facade');
+  if(!container || !facade) return;
+  var loaded = false;
+  function loadYT(){
+    if(loaded) return;
+    loaded = true;
+    var iframe = document.createElement('iframe');
+    iframe.width = '100%';
+    iframe.height = '100%';
+    iframe.src = 'https://www.youtube.com/embed/LW12zGyz6BQ?autoplay=1&mute=1&loop=1&playlist=LW12zGyz6BQ&controls=0&showinfo=0&rel=0&modestbranding=1&disablekb=1&vq=hd1080';
+    iframe.title = 'Showcase AI Landing Page Builder';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    iframe.allowFullscreen = true;
+    iframe.style.cssText = 'border:0;border-radius:1rem;position:absolute;inset:0;width:100%;height:100%';
+    // Overlay to prevent clicking
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:absolute;inset:0;z-index:10';
+    facade.style.display = 'none';
+    container.appendChild(iframe);
+    container.appendChild(overlay);
+  }
+  // Click to load immediately
+  facade.addEventListener('click', loadYT);
+  // Auto-load when scrolled into view
+  if('IntersectionObserver' in window){
+    var obs = new IntersectionObserver(function(entries){
+      if(entries[0].isIntersecting){ loadYT(); obs.disconnect(); }
+    }, {rootMargin: '200px'});
+    obs.observe(container);
+  } else {
+    // Fallback: load after 3 seconds
+    setTimeout(loadYT, 3000);
+  }
+})();
+</script>
+</body>
+</html>
