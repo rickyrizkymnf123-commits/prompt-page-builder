@@ -32,6 +32,9 @@ import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { sampleTemplates } from "@/data/sampleTemplates";
 import { motion } from "framer-motion";
 import { TypewriterText } from "@/components/TypewriterText";
+import EmbedFormTab from "@/components/admin/EmbedFormTab";
+import DemoManagementTab from "@/components/admin/DemoManagementTab";
+import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 
 interface AdminUser {
   id: string; email: string; name: string | null; phone: string | null;
@@ -423,6 +426,7 @@ export default function Admin() {
             <TabsTrigger value="templates" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Layout className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Templates</span></TabsTrigger>
             <TabsTrigger value="logs" className="gap-1 sm:gap-2 text-xs sm:text-sm"><FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Logs</span></TabsTrigger>
             <TabsTrigger value="settings" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Settings</span></TabsTrigger>
+            <TabsTrigger value="lpbuilder" className="gap-1 sm:gap-2 text-xs sm:text-sm"><ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">LP Builder</span><span className="sm:hidden">LP</span></TabsTrigger>
           </TabsList>
 
           {/* TOOLS TAB */}
@@ -837,6 +841,22 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* LP BUILDER TAB */}
+          <TabsContent value="lpbuilder">
+            <div className="space-y-6">
+              <Tabs defaultValue="embed">
+                <TabsList className="w-full grid grid-cols-3 h-10">
+                  <TabsTrigger value="embed" className="text-xs sm:text-sm gap-1">🔗 Embed Form</TabsTrigger>
+                  <TabsTrigger value="demos" className="text-xs sm:text-sm gap-1">🖼 Demos</TabsTrigger>
+                  <TabsTrigger value="generate" className="text-xs sm:text-sm gap-1">⚡ Generate HTML</TabsTrigger>
+                </TabsList>
+                <TabsContent value="embed" className="mt-6"><EmbedFormTab /></TabsContent>
+                <TabsContent value="demos" className="mt-6"><DemoManagementTab /></TabsContent>
+                <TabsContent value="generate" className="mt-6"><HtmlGeneratorTab /></TabsContent>
+              </Tabs>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

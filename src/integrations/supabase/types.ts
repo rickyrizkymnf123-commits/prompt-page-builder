@@ -35,6 +35,45 @@ export type Database = {
         }
         Relationships: []
       }
+      demos: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          html_code: string | null
+          id: string
+          is_active: boolean | null
+          sort_order: number | null
+          thumbnail_url: string | null
+          title: string
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          html_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number | null
+          thumbnail_url?: string | null
+          title?: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          html_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number | null
+          thumbnail_url?: string | null
+          title?: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       entitlements: {
         Row: {
           created_at: string
