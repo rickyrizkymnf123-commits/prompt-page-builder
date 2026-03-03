@@ -232,7 +232,8 @@ Deno.serve(async (req) => {
       // Fallback: keyword detection from URL
       if (!product_code) {
         const lower = sourceUrl.toLowerCase();
-        if (lower.includes("story-weaver") || lower.includes("swa") || lower.includes("ebook")) product_code = "SWA";
+        if (lower.includes("landing-page") || lower.includes("lpe")) product_code = "LPE";
+        else if (lower.includes("story-weaver") || lower.includes("swa") || lower.includes("ebook")) product_code = "SWA";
         else if (lower.includes("property") || lower.includes("pea")) product_code = "PEA";
         else if (lower.includes("digital-strategy") || lower.includes("dst")) product_code = "DST";
         else if (lower.includes("meta-ads") || lower.includes("maa")) product_code = "MAA";
