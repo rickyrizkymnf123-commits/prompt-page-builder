@@ -120,7 +120,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     let idx = 0;
     editableTags.forEach(tag => {
       doc.querySelectorAll(tag).forEach(el => {
-        if (el.closest('#sn-popup')) { idx++; return; }
+        if (el.closest('#sn-popup')) return;
         el.setAttribute('data-edit-idx', String(idx));
         el.setAttribute('data-edit-tag', tag.toUpperCase());
         if (tag !== 'iframe') el.setAttribute('draggable', 'true');
