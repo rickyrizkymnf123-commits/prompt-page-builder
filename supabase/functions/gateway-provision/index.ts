@@ -43,6 +43,40 @@ async function verifyScalevSignature(
   }
 }
 
+async function getAllSigningSecrets(): Promise<string[]> {
+  const secrets: string[] = [];
+  
+  // Primary secret from env
+  const primary = Deno.env.get("PROVISION_SECRET");
+  if (primary) secrets.push(primary);
+  
+  // Additional secrets from app_settings (webhook_signing_secrets)
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/app_settings?key=eq.webhook_signing_secrets&select=value`,
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+    );
+    if (res.ok) {
+      const rows = await res.json();
+      if (rows?.[0]?.value) {
+        const parsed = JSON.parse(rows[0].value);
+        if (Array.isArray(parsed)) {
+          for (const entry of parsed) {
+            const s = typeof entry === "string" ? entry : entry?.secret;
+            if (s && !secrets.includes(s)) secrets.push(s);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Failed to fetch additional signing secrets:", e);
+  }
+  
+  return secrets;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -79,24 +113,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    const PROVISION_SECRET = Deno.env.get("PROVISION_SECRET");
-    if (!PROVISION_SECRET) {
+    const signingSecrets = await getAllSigningSecrets();
+    if (signingSecrets.length === 0) {
       return new Response(JSON.stringify({ error: "Server misconfigured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Verify HMAC or query param
+    // Verify HMAC against ALL signing secrets or query param
     const scalevSignature = req.headers.get("x-scalev-hmac-sha256");
     const url = new URL(req.url);
     const querySecret = url.searchParams.get("secret");
 
     let authorized = false;
+    let matchedSecret = "";
     if (scalevSignature) {
-      authorized = await verifyScalevSignature(rawBody, scalevSignature, PROVISION_SECRET);
+      for (const secret of signingSecrets) {
+        if (await verifyScalevSignature(rawBody, scalevSignature, secret)) {
+          authorized = true;
+          matchedSecret = secret;
+          break;
+        }
+      }
     } else if (querySecret) {
-      authorized = querySecret === PROVISION_SECRET;
+      authorized = signingSecrets.includes(querySecret);
+      if (authorized) matchedSecret = querySecret;
     }
 
     // Allow test events without auth
@@ -111,6 +153,7 @@ Deno.serve(async (req) => {
         }
       } catch { /* ignore */ }
 
+      console.error("HMAC verification failed. Tried", signingSecrets.length, "secrets.");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
