@@ -733,6 +733,21 @@ export default function Admin() {
                   </ul>
                 </div>
 
+                {/* Webhook URL */}
+                <div className="border-t border-border pt-6 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🌐 Webhook URL</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Gunakan URL ini sebagai Webhook Endpoint di Scalev untuk menerima notifikasi pembayaran.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input readOnly value="https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision" className="font-mono text-xs bg-muted" />
+                    <Button size="sm" variant="outline" onClick={() => {
+                      navigator.clipboard.writeText('https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision');
+                      showToast({ title: '📋 URL disalin!' });
+                    }}>Copy</Button>
+                  </div>
+                </div>
+
                 {/* Webhook Signing Secrets Management */}
                 <div className="border-t border-border pt-6 space-y-4">
                   <div>
