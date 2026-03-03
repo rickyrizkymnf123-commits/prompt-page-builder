@@ -144,6 +144,10 @@ export default function Admin() {
 
   // Settings state
   const [orderUrl, setOrderUrl] = useState('');
+  const [signingSecrets, setSigningSecrets] = useState<{ label: string; secret: string }[]>([]);
+  const [newSecretLabel, setNewSecretLabel] = useState('');
+  const [newSecretValue, setNewSecretValue] = useState('');
+  const [showSecretValues, setShowSecretValues] = useState(false);
   // Tutorials state
   const [tutorialsList, setTutorialsList] = useState<{ id: string; title: string; description: string | null; youtube_url: string; sort_order: number; is_active: boolean }[]>([]);
   const [tutDialog, setTutDialog] = useState(false);
@@ -175,6 +179,13 @@ export default function Admin() {
       if (data) {
         const s = (data as any[]).find((r: any) => r.key === 'scalev_order_url');
         if (s) setOrderUrl(s.value || '');
+        const ws = (data as any[]).find((r: any) => r.key === 'webhook_signing_secrets');
+        if (ws?.value) {
+          try {
+            const parsed = JSON.parse(ws.value);
+            if (Array.isArray(parsed)) setSigningSecrets(parsed.map((e: any) => typeof e === 'string' ? { label: '', secret: e } : { label: e.label || '', secret: e.secret || '' }));
+          } catch {}
+        }
       }
     } catch {}
   };
@@ -722,7 +733,52 @@ export default function Admin() {
                   </ul>
                 </div>
 
-                {/* Tutorial Management */}
+                {/* Webhook Signing Secrets Management */}
+                <div className="border-t border-border pt-6 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🔑 Webhook Signing Secrets (Multi-Partner)</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Tambahkan Signing Secret dari setiap partner Scalev agar webhook mereka bisa diverifikasi. Secret utama dari ENV sudah otomatis digunakan.</p>
+                  </div>
+                  
+                  {signingSecrets.length > 0 && (
+                    <div className="space-y-2">
+                      {signingSecrets.map((entry, i) => (
+                        <div key={i} className="flex items-center gap-2 rounded-lg bg-secondary border border-border p-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-foreground truncate">{entry.label || `Partner ${i + 1}`}</p>
+                            <p className="text-xs font-mono text-muted-foreground truncate">{showSecretValues ? entry.secret : '••••••••' + entry.secret.slice(-6)}</p>
+                          </div>
+                          <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0" onClick={async () => {
+                            const next = signingSecrets.filter((_, idx) => idx !== i);
+                            setSigningSecrets(next);
+                            await (supabase as any).from('app_settings').update({ value: JSON.stringify(next) }).eq('key', 'webhook_signing_secrets');
+                            showToast({ title: '🗑 Secret dihapus' });
+                          }}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => setShowSecretValues(!showSecretValues)} className="text-xs text-primary hover:underline flex items-center gap-1">
+                        {showSecretValues ? <><EyeOff className="h-3 w-3" /> Sembunyikan</> : <><Eye className="h-3 w-3" /> Tampilkan Secret</>}
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="rounded-lg border border-dashed border-border p-3 space-y-2">
+                    <p className="text-xs font-semibold text-foreground">Tambah Secret Baru</p>
+                    <div className="flex gap-2">
+                      <Input value={newSecretLabel} onChange={(e) => setNewSecretLabel(e.target.value)} placeholder="Label (misal: Partner Ahmad)" className="flex-1" />
+                      <Input value={newSecretValue} onChange={(e) => setNewSecretValue(e.target.value)} placeholder="Signing Secret dari Scalev" className="flex-1 font-mono text-xs" />
+                      <Button size="sm" disabled={!newSecretValue.trim()} onClick={async () => {
+                        const next = [...signingSecrets, { label: newSecretLabel.trim() || `Partner ${signingSecrets.length + 1}`, secret: newSecretValue.trim() }];
+                        setSigningSecrets(next);
+                        await (supabase as any).from('app_settings').update({ value: JSON.stringify(next) }).eq('key', 'webhook_signing_secrets');
+                        setNewSecretLabel(''); setNewSecretValue('');
+                        showToast({ title: '✅ Secret ditambahkan!' });
+                      }}>+ Tambah</Button>
+                    </div>
+                  </div>
+                </div>
                 <div className="border-t border-border pt-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
