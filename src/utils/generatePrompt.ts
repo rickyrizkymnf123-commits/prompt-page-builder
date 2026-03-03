@@ -354,51 +354,15 @@ function buildSalesNotifBlock(form: FormState): string {
 
 // Checklist block builder
 function buildChecklistBlock(platformName: string, isScalev: boolean): string {
-  return `## ⚡ OPTIMASI PERFORMA & SEO (WAJIB)
-
-1) **Meta Tags WAJIB** di \`<head>\`:
-   - \`<meta charset="UTF-8">\`
-   - \`<meta name="viewport" content="width=device-width, initial-scale=1.0">\`
-   - \`<meta name="description" content="[deskripsi produk 150 karakter]">\`
-   - \`<title>[Nama Produk] - [Value Proposition]</title>\`
-
-2) **Gambar Optimasi:**
-   - SEMUA \`<img>\` WAJIB punya \`loading="lazy"\`, \`width\`, \`height\`, dan \`alt\` deskriptif
-   - Format .webp, ukuran placeholder realistis (600x400, bukan 1920x1080)
-   - Gunakan \`decoding="async"\` pada semua gambar
-
-3) **CSS Optimasi:**
-   - Gunakan 1x \`<style>\` di \`<head>\` untuk style berulang, inline hanya untuk style unik
-   - Hindari box-shadow kompleks berlebihan
-   - Gunakan \`font-display: swap\` jika pakai custom font
-
-4) **JavaScript Optimasi:**
-   - Script countdown & sales notif letakkan sebelum \`</body>\`
-   - Cache DOM element references, hindari query berulang
-   - Gunakan \`requestAnimationFrame\` untuk animasi visual
-
-5) **Semantic HTML & SEO:**
-   - Gunakan \`<main>\`, \`<section>\`, \`<header>\`, \`<footer>\`
-   - Hanya 1x \`<h1>\` — sub-section pakai \`<h2>\`/\`<h3>\`
-   - Tambahkan \`aria-label\` pada tombol CTA
-   - Link CTA: \`rel="noopener"\`
-
-6) **Critical Rendering:**
-   - Background & font color WAJIB inline pada \`<body>\` agar First Paint cepat
-   - Gunakan system font stack: \`-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif\`
-
----
-
-## ✅ OUTPUT FINAL
+  return `## ✅ OUTPUT FINAL
 
 Output HARUS:
 - 1 file HTML tunggal${isScalev ? '\n- Semua di dalam `#lp-root`\n- Section: max-width 688px + margin auto + padding 35px' : ''}
-- CSS di \`<style>\` untuk style berulang, inline hanya untuk style unik
-- Layout single column, semantic HTML
-- Gambar .webp + \`loading="lazy"\` + \`width\` + \`height\` + \`alt\`
-- Meta viewport + description + title di \`<head>\`
-- Countdown & sales notif script sebelum \`</body>\`
+- CSS inline pada elemen utama
+- Layout single column
+- Gambar format .webp (placeholder placehold.co)
+- Countdown real-time
+- Sales notification sebelum \`</body>\`
 - Siap inject ke ${platformName}
-- Target Lighthouse: Performance >80, SEO >90
 - **TIDAK ADA** penjelasan di luar HTML`;
 }
