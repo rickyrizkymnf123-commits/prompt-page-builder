@@ -380,7 +380,17 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
           el.setAttribute('style', '');
         }
       } else if (editTarget.type === 'video') el.setAttribute('src', newValue);
-      else if (editTarget.type === 'img') el.setAttribute('src', newValue);
+      else if (editTarget.type === 'img') {
+        if (newHref === 'media:video') {
+          // Replace img with video iframe wrapper
+          const wrapper = doc.createElement('div');
+          wrapper.setAttribute('style', 'position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;');
+          wrapper.innerHTML = `<iframe src="${newValue}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:12px;" allowfullscreen></iframe>`;
+          el.parentNode?.replaceChild(wrapper, el);
+        } else {
+          el.setAttribute('src', newValue);
+        }
+      }
       else if (editTarget.type === 'link') {
         el.textContent = newValue;
         if (newHref !== undefined) el.setAttribute('href', newHref);
