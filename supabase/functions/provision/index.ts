@@ -201,9 +201,19 @@ Deno.serve(async (req) => {
     let userId: string;
     const password = generatePassword(12);
 
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
-      (u) => u.email?.toLowerCase() === email
+    // Fetch all users with pagination (default limit is 50)
+    let allAuthUsers: any[] = [];
+    let page = 1;
+    const perPage = 1000;
+    while (true) {
+      const { data: batch } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+      if (!batch?.users?.length) break;
+      allAuthUsers = allAuthUsers.concat(batch.users);
+      if (batch.users.length < perPage) break;
+      page++;
+    }
+    const existingUser = allAuthUsers.find(
+      (u: any) => u.email?.toLowerCase() === email
     );
 
     if (existingUser) {

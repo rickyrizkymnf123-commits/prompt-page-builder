@@ -162,6 +162,12 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     script.textContent = `
       document.querySelectorAll('a,button').forEach(function(a) { a.addEventListener('click', function(e) { e.preventDefault(); }); });
       document.addEventListener('submit', function(e) { e.preventDefault(); });
+      // Prevent native browser drag on images so clicks register properly
+      document.querySelectorAll('img').forEach(function(img) {
+        img.addEventListener('dragstart', function(e) { e.preventDefault(); });
+        img.style.webkitUserDrag = 'none';
+        img.style.userSelect = 'none';
+      });
       
       var _lastScroll = 0;
       window.addEventListener('scroll', function() { _lastScroll = window.pageYOffset || document.documentElement.scrollTop; window.parent.postMessage({ type: 'SCROLL_POS', top: _lastScroll }, '*'); }, true);
