@@ -163,8 +163,29 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
           idx++;
           return;
         }
+        if (tag === 'img') {
+          // Add overlay badge on images to show they support video/image editing
+          const parent = el.parentElement;
+          if (parent) {
+            const wrapper = doc.createElement('div');
+            wrapper.setAttribute('style', 'position:relative;display:inline-block;cursor:pointer;');
+            wrapper.setAttribute('data-edit-idx', String(idx));
+            wrapper.setAttribute('data-edit-tag', 'IMG');
+            el.removeAttribute('data-edit-idx');
+            el.removeAttribute('data-edit-tag');
+            el.removeAttribute('draggable');
+            parent.insertBefore(wrapper, el);
+            wrapper.appendChild(el);
+            const badge = doc.createElement('div');
+            badge.setAttribute('style', 'position:absolute;top:8px;right:8px;background:rgba(124,58,237,0.9);color:white;padding:4px 10px;border-radius:16px;font-size:11px;font-weight:bold;z-index:10;pointer-events:none;');
+            badge.textContent = '🖼🎬 Edit';
+            wrapper.appendChild(badge);
+          }
+        }
         const style = el.getAttribute('style') || '';
-        el.setAttribute('style', style + ';cursor:pointer;outline:2px dashed rgba(59,130,246,0.5);outline-offset:2px;');
+        if (tag !== 'img') {
+          el.setAttribute('style', style + ';cursor:pointer;outline:2px dashed rgba(59,130,246,0.5);outline-offset:2px;');
+        }
         idx++;
       });
     });
@@ -252,18 +273,17 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       document.addEventListener('click', function(e) {
         if (!_isClick) { _isClick = true; return; }
         e.preventDefault(); e.stopPropagation();
-        var el = e.target;
-        if (el.tagName === 'IMG' && el.hasAttribute('data-edit-idx')) { }
-        else { el = e.target.closest('[data-edit-idx]'); }
+        var el = e.target.closest('[data-edit-idx]');
         if (!el) return;
         var idx = el.getAttribute('data-edit-idx');
         var tag = el.getAttribute('data-edit-tag');
         var isImg = tag === 'IMG'; var isA = tag === 'A'; var isIframe = tag === 'IFRAME'; var isMedia = tag === 'MEDIA';
-        var value = isMedia ? (el.getAttribute('data-edit-src') || '') : isImg ? (el.getAttribute('src') || '') : isIframe ? (el.getAttribute('data-edit-src') || (el.querySelector('iframe') ? el.querySelector('iframe').getAttribute('src') : '') || '') : (el.innerText || el.textContent || '');
+        var imgEl = isImg ? (el.querySelector('img') || el) : el;
+        var value = isMedia ? (el.getAttribute('data-edit-src') || '') : isImg ? (imgEl.getAttribute('src') || '') : isIframe ? (el.getAttribute('data-edit-src') || (el.querySelector('iframe') ? el.querySelector('iframe').getAttribute('src') : '') || '') : (el.innerText || el.textContent || '');
         var href = isA ? (el.getAttribute('data-edit-href') || el.getAttribute('href') || '') : '';
         var pixelEvent = el.getAttribute('data-pixel-event') || '';
-        var imgWidth = isImg ? (el.naturalWidth || el.getAttribute('width') || 0) : 0;
-        var imgHeight = isImg ? (el.naturalHeight || el.getAttribute('height') || 0) : 0;
+        var imgWidth = isImg ? (imgEl.naturalWidth || imgEl.getAttribute('width') || 0) : 0;
+        var imgHeight = isImg ? (imgEl.naturalHeight || imgEl.getAttribute('height') || 0) : 0;
         var bgColor = el.style.backgroundColor || '';
         var textColor = el.style.color || '';
         window.parent.postMessage({ type: 'EDIT_ELEMENT', idx: Number(idx), tag: tag, value: value, href: href, isImg: isImg, isA: isA, isIframe: isIframe, isMedia: isMedia, pixelEvent: pixelEvent, imgWidth: imgWidth, imgHeight: imgHeight, bgColor: bgColor, textColor: textColor }, '*');
@@ -383,10 +403,10 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       else if (editTarget.type === 'img') {
         if (newHref === 'media:video') {
           // Replace img with video iframe wrapper
-          const wrapper = doc.createElement('div');
-          wrapper.setAttribute('style', 'position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;');
-          wrapper.innerHTML = `<iframe src="${newValue}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:12px;" allowfullscreen></iframe>`;
-          el.parentNode?.replaceChild(wrapper, el);
+          const videoWrapper = doc.createElement('div');
+          videoWrapper.setAttribute('style', 'position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;');
+          videoWrapper.innerHTML = `<iframe src="${newValue}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:12px;" allowfullscreen></iframe>`;
+          el.parentNode?.replaceChild(videoWrapper, el);
         } else {
           el.setAttribute('src', newValue);
         }
