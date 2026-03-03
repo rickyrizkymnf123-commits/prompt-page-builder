@@ -40,9 +40,9 @@ export function EditModal({ editTarget, onClose, onSave, onDelete }: Props) {
   const [bgColor, setBgColor] = useState(editTarget.bgColor || '');
   const [textColor, setTextColor] = useState(editTarget.textColor || '');
   const [mediaMode, setMediaMode] = useState<'video' | 'image'>(
-    editTarget.type === 'media' 
+    (editTarget.type === 'media' || editTarget.type === 'img')
       ? (editTarget.value && editTarget.value.includes('youtube') ? 'video' : 'image')
-      : 'video'
+      : editTarget.type === 'video' ? 'video' : 'image'
   );
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export function EditModal({ editTarget, onClose, onSave, onDelete }: Props) {
     setPixelEvent(editTarget.pixelEvent || '');
     setBgColor(editTarget.bgColor || '');
     setTextColor(editTarget.textColor || '');
-    if (editTarget.type === 'media') {
+    if (editTarget.type === 'media' || editTarget.type === 'img') {
       setMediaMode(editTarget.value && editTarget.value.includes('youtube') ? 'video' : 'image');
     }
   }, [editTarget.index, editTarget.value, editTarget.href, editTarget.pixelEvent]);
@@ -66,11 +66,10 @@ export function EditModal({ editTarget, onClose, onSave, onDelete }: Props) {
 
   const handleSave = () => {
     const styles = (bgColor || textColor) ? { bgColor: bgColor || undefined, textColor: textColor || undefined } : undefined;
-    if (editTarget.type === 'media') {
+    if (editTarget.type === 'media' || editTarget.type === 'img') {
       if (mediaMode === 'video') onSave(toYoutubeEmbed(videoValue), 'media:video', undefined, styles);
       else onSave(imgValue, 'media:image', undefined, styles);
     } else if (editTarget.type === 'video') onSave(toYoutubeEmbed(videoValue), undefined, undefined, styles);
-    else if (editTarget.type === 'img') onSave(imgValue, undefined, undefined, styles);
     else if (editTarget.type === 'link') onSave(textValue, hrefValue, pixelEvent || undefined, styles);
     else onSave(textValue, undefined, undefined, styles);
   };
@@ -123,20 +122,38 @@ export function EditModal({ editTarget, onClose, onSave, onDelete }: Props) {
             )}
           </div>
         ) : editTarget.type === 'img' ? (
-          <div className="space-y-2">
-            <label className="text-sm font-semibold uppercase tracking-wide text-foreground">URL Gambar</label>
-            {(editTarget.imgWidth || editTarget.imgHeight) && (
-              <span className="text-xs bg-secondary border border-border rounded px-2 py-1 text-muted-foreground font-mono">
-                {editTarget.imgWidth} × {editTarget.imgHeight} px
-              </span>
-            )}
-            <input type="text" value={imgValue} onChange={(e) => setImgValue(e.target.value)} placeholder="https://..." className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary" />
-            {imgValue && (
-              <div className="rounded-lg overflow-hidden border border-border bg-secondary/40 flex items-center justify-center" style={{ minHeight: 80 }}>
-                <img src={imgValue} alt="preview" className="max-h-32 object-contain rounded" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <div className="space-y-3">
+            <div className="flex gap-1 p-1 rounded-lg bg-secondary border border-border">
+              <button type="button" onClick={() => setMediaMode('video')} className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-all ${mediaMode === 'video' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>🎬 YouTube Video</button>
+              <button type="button" onClick={() => setMediaMode('image')} className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold transition-all ${mediaMode === 'image' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>🖼 Gambar</button>
+            </div>
+            {mediaMode === 'video' ? (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold uppercase tracking-wide text-foreground">URL Video YouTube</label>
+                <input type="text" value={videoValue} onChange={(e) => setVideoValue(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary" />
+                {videoValue && videoValue.includes('youtu') && (
+                  <div className="rounded-lg overflow-hidden border border-border aspect-video">
+                    <iframe src={toYoutubeEmbed(videoValue)} className="w-full h-full" allowFullScreen title="Video preview" />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold uppercase tracking-wide text-foreground">URL Gambar</label>
+                {(editTarget.imgWidth || editTarget.imgHeight) && (
+                  <span className="text-xs bg-secondary border border-border rounded px-2 py-1 text-muted-foreground font-mono">
+                    {editTarget.imgWidth} × {editTarget.imgHeight} px
+                  </span>
+                )}
+                <input type="text" value={imgValue} onChange={(e) => setImgValue(e.target.value)} placeholder="https://..." className="w-full rounded-lg bg-secondary text-foreground text-sm p-3 border border-border focus:outline-none focus:border-primary" />
+                {imgValue && (
+                  <div className="rounded-lg overflow-hidden border border-border bg-secondary/40 flex items-center justify-center" style={{ minHeight: 80 }}>
+                    <img src={imgValue} alt="preview" className="max-h-32 object-contain rounded" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">Gunakan format <strong>.webp</strong> untuk performa terbaik. Upload di <a href="https://uploadimgur.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">uploadimgur.com</a></p>
               </div>
             )}
-            <p className="text-xs text-muted-foreground">Gunakan format <strong>.webp</strong> untuk performa terbaik. Upload di <a href="https://uploadimgur.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">uploadimgur.com</a></p>
           </div>
         ) : editTarget.type === 'link' ? (
           <div className="space-y-3">
