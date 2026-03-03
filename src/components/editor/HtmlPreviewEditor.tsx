@@ -119,9 +119,31 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
 
     const editableTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'span', 'li', 'button', 'img', 'iframe'];
     let idx = 0;
+
+    // Mark media containers (yt-container, aspect-video with yt-facade) as editable media
+    doc.querySelectorAll('#yt-container, .aspect-video').forEach(container => {
+      if (container.closest('#sn-popup')) return;
+      const existingIframe = container.querySelector('iframe');
+      const existingImg = container.querySelector('img');
+      const currentSrc = existingIframe?.getAttribute('src') || existingImg?.getAttribute('src') || '';
+      container.setAttribute('data-edit-idx', String(idx));
+      container.setAttribute('data-edit-tag', 'MEDIA');
+      container.setAttribute('data-edit-src', currentSrc);
+      container.setAttribute('data-media-type', existingIframe ? 'video' : 'image');
+      const style = container.getAttribute('style') || '';
+      container.setAttribute('style', style + ';position:relative;cursor:pointer;');
+      const overlay = doc.createElement('div');
+      overlay.setAttribute('style', 'position:absolute;inset:0;background:rgba(124,58,237,0.15);border:2px dashed rgba(124,58,237,0.8);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;');
+      overlay.innerHTML = '<span style="background:rgba(124,58,237,0.9);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:bold;">🎬🖼 Edit Media</span>';
+      container.appendChild(overlay);
+      idx++;
+    });
+
     editableTags.forEach(tag => {
       doc.querySelectorAll(tag).forEach(el => {
         if (el.closest('#sn-popup')) return;
+        // Skip elements inside media containers already indexed
+        if (el.closest('[data-edit-tag="MEDIA"]')) return;
         el.setAttribute('data-edit-idx', String(idx));
         el.setAttribute('data-edit-tag', tag.toUpperCase());
         if (tag !== 'iframe') el.setAttribute('draggable', 'true');
@@ -236,15 +258,15 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
         if (!el) return;
         var idx = el.getAttribute('data-edit-idx');
         var tag = el.getAttribute('data-edit-tag');
-        var isImg = tag === 'IMG'; var isA = tag === 'A'; var isIframe = tag === 'IFRAME';
-        var value = isImg ? (el.getAttribute('src') || '') : isIframe ? (el.getAttribute('data-edit-src') || (el.querySelector('iframe') ? el.querySelector('iframe').getAttribute('src') : '') || '') : (el.innerText || el.textContent || '');
+        var isImg = tag === 'IMG'; var isA = tag === 'A'; var isIframe = tag === 'IFRAME'; var isMedia = tag === 'MEDIA';
+        var value = isMedia ? (el.getAttribute('data-edit-src') || '') : isImg ? (el.getAttribute('src') || '') : isIframe ? (el.getAttribute('data-edit-src') || (el.querySelector('iframe') ? el.querySelector('iframe').getAttribute('src') : '') || '') : (el.innerText || el.textContent || '');
         var href = isA ? (el.getAttribute('data-edit-href') || el.getAttribute('href') || '') : '';
         var pixelEvent = el.getAttribute('data-pixel-event') || '';
         var imgWidth = isImg ? (el.naturalWidth || el.getAttribute('width') || 0) : 0;
         var imgHeight = isImg ? (el.naturalHeight || el.getAttribute('height') || 0) : 0;
         var bgColor = el.style.backgroundColor || '';
         var textColor = el.style.color || '';
-        window.parent.postMessage({ type: 'EDIT_ELEMENT', idx: Number(idx), tag: tag, value: value, href: href, isImg: isImg, isA: isA, isIframe: isIframe, pixelEvent: pixelEvent, imgWidth: imgWidth, imgHeight: imgHeight, bgColor: bgColor, textColor: textColor }, '*');
+        window.parent.postMessage({ type: 'EDIT_ELEMENT', idx: Number(idx), tag: tag, value: value, href: href, isImg: isImg, isA: isA, isIframe: isIframe, isMedia: isMedia, pixelEvent: pixelEvent, imgWidth: imgWidth, imgHeight: imgHeight, bgColor: bgColor, textColor: textColor }, '*');
       }, true);
     `;
     doc.body.appendChild(script);
@@ -264,9 +286,13 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
   const getEditableElements = useCallback((doc: Document): Element[] => {
     const editableTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'span', 'li', 'button', 'img', 'iframe'];
     const elements: Element[] = [];
+    // Media containers first (same order as getEditableHtml)
+    doc.querySelectorAll('#yt-container, .aspect-video').forEach(el => {
+      if (!el.closest('#sn-popup')) elements.push(el);
+    });
     editableTags.forEach(tag => {
       doc.querySelectorAll(tag).forEach(el => {
-        if (!el.closest('#sn-popup')) elements.push(el);
+        if (!el.closest('#sn-popup') && !el.closest('#yt-container') && !el.closest('.aspect-video')) elements.push(el);
       });
     });
     return elements;
@@ -321,7 +347,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     const handler = (e: MessageEvent) => {
       if (e.data?.type === 'EDIT_ELEMENT') {
         setEditTarget({
-          type: e.data.isImg ? 'img' : e.data.isA ? 'link' : e.data.isIframe ? 'video' : 'text',
+          type: e.data.isMedia ? 'media' : e.data.isImg ? 'img' : e.data.isA ? 'link' : e.data.isIframe ? 'video' : 'text',
           tag: e.data.tag, value: e.data.value, href: e.data.href || '', index: e.data.idx,
           pixelEvent: e.data.pixelEvent || '', imgWidth: e.data.imgWidth || 0, imgHeight: e.data.imgHeight || 0,
           bgColor: e.data.bgColor || '', textColor: e.data.textColor || '',
@@ -344,7 +370,16 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     const targetEl = allElements[editTarget.index] || null;
     if (targetEl) {
       const el = targetEl as HTMLElement;
-      if (editTarget.type === 'video') el.setAttribute('src', newValue);
+      if (editTarget.type === 'media') {
+        // Replace container content with video iframe or image
+        if (newHref === 'media:video') {
+          el.innerHTML = `<iframe src="${newValue}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:12px;" allowfullscreen></iframe>`;
+          el.setAttribute('style', 'position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;');
+        } else if (newHref === 'media:image') {
+          el.innerHTML = `<img src="${newValue}" alt="Media" style="width:100%;border-radius:12px;" />`;
+          el.setAttribute('style', '');
+        }
+      } else if (editTarget.type === 'video') el.setAttribute('src', newValue);
       else if (editTarget.type === 'img') el.setAttribute('src', newValue);
       else if (editTarget.type === 'link') {
         el.textContent = newValue;
