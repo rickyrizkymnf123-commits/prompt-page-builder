@@ -415,7 +415,24 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
         }
       }
       else if (editTarget.type === 'link') {
-        el.textContent = newValue;
+        // Preserve child elements (like <span>, <img>) inside the link
+        if (el.children.length === 0) {
+          el.textContent = newValue;
+        } else {
+          // Update only direct text nodes, keep child elements
+          const walker = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+          const textNodes: Text[] = [];
+          let node: Text | null;
+          while ((node = walker.nextNode() as Text | null)) {
+            if (node.parentNode === el) textNodes.push(node);
+          }
+          if (textNodes.length > 0) {
+            textNodes[0].textContent = newValue;
+            for (let i = 1; i < textNodes.length; i++) textNodes[i].textContent = '';
+          } else {
+            el.insertBefore(doc.createTextNode(newValue), el.firstChild);
+          }
+        }
         if (newHref !== undefined) el.setAttribute('href', newHref);
         if (pixelEvent) {
           const evScript = pixelEvent === 'Purchase'
@@ -424,7 +441,25 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
           el.setAttribute('onclick', evScript);
           el.setAttribute('data-pixel-event', pixelEvent);
         } else { el.removeAttribute('onclick'); el.removeAttribute('data-pixel-event'); }
-      } else el.textContent = newValue;
+      } else {
+        // For text elements, preserve child HTML structure
+        if (el.children.length === 0) {
+          el.textContent = newValue;
+        } else {
+          // Update direct text nodes only
+          const walker = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+          const textNodes: Text[] = [];
+          let node: Text | null;
+          while ((node = walker.nextNode() as Text | null)) {
+            if (node.parentNode === el) textNodes.push(node);
+          }
+          if (textNodes.length > 0) {
+            textNodes[0].textContent = newValue;
+            for (let i = 1; i < textNodes.length; i++) textNodes[i].textContent = '';
+          } else {
+            el.textContent = newValue;
+          }
+        }
       if (styles?.textColor) el.style.color = styles.textColor;
       if (styles?.bgColor) el.style.backgroundColor = styles.bgColor;
       const updatedHtml = serializeDoc(doc);
