@@ -460,6 +460,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
             el.textContent = newValue;
           }
         }
+      }
       if (styles?.textColor) el.style.color = styles.textColor;
       if (styles?.bgColor) el.style.backgroundColor = styles.bgColor;
       const updatedHtml = serializeDoc(doc);
