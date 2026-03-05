@@ -321,18 +321,21 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
   // Helper to serialize back to the same format as the original HTML (avoid wrapping in <html><head><body>)
   const serializeDoc = useCallback((doc: Document): string => {
     const root = doc.getElementById('lp-root');
+    // Always capture head content (styles, meta, scripts that DOMParser moved to head)
+    const headContent = doc.head.innerHTML.trim();
+    const headPart = headContent ? `<head>${headContent}</head>` : '';
     if (root) {
       // Collect scripts/styles from body that are outside lp-root
       const extras: string[] = [];
       Array.from(doc.body.children).forEach(child => {
         if (child !== root) extras.push((child as HTMLElement).outerHTML);
       });
-      // Collect head content
-      const headContent = doc.head.innerHTML.trim();
-      const headPart = headContent ? `<head>${headContent}</head>` : '';
       return headPart + root.outerHTML + extras.join('');
     }
-    // Fallback: return body innerHTML to avoid extra <html> wrapping
+    // Fallback: include head content (styles etc.) + body content
+    if (headContent) {
+      return headContent + '\n' + doc.body.innerHTML;
+    }
     return doc.body.innerHTML;
   }, []);
 
@@ -412,7 +415,24 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
         }
       }
       else if (editTarget.type === 'link') {
-        el.textContent = newValue;
+        // Preserve child elements (like <span>, <img>) inside the link
+        if (el.children.length === 0) {
+          el.textContent = newValue;
+        } else {
+          // Update only direct text nodes, keep child elements
+          const walker = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+          const textNodes: Text[] = [];
+          let node: Text | null;
+          while ((node = walker.nextNode() as Text | null)) {
+            if (node.parentNode === el) textNodes.push(node);
+          }
+          if (textNodes.length > 0) {
+            textNodes[0].textContent = newValue;
+            for (let i = 1; i < textNodes.length; i++) textNodes[i].textContent = '';
+          } else {
+            el.insertBefore(doc.createTextNode(newValue), el.firstChild);
+          }
+        }
         if (newHref !== undefined) el.setAttribute('href', newHref);
         if (pixelEvent) {
           const evScript = pixelEvent === 'Purchase'
@@ -421,7 +441,26 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
           el.setAttribute('onclick', evScript);
           el.setAttribute('data-pixel-event', pixelEvent);
         } else { el.removeAttribute('onclick'); el.removeAttribute('data-pixel-event'); }
-      } else el.textContent = newValue;
+      } else {
+        // For text elements, preserve child HTML structure
+        if (el.children.length === 0) {
+          el.textContent = newValue;
+        } else {
+          // Update direct text nodes only
+          const walker = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+          const textNodes: Text[] = [];
+          let node: Text | null;
+          while ((node = walker.nextNode() as Text | null)) {
+            if (node.parentNode === el) textNodes.push(node);
+          }
+          if (textNodes.length > 0) {
+            textNodes[0].textContent = newValue;
+            for (let i = 1; i < textNodes.length; i++) textNodes[i].textContent = '';
+          } else {
+            el.textContent = newValue;
+          }
+        }
+      }
       if (styles?.textColor) el.style.color = styles.textColor;
       if (styles?.bgColor) el.style.backgroundColor = styles.bgColor;
       const updatedHtml = serializeDoc(doc);
