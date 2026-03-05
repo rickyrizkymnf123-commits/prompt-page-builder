@@ -321,18 +321,21 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
   // Helper to serialize back to the same format as the original HTML (avoid wrapping in <html><head><body>)
   const serializeDoc = useCallback((doc: Document): string => {
     const root = doc.getElementById('lp-root');
+    // Always capture head content (styles, meta, scripts that DOMParser moved to head)
+    const headContent = doc.head.innerHTML.trim();
+    const headPart = headContent ? `<head>${headContent}</head>` : '';
     if (root) {
       // Collect scripts/styles from body that are outside lp-root
       const extras: string[] = [];
       Array.from(doc.body.children).forEach(child => {
         if (child !== root) extras.push((child as HTMLElement).outerHTML);
       });
-      // Collect head content
-      const headContent = doc.head.innerHTML.trim();
-      const headPart = headContent ? `<head>${headContent}</head>` : '';
       return headPart + root.outerHTML + extras.join('');
     }
-    // Fallback: return body innerHTML to avoid extra <html> wrapping
+    // Fallback: include head content (styles etc.) + body content
+    if (headContent) {
+      return headContent + '\n' + doc.body.innerHTML;
+    }
     return doc.body.innerHTML;
   }, []);
 
