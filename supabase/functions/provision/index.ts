@@ -141,7 +141,9 @@ Deno.serve(async (req) => {
     const destination = data.destination_address || {};
     const name = customer.name || destination.name || data.name || body.name || "";
     const email = (customer.email || destination.email || data.email || body.email || "").toLowerCase();
-    const phone = customer.phone || destination.phone || data.phone || body.phone || "";
+    // Phone: check multiple locations in Scalev payload
+    const pgCustomer = data.pg_payment_info?.customer || {};
+    const phone = customer.phone || destination.phone || pgCustomer.mobile_number || data.phone || body.phone || "";
 
     console.log("Parsed fields:", { order_id, email, phone, name, payment_status, event });
 
