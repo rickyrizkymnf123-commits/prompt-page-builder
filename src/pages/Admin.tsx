@@ -160,6 +160,10 @@ export default function Admin() {
   const [testProvForm, setTestProvForm] = useState({ email: '', name: '', phone: '', product_code: 'LPE' });
   const [testProvLoading, setTestProvLoading] = useState(false);
   const [testProvResult, setTestProvResult] = useState<any>(null);
+  // Partner Webhook Test state
+  const [partnerTestForm, setPartnerTestForm] = useState({ partner: '', email: 'test@example.com', name: 'Test Partner', phone: '', product_code: 'LPE' });
+  const [partnerTestLoading, setPartnerTestLoading] = useState(false);
+  const [partnerTestResult, setPartnerTestResult] = useState<any>(null);
   // Tutorials state
   const [tutorialsList, setTutorialsList] = useState<{ id: string; title: string; description: string | null; youtube_url: string; sort_order: number; is_active: boolean }[]>([]);
   const [tutDialog, setTutDialog] = useState(false);
