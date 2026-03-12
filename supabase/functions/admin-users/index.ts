@@ -338,6 +338,86 @@ Deno.serve(async (req) => {
         });
       }
 
+      // --- TEST PARTNER WEBHOOK ---
+      if (action === "test_partner_webhook") {
+        const partnerSecret = (body.partner_secret || '').trim();
+        const testEmail = (email || 'test@example.com').trim().toLowerCase();
+        const testName = (name || 'Test Partner').trim();
+        const testPhone = (phone || '').trim();
+        const testProductCode = tier || 'LPE';
+
+        if (!partnerSecret) {
+          return new Response(JSON.stringify({ error: "Partner secret wajib diisi" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Build fake payload
+        const testOrderId = `PARTNER_TEST_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+        const fakePayload = {
+          event: "order.payment_status_changed",
+          data: {
+            order_id: testOrderId,
+            payment_status: "paid",
+            customer: {
+              email: testEmail,
+              name: testName,
+              phone: testPhone || null,
+            },
+            product_code: testProductCode,
+          },
+        };
+
+        const rawBody = JSON.stringify(fakePayload);
+
+        // Sign with the partner's secret (HMAC)
+        const encoder = new TextEncoder();
+        const key = await crypto.subtle.importKey(
+          "raw",
+          encoder.encode(partnerSecret),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign"]
+        );
+        const signed = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+        const { encode: b64Encode } = await import("https://deno.land/std@0.208.0/encoding/base64.ts");
+        const hmacSignature = b64Encode(new Uint8Array(signed));
+
+        // Send to gateway with HMAC header (like a real Scalev webhook)
+        const gatewayUrl = `${supabaseUrl}/functions/v1/gateway-provision?product=${encodeURIComponent(testProductCode)}`;
+        
+        const gatewayRes = await fetch(gatewayUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-scalev-hmac-sha256": hmacSignature,
+          },
+          body: rawBody,
+        });
+
+        const gatewayResult = await gatewayRes.json();
+
+        // Determine results
+        const hmacValid = gatewayRes.status !== 401;
+        const customerData = {
+          email: testEmail || null,
+          name: testName || null,
+          phone: testPhone || null,
+          phone_is_null: !testPhone,
+        };
+
+        return new Response(JSON.stringify({
+          success: gatewayRes.ok && gatewayResult?.ok,
+          hmac_valid: hmacValid,
+          customer_data: customerData,
+          gateway_status: gatewayRes.status,
+          gateway_result: gatewayResult,
+          test_order_id: testOrderId,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+
       return new Response(JSON.stringify({ error: "Unknown action" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
