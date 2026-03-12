@@ -156,6 +156,10 @@ export default function Admin() {
   const [newSlug, setNewSlug] = useState('');
   const [newSlugProduct, setNewSlugProduct] = useState('LPE');
   const [newSlugLabel, setNewSlugLabel] = useState('');
+  // Test Provision state
+  const [testProvForm, setTestProvForm] = useState({ email: '', name: '', phone: '', product_code: 'LPE' });
+  const [testProvLoading, setTestProvLoading] = useState(false);
+  const [testProvResult, setTestProvResult] = useState<any>(null);
   // Tutorials state
   const [tutorialsList, setTutorialsList] = useState<{ id: string; title: string; description: string | null; youtube_url: string; sort_order: number; is_active: boolean }[]>([]);
   const [tutDialog, setTutDialog] = useState(false);
@@ -874,6 +878,113 @@ export default function Admin() {
                   <div className="rounded-xl border border-border bg-secondary/50 p-3">
                     <p className="text-[10px] text-muted-foreground">💡 <strong>Tips:</strong> Slug adalah bagian akhir dari URL checkout Scalev. Contoh: dari <code className="bg-muted px-1 rounded">papospedia.myscalev.com/<strong>anaksehat</strong></code>, slug-nya adalah <strong>anaksehat</strong>.</p>
                   </div>
+                </div>
+
+                {/* Test Provision */}
+                <div className="border-t border-border pt-6 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🧪 Test Provisioning</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Simulasi webhook Scalev untuk test alur provisioning lengkap (buat akun, entitlement, kirim WA) tanpa pembayaran nyata.</p>
+                  </div>
+
+                  <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">Email *</label>
+                        <Input value={testProvForm.email} onChange={(e) => setTestProvForm(p => ({ ...p, email: e.target.value }))} placeholder="test@example.com" className="text-xs" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">Nama</label>
+                        <Input value={testProvForm.name} onChange={(e) => setTestProvForm(p => ({ ...p, name: e.target.value }))} placeholder="Test User" className="text-xs" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">No. WhatsApp</label>
+                        <Input value={testProvForm.phone} onChange={(e) => setTestProvForm(p => ({ ...p, phone: e.target.value }))} placeholder="08123456789" className="text-xs" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">Product Code</label>
+                        <select value={testProvForm.product_code} onChange={(e) => setTestProvForm(p => ({ ...p, product_code: e.target.value }))}
+                          className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs">
+                          <option value="LPE">LPE (Landing Page Engine)</option>
+                          <option value="LPE_FREE">LPE_FREE (Gratis)</option>
+                          <option value="SWA">SWA (Story Weaver AI)</option>
+                          <option value="PEA">PEA (Property Enhancer AI)</option>
+                          <option value="DST">DST (Digital Strategy)</option>
+                          <option value="MAA">MAA (Meta Ads)</option>
+                          <option value="PNA">PNA (Profit Navigator)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button size="sm" disabled={testProvLoading || !testProvForm.email.trim()} onClick={async () => {
+                        setTestProvLoading(true);
+                        setTestProvResult(null);
+                        try {
+                          const { data, error } = await supabase.functions.invoke('admin-users', {
+                            body: {
+                              action: 'test_provision',
+                              email: testProvForm.email,
+                              name: testProvForm.name || 'Test User',
+                              phone: testProvForm.phone,
+                              tier: testProvForm.product_code,
+                            },
+                          });
+                          if (error) {
+                            setTestProvResult({ success: false, error: error.message });
+                          } else {
+                            setTestProvResult(data);
+                            if (data?.success) {
+                              showToast({ title: '✅ Test provision berhasil!' });
+                              await fetchUsers();
+                              await fetchLogs();
+                            } else {
+                              showToast({ title: '❌ Test provision gagal', description: data?.provision_result?.error || data?.error || 'Unknown error', variant: 'destructive' });
+                            }
+                          }
+                        } catch (err: any) {
+                          setTestProvResult({ success: false, error: err.message });
+                        }
+                        setTestProvLoading(false);
+                      }}>
+                        {testProvLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1" /> : <Rocket className="h-3.5 w-3.5 mr-1" />}
+                        {testProvLoading ? 'Memproses...' : 'Jalankan Test'}
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground">⚠️ Akan membuat akun + entitlement nyata. Jika nomor WA diisi, notifikasi WA akan terkirim.</p>
+                    </div>
+                  </div>
+
+                  {testProvResult && (
+                    <div className={`rounded-lg border p-4 space-y-2 ${testProvResult.success ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
+                      <div className="flex items-center gap-2">
+                        {testProvResult.success ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-destructive" />}
+                        <p className="text-sm font-semibold text-foreground">{testProvResult.success ? 'Provisioning Berhasil!' : 'Provisioning Gagal'}</p>
+                      </div>
+                      {testProvResult.test_order_id && (
+                        <p className="text-xs text-muted-foreground">Order ID: <span className="font-mono">{testProvResult.test_order_id}</span></p>
+                      )}
+                      {testProvResult.provision_result?.email && (
+                        <p className="text-xs text-muted-foreground">Email: <span className="font-mono">{testProvResult.provision_result.email}</span></p>
+                      )}
+                      {testProvResult.provision_result?.password && (
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-muted-foreground">Password: <span className="font-mono font-semibold text-foreground">{testProvResult.provision_result.password}</span></p>
+                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
+                            navigator.clipboard.writeText(testProvResult.provision_result.password);
+                            showToast({ title: '📋 Password disalin!' });
+                          }}><Copy className="h-3 w-3" /></Button>
+                        </div>
+                      )}
+                      {testProvResult.provision_result?.whatsapp_sent !== undefined && (
+                        <p className="text-xs text-muted-foreground">WhatsApp: {testProvResult.provision_result.whatsapp_sent ? '✅ Terkirim' : '⏭️ Tidak dikirim (no phone)'}</p>
+                      )}
+                      {testProvResult.error && (
+                        <p className="text-xs text-destructive">{testProvResult.error}</p>
+                      )}
+                      {testProvResult.provision_result?.error && (
+                        <p className="text-xs text-destructive">{testProvResult.provision_result.error}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-border pt-6 space-y-4">
