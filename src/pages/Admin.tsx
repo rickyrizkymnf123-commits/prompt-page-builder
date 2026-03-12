@@ -160,6 +160,10 @@ export default function Admin() {
   const [testProvForm, setTestProvForm] = useState({ email: '', name: '', phone: '', product_code: 'LPE' });
   const [testProvLoading, setTestProvLoading] = useState(false);
   const [testProvResult, setTestProvResult] = useState<any>(null);
+  // Partner Webhook Test state
+  const [partnerTestForm, setPartnerTestForm] = useState({ partner: '', email: 'test@example.com', name: 'Test Partner', phone: '', product_code: 'LPE' });
+  const [partnerTestLoading, setPartnerTestLoading] = useState(false);
+  const [partnerTestResult, setPartnerTestResult] = useState<any>(null);
   // Tutorials state
   const [tutorialsList, setTutorialsList] = useState<{ id: string; title: string; description: string | null; youtube_url: string; sort_order: number; is_active: boolean }[]>([]);
   const [tutDialog, setTutDialog] = useState(false);
@@ -983,6 +987,130 @@ export default function Admin() {
                       {testProvResult.provision_result?.error && (
                         <p className="text-xs text-destructive">{testProvResult.provision_result.error}</p>
                       )}
+                    </div>
+                  )}
+                </div>
+
+                {/* TEST PARTNER WEBHOOK */}
+                <div className="border-t border-border pt-6 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🔗 Test Webhook Partner</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Test koneksi webhook partner: verifikasi HMAC, cek data customer, dan kirim WA test. Pilih partner dari daftar signing secret yang sudah terdaftar.</p>
+                  </div>
+
+                  <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">Partner *</label>
+                        <select value={partnerTestForm.partner} onChange={(e) => setPartnerTestForm(p => ({ ...p, partner: e.target.value }))}
+                          className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs">
+                          <option value="">-- Pilih Partner --</option>
+                          {signingSecrets.map((s: any, i: number) => (
+                            <option key={i} value={s.secret}>{s.label} ({s.secret.slice(0, 8)}...)</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">Product Code</label>
+                        <select value={partnerTestForm.product_code} onChange={(e) => setPartnerTestForm(p => ({ ...p, product_code: e.target.value }))}
+                          className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs">
+                          <option value="LPE">LPE (Landing Page Engine)</option>
+                          <option value="SWA">SWA (Story Weaver AI)</option>
+                          <option value="PEA">PEA (Property Enhancer AI)</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">Email</label>
+                        <Input value={partnerTestForm.email} onChange={(e) => setPartnerTestForm(p => ({ ...p, email: e.target.value }))} placeholder="test@example.com" className="text-xs" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">Nama</label>
+                        <Input value={partnerTestForm.name} onChange={(e) => setPartnerTestForm(p => ({ ...p, name: e.target.value }))} placeholder="Test Partner" className="text-xs" />
+                      </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-xs font-medium text-foreground">No. WhatsApp (opsional, isi jika mau test kirim WA)</label>
+                        <Input value={partnerTestForm.phone} onChange={(e) => setPartnerTestForm(p => ({ ...p, phone: e.target.value }))} placeholder="08123456789" className="text-xs" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button size="sm" disabled={partnerTestLoading || !partnerTestForm.partner} onClick={async () => {
+                        setPartnerTestLoading(true);
+                        setPartnerTestResult(null);
+                        try {
+                          const { data, error } = await supabase.functions.invoke('admin-users', {
+                            body: {
+                              action: 'test_partner_webhook',
+                              partner_secret: partnerTestForm.partner,
+                              email: partnerTestForm.email,
+                              name: partnerTestForm.name,
+                              phone: partnerTestForm.phone,
+                              tier: partnerTestForm.product_code,
+                            },
+                          });
+                          if (error) {
+                            setPartnerTestResult({ success: false, error: error.message });
+                          } else {
+                            setPartnerTestResult(data);
+                            if (data?.success) {
+                              showToast({ title: '✅ Webhook partner berhasil!' });
+                            } else {
+                              showToast({ title: '❌ Webhook partner gagal', description: data?.gateway_result?.error || data?.error || 'Unknown', variant: 'destructive' });
+                            }
+                          }
+                        } catch (err: any) {
+                          setPartnerTestResult({ success: false, error: err.message });
+                        }
+                        setPartnerTestLoading(false);
+                      }}>
+                        {partnerTestLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1" /> : <Rocket className="h-3.5 w-3.5 mr-1" />}
+                        {partnerTestLoading ? 'Testing...' : 'Test Koneksi Partner'}
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground">Mengirim fake webhook dengan HMAC partner untuk verifikasi koneksi.</p>
+                    </div>
+                  </div>
+
+                  {partnerTestResult && (
+                    <div className={`rounded-lg border p-4 space-y-3 ${partnerTestResult.success ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
+                      {/* HMAC Status */}
+                      <div className="flex items-center gap-2">
+                        {partnerTestResult.hmac_valid ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-destructive" />}
+                        <p className="text-sm font-semibold text-foreground">HMAC: {partnerTestResult.hmac_valid ? '✅ Valid' : '❌ Invalid — Secret tidak cocok'}</p>
+                      </div>
+
+                      {/* Customer Data */}
+                      {partnerTestResult.customer_data && (
+                        <div className="bg-background/50 rounded-md p-3 space-y-1">
+                          <p className="text-xs font-medium text-foreground mb-1">📋 Data Customer (parsed):</p>
+                          <div className="grid grid-cols-2 gap-1 text-xs">
+                            <span className="text-muted-foreground">Email:</span>
+                            <span className={`font-mono ${partnerTestResult.customer_data.email ? 'text-foreground' : 'text-destructive font-semibold'}`}>
+                              {partnerTestResult.customer_data.email || '⚠️ NULL'}
+                            </span>
+                            <span className="text-muted-foreground">Nama:</span>
+                            <span className={`font-mono ${partnerTestResult.customer_data.name ? 'text-foreground' : 'text-destructive font-semibold'}`}>
+                              {partnerTestResult.customer_data.name || '⚠️ NULL'}
+                            </span>
+                            <span className="text-muted-foreground">Phone:</span>
+                            <span className={`font-mono ${partnerTestResult.customer_data.phone && !partnerTestResult.customer_data.phone_is_null ? 'text-foreground' : 'text-amber-500 font-semibold'}`}>
+                              {partnerTestResult.customer_data.phone || '⚠️ Kosong (WA tidak terkirim)'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Gateway result */}
+                      <div className="text-xs text-muted-foreground">
+                        <span>Gateway Status: <span className="font-mono">{partnerTestResult.gateway_status}</span></span>
+                        {partnerTestResult.test_order_id && <span className="ml-3">Order: <span className="font-mono">{partnerTestResult.test_order_id}</span></span>}
+                      </div>
+
+                      {/* WA status from gateway result */}
+                      {partnerTestResult.gateway_result?.whatsapp_sent !== undefined && (
+                        <p className="text-xs">WhatsApp: {partnerTestResult.gateway_result.whatsapp_sent ? '✅ Terkirim' : '⏭️ Tidak dikirim'}</p>
+                      )}
+
+                      {partnerTestResult.error && <p className="text-xs text-destructive">{partnerTestResult.error}</p>}
+                      {partnerTestResult.gateway_result?.error && <p className="text-xs text-destructive">{partnerTestResult.gateway_result.error}</p>}
                     </div>
                   )}
                 </div>
