@@ -8,16 +8,16 @@ const corsHeaders = {
 
 // Route mapping: product_code → provision endpoint URL
 // Add new products here. Use env vars for external project URLs.
+// ALLOWLIST: Only these product codes are active. Others are silently rejected.
+const ALLOWED_PRODUCTS = new Set(["LPE", "SWA", "PEA"]);
+
 function getRoutes(): Record<string, string> {
   return {
     // LPE is handled locally (this project)
     LPE: "LOCAL",
-    // External projects — add env vars as you set up each project
+    // External projects
     ...(Deno.env.get("ROUTE_SWA_URL") ? { SWA: Deno.env.get("ROUTE_SWA_URL")! } : {}),
     ...(Deno.env.get("ROUTE_PEA_URL") ? { PEA: Deno.env.get("ROUTE_PEA_URL")! } : {}),
-    ...(Deno.env.get("ROUTE_DST_URL") ? { DST: Deno.env.get("ROUTE_DST_URL")! } : {}),
-    ...(Deno.env.get("ROUTE_MAA_URL") ? { MAA: Deno.env.get("ROUTE_MAA_URL")! } : {}),
-    ...(Deno.env.get("ROUTE_PNA_URL") ? { PNA: Deno.env.get("ROUTE_PNA_URL")! } : {}),
   };
 }
 
@@ -199,9 +199,6 @@ Deno.serve(async (req) => {
       if (productName.includes("LANDING PAGE") || productName.includes("LPE")) product_code = "LPE";
       else if (productName.includes("STORY WEAVER") || productName.includes("SWA") || productName.includes("EBOOK")) product_code = "SWA";
       else if (productName.includes("PROPERTY") || productName.includes("PEA")) product_code = "PEA";
-      else if (productName.includes("DIGITAL STRATEGY") || productName.includes("DST")) product_code = "DST";
-      else if (productName.includes("META ADS") || productName.includes("MAA")) product_code = "MAA";
-      else if (productName.includes("PROFIT") || productName.includes("PNA")) product_code = "PNA";
     }
 
     // 4. Slug mapping from SCALEV_SLUG_MAP (env var + app_settings DB)
@@ -261,15 +258,12 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Fallback: keyword detection from URL
+      // Fallback: keyword detection from URL (only allowed products)
       if (!product_code) {
         const lower = sourceUrl.toLowerCase();
         if (lower.includes("landing-page") || lower.includes("lpe")) product_code = "LPE";
         else if (lower.includes("story-weaver") || lower.includes("swa") || lower.includes("ebook")) product_code = "SWA";
         else if (lower.includes("property") || lower.includes("pea")) product_code = "PEA";
-        else if (lower.includes("digital-strategy") || lower.includes("dst")) product_code = "DST";
-        else if (lower.includes("meta-ads") || lower.includes("maa")) product_code = "MAA";
-        else if (lower.includes("profit") || lower.includes("pna")) product_code = "PNA";
       }
     }
 
@@ -290,6 +284,19 @@ Deno.serve(async (req) => {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
+      );
+    }
+
+    // ALLOWLIST CHECK: reject any product not in the active list
+    if (!ALLOWED_PRODUCTS.has(product_code)) {
+      console.log(`Product ${product_code} is not in allowlist. Ignoring silently.`);
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          status: "ignored",
+          reason: `Product ${product_code} is not active. Only ${[...ALLOWED_PRODUCTS].join(", ")} are allowed.`,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
