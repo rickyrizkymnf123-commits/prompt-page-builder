@@ -194,6 +194,13 @@ export default function Admin() {
             if (Array.isArray(parsed)) setSigningSecrets(parsed.map((e: any) => typeof e === 'string' ? { label: '', secret: e } : { label: e.label || '', secret: e.secret || '' }));
           } catch {}
         }
+        const sm = (data as any[]).find((r: any) => r.key === 'scalev_slug_map');
+        if (sm?.value) {
+          try {
+            const parsed = JSON.parse(sm.value);
+            if (Array.isArray(parsed)) setSlugMap(parsed.map((e: any) => ({ slug: e.slug || '', product_code: e.product_code || 'LPE', label: e.label || '' })));
+          } catch {}
+        }
       }
     } catch {}
   };
