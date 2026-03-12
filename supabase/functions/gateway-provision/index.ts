@@ -337,7 +337,7 @@ Deno.serve(async (req) => {
     console.log(`Routing to EXTERNAL ${product_code}:`, targetUrl);
 
     // Get the secret for the target project (each project can have its own)
-    const targetSecret = Deno.env.get(`ROUTE_${product_code}_SECRET`) || PROVISION_SECRET;
+    const targetSecret = Deno.env.get(`ROUTE_${product_code}_SECRET`) || Deno.env.get("PROVISION_SECRET") || "";
 
     // Re-sign the body with the target project's secret
     const encoder = new TextEncoder();
