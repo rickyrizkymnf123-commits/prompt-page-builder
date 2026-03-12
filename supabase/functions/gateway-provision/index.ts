@@ -204,29 +204,61 @@ Deno.serve(async (req) => {
       else if (productName.includes("PROFIT") || productName.includes("PNA")) product_code = "PNA";
     }
 
-    // 4. Slug mapping from SCALEV_SLUG_MAP env var (JSON: {"slug-name":"PRODUCT_CODE"})
+    // 4. Slug mapping from SCALEV_SLUG_MAP (env var + app_settings DB)
     if (!product_code && data.metadata?.event_source_url) {
       const sourceUrl = data.metadata.event_source_url;
       // Extract slug from URL (last path segment)
       const slug = sourceUrl.split("/").filter(Boolean).pop() || "";
       
+      // Build combined slug map from env var AND database
+      const combinedSlugMap: Record<string, string> = {};
+      
+      // Source 1: env var (legacy)
       const slugMapRaw = Deno.env.get("SCALEV_SLUG_MAP");
       if (slugMapRaw) {
         try {
-          const slugMap: Record<string, string> = JSON.parse(slugMapRaw);
-          // Check exact slug match
-          if (slugMap[slug]) {
-            product_code = slugMap[slug];
-          } else {
-            // Check if any key is contained in the full URL
-            for (const [key, code] of Object.entries(slugMap)) {
-              if (sourceUrl.toLowerCase().includes(key.toLowerCase())) {
-                product_code = code;
-                break;
+          const envMap = JSON.parse(slugMapRaw);
+          Object.assign(combinedSlugMap, envMap);
+        } catch { /* ignore */ }
+      }
+      
+      // Source 2: app_settings table (managed via dashboard)
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const res = await fetch(
+          `${supabaseUrl}/rest/v1/app_settings?key=eq.scalev_slug_map&select=value`,
+          { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+        );
+        if (res.ok) {
+          const rows = await res.json();
+          if (rows?.[0]?.value) {
+            const parsed = JSON.parse(rows[0].value);
+            // Format: [{ slug: "anaksehat", product_code: "LPE" }, ...]
+            if (Array.isArray(parsed)) {
+              for (const entry of parsed) {
+                if (entry.slug && entry.product_code) {
+                  combinedSlugMap[entry.slug] = entry.product_code;
+                }
               }
             }
           }
-        } catch { /* ignore invalid JSON */ }
+        }
+      } catch (e) {
+        console.error("Failed to fetch slug map from DB:", e);
+      }
+      
+      // Match slug against combined map
+      if (combinedSlugMap[slug]) {
+        product_code = combinedSlugMap[slug];
+      } else {
+        // Check if any key is contained in the full URL
+        for (const [key, code] of Object.entries(combinedSlugMap)) {
+          if (sourceUrl.toLowerCase().includes(key.toLowerCase())) {
+            product_code = code;
+            break;
+          }
+        }
       }
 
       // Fallback: keyword detection from URL

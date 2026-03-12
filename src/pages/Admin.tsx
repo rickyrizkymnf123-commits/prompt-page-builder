@@ -151,6 +151,11 @@ export default function Admin() {
   const [newSecretLabel, setNewSecretLabel] = useState('');
   const [newSecretValue, setNewSecretValue] = useState('');
   const [showSecretValues, setShowSecretValues] = useState(false);
+  // Slug map state
+  const [slugMap, setSlugMap] = useState<{ slug: string; product_code: string; label: string }[]>([]);
+  const [newSlug, setNewSlug] = useState('');
+  const [newSlugProduct, setNewSlugProduct] = useState('LPE');
+  const [newSlugLabel, setNewSlugLabel] = useState('');
   // Tutorials state
   const [tutorialsList, setTutorialsList] = useState<{ id: string; title: string; description: string | null; youtube_url: string; sort_order: number; is_active: boolean }[]>([]);
   const [tutDialog, setTutDialog] = useState(false);
