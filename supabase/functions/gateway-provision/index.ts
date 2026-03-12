@@ -8,16 +8,16 @@ const corsHeaders = {
 
 // Route mapping: product_code → provision endpoint URL
 // Add new products here. Use env vars for external project URLs.
+// ALLOWLIST: Only these product codes are active. Others are silently rejected.
+const ALLOWED_PRODUCTS = new Set(["LPE", "SWA", "PEA"]);
+
 function getRoutes(): Record<string, string> {
   return {
     // LPE is handled locally (this project)
     LPE: "LOCAL",
-    // External projects — add env vars as you set up each project
+    // External projects
     ...(Deno.env.get("ROUTE_SWA_URL") ? { SWA: Deno.env.get("ROUTE_SWA_URL")! } : {}),
     ...(Deno.env.get("ROUTE_PEA_URL") ? { PEA: Deno.env.get("ROUTE_PEA_URL")! } : {}),
-    ...(Deno.env.get("ROUTE_DST_URL") ? { DST: Deno.env.get("ROUTE_DST_URL")! } : {}),
-    ...(Deno.env.get("ROUTE_MAA_URL") ? { MAA: Deno.env.get("ROUTE_MAA_URL")! } : {}),
-    ...(Deno.env.get("ROUTE_PNA_URL") ? { PNA: Deno.env.get("ROUTE_PNA_URL")! } : {}),
   };
 }
 
