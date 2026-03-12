@@ -143,6 +143,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_payments: {
+        Row: {
+          checkout_url: string | null
+          created_at: string
+          email: string | null
+          id: string
+          last_reminder_at: string | null
+          name: string | null
+          order_id: string
+          payment_status: string
+          phone: string | null
+          product_code: string
+          reminder_count: number
+          updated_at: string
+        }
+        Insert: {
+          checkout_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_reminder_at?: string | null
+          name?: string | null
+          order_id: string
+          payment_status?: string
+          phone?: string | null
+          product_code?: string
+          reminder_count?: number
+          updated_at?: string
+        }
+        Update: {
+          checkout_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_reminder_at?: string | null
+          name?: string | null
+          order_id?: string
+          payment_status?: string
+          phone?: string | null
+          product_code?: string
+          reminder_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

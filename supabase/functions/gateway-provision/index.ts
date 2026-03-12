@@ -300,7 +300,68 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("Gateway routing:", { product_code, slug: data.metadata?.event_source_url, event: body.event });
+    const payment_status = data.payment_status || "";
+    const checkoutUrl = data.metadata?.event_source_url || "";
+    const customerName = data.customer?.name || data.destination_address?.name || "";
+    const customerEmail = data.customer?.email || data.destination_address?.email || "";
+    const customerPhone = data.customer?.phone || data.destination_address?.phone || "";
+
+    console.log("Gateway routing:", { product_code, payment_status, slug: checkoutUrl, event: body.event });
+
+    // UNPAID HANDLER: send payment reminder instead of provisioning
+    if (payment_status === "unpaid") {
+      console.log(`Unpaid order detected for ${product_code}. Sending payment reminder.`);
+      const reminderUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-reminder`;
+      try {
+        const reminderRes = await fetch(reminderUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            action: "immediate",
+            order_id: data.order_id || body.order_id || `ORDER_${Date.now()}`,
+            email: customerEmail,
+            name: customerName,
+            phone: customerPhone,
+            product_code,
+            checkout_url: checkoutUrl,
+          }),
+        });
+        const reminderResult = await reminderRes.json();
+        console.log("Reminder result:", reminderResult);
+        return new Response(
+          JSON.stringify({ ok: true, status: "unpaid_reminder_sent", ...reminderResult }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (e) {
+        console.error("Reminder error:", e);
+        return new Response(
+          JSON.stringify({ ok: false, error: "Failed to send reminder" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // PAID HANDLER: mark pending payment as paid, then continue to provision
+    if (payment_status === "paid") {
+      // Non-blocking: mark as paid in pending_payments
+      try {
+        const reminderUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-reminder`;
+        fetch(reminderUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            action: "mark_paid",
+            order_id: data.order_id || body.order_id || "",
+          }),
+        }).catch(() => {}); // fire-and-forget
+      } catch { /* ignore */ }
+    }
 
     const routes = getRoutes();
     const targetUrl = routes[product_code];
