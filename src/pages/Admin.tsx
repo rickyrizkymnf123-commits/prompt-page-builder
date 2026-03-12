@@ -156,6 +156,10 @@ export default function Admin() {
   const [newSlug, setNewSlug] = useState('');
   const [newSlugProduct, setNewSlugProduct] = useState('LPE');
   const [newSlugLabel, setNewSlugLabel] = useState('');
+  // Test Provision state
+  const [testProvForm, setTestProvForm] = useState({ email: '', name: '', phone: '', product_code: 'LPE' });
+  const [testProvLoading, setTestProvLoading] = useState(false);
+  const [testProvResult, setTestProvResult] = useState<any>(null);
   // Tutorials state
   const [tutorialsList, setTutorialsList] = useState<{ id: string; title: string; description: string | null; youtube_url: string; sort_order: number; is_active: boolean }[]>([]);
   const [tutDialog, setTutDialog] = useState(false);
