@@ -151,6 +151,11 @@ export default function Admin() {
   const [newSecretLabel, setNewSecretLabel] = useState('');
   const [newSecretValue, setNewSecretValue] = useState('');
   const [showSecretValues, setShowSecretValues] = useState(false);
+  // Slug map state
+  const [slugMap, setSlugMap] = useState<{ slug: string; product_code: string; label: string }[]>([]);
+  const [newSlug, setNewSlug] = useState('');
+  const [newSlugProduct, setNewSlugProduct] = useState('LPE');
+  const [newSlugLabel, setNewSlugLabel] = useState('');
   // Tutorials state
   const [tutorialsList, setTutorialsList] = useState<{ id: string; title: string; description: string | null; youtube_url: string; sort_order: number; is_active: boolean }[]>([]);
   const [tutDialog, setTutDialog] = useState(false);
@@ -187,6 +192,13 @@ export default function Admin() {
           try {
             const parsed = JSON.parse(ws.value);
             if (Array.isArray(parsed)) setSigningSecrets(parsed.map((e: any) => typeof e === 'string' ? { label: '', secret: e } : { label: e.label || '', secret: e.secret || '' }));
+          } catch {}
+        }
+        const sm = (data as any[]).find((r: any) => r.key === 'scalev_slug_map');
+        if (sm?.value) {
+          try {
+            const parsed = JSON.parse(sm.value);
+            if (Array.isArray(parsed)) setSlugMap(parsed.map((e: any) => ({ slug: e.slug || '', product_code: e.product_code || 'LPE', label: e.label || '' })));
           } catch {}
         }
       }
@@ -798,6 +810,72 @@ export default function Admin() {
                     </div>
                   </div>
                 </div>
+
+                {/* Scalev Slug Map Management */}
+                <div className="border-t border-border pt-6 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🗺️ Slug Routing Map</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Mapping slug checkout Scalev ke Product Code. Ketika ada order dari slug yang terdaftar, gateway otomatis meneruskan ke project yang benar.</p>
+                  </div>
+
+                  {slugMap.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-[1fr_100px_auto] gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3">
+                        <span>Slug / Label</span>
+                        <span>Product</span>
+                        <span></span>
+                      </div>
+                      {slugMap.map((entry, i) => (
+                        <div key={i} className="grid grid-cols-[1fr_100px_auto] gap-2 items-center rounded-lg bg-secondary border border-border p-3">
+                          <div className="min-w-0">
+                            <p className="text-xs font-mono text-foreground truncate">{entry.slug}</p>
+                            {entry.label && <p className="text-[10px] text-muted-foreground truncate">{entry.label}</p>}
+                          </div>
+                          <span className="text-xs font-semibold text-primary">{entry.product_code}</span>
+                          <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0" onClick={async () => {
+                            const next = slugMap.filter((_, idx) => idx !== i);
+                            setSlugMap(next);
+                            await (supabase as any).from('app_settings').update({ value: JSON.stringify(next) }).eq('key', 'scalev_slug_map');
+                            showToast({ title: '🗑 Slug dihapus' });
+                          }}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="rounded-lg border border-dashed border-border p-3 space-y-2">
+                    <p className="text-xs font-semibold text-foreground">Tambah Slug Baru</p>
+                    <div className="flex gap-2">
+                      <Input value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="Slug (misal: anaksehat)" className="flex-1 font-mono text-xs" />
+                      <select value={newSlugProduct} onChange={(e) => setNewSlugProduct(e.target.value)}
+                        className="h-9 rounded-md border border-input bg-background px-3 text-xs font-semibold">
+                        <option value="LPE">LPE</option>
+                        <option value="SWA">SWA</option>
+                        <option value="PEA">PEA</option>
+                        <option value="DST">DST</option>
+                        <option value="MAA">MAA</option>
+                        <option value="PNA">PNA</option>
+                      </select>
+                      <Input value={newSlugLabel} onChange={(e) => setNewSlugLabel(e.target.value)} placeholder="Label (opsional)" className="w-32 text-xs" />
+                      <Button size="sm" disabled={!newSlug.trim()} onClick={async () => {
+                        const exists = slugMap.some(s => s.slug === newSlug.trim());
+                        if (exists) { showToast({ title: '⚠️ Slug sudah ada!', variant: 'destructive' }); return; }
+                        const next = [...slugMap, { slug: newSlug.trim(), product_code: newSlugProduct, label: newSlugLabel.trim() }];
+                        setSlugMap(next);
+                        await (supabase as any).from('app_settings').update({ value: JSON.stringify(next) }).eq('key', 'scalev_slug_map');
+                        setNewSlug(''); setNewSlugLabel('');
+                        showToast({ title: '✅ Slug ditambahkan!' });
+                      }}>+ Tambah</Button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-border bg-secondary/50 p-3">
+                    <p className="text-[10px] text-muted-foreground">💡 <strong>Tips:</strong> Slug adalah bagian akhir dari URL checkout Scalev. Contoh: dari <code className="bg-muted px-1 rounded">papospedia.myscalev.com/<strong>anaksehat</strong></code>, slug-nya adalah <strong>anaksehat</strong>.</p>
+                  </div>
+                </div>
+
                 <div className="border-t border-border pt-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
