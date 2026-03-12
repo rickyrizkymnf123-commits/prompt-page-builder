@@ -287,6 +287,19 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ALLOWLIST CHECK: reject any product not in the active list
+    if (!ALLOWED_PRODUCTS.has(product_code)) {
+      console.log(`Product ${product_code} is not in allowlist. Ignoring silently.`);
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          status: "ignored",
+          reason: `Product ${product_code} is not active. Only ${[...ALLOWED_PRODUCTS].join(", ")} are allowed.`,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.log("Gateway routing:", { product_code, slug: data.metadata?.event_source_url, event: body.event });
 
     const routes = getRoutes();
