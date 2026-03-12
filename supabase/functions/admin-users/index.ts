@@ -317,11 +317,11 @@ Deno.serve(async (req) => {
           },
         };
 
-        // Call provision function directly with secret
+        // Route through gateway so PEA/SWA/etc go to correct external project
         const provisionSecret = Deno.env.get("PROVISION_SECRET") || "";
-        const provisionUrl = `${supabaseUrl}/functions/v1/provision?secret=${encodeURIComponent(provisionSecret)}`;
+        const gatewayUrl = `${supabaseUrl}/functions/v1/gateway-provision?secret=${encodeURIComponent(provisionSecret)}&product=${encodeURIComponent(testProductCode)}`;
 
-        const provisionRes = await fetch(provisionUrl, {
+        const provisionRes = await fetch(gatewayUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(fakePayload),
