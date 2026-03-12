@@ -241,12 +241,27 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Default to LPE if no product_code detected
-    if (!product_code) product_code = "LPE";
+    // If no product_code detected, DO NOT default to LPE — return error
+    // This prevents wrong project from processing the order and sending WA notifications
+    if (!product_code) {
+      const sourceUrl = data.metadata?.event_source_url || "unknown";
+      const slug = sourceUrl.split("/").filter(Boolean).pop() || "unknown";
+      console.error(`Cannot determine product_code. Slug: ${slug}, URL: ${sourceUrl}`);
+      console.error("Add this slug to SCALEV_SLUG_MAP env var to fix routing.");
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error: `Cannot determine product for slug: ${slug}. Add it to SCALEV_SLUG_MAP.`,
+          source_url: sourceUrl,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     console.log("Gateway routing:", { product_code, slug: data.metadata?.event_source_url, event: body.event });
-
-    console.log("Gateway routing:", { product_code, event: body.event });
 
     const routes = getRoutes();
     const targetUrl = routes[product_code];
