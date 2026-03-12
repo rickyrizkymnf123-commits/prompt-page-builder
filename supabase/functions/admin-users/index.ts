@@ -287,6 +287,58 @@ Deno.serve(async (req) => {
         });
       }
 
+      // --- TEST PROVISION ---
+      if (action === "test_provision") {
+        const testEmail = (email || '').trim().toLowerCase();
+        const testName = (name || 'Test User').trim();
+        const testPhone = (req.json && (await req.clone().json().catch(() => ({})))?.phone) || '';
+        const testProductCode = tier || 'LPE';
+        const sendWa = (await req.clone().json().catch(() => ({})))?.send_wa ?? false;
+
+        if (!testEmail) {
+          return new Response(JSON.stringify({ error: "Email wajib diisi" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Build a fake Scalev-like payload
+        const testOrderId = `TEST_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+        const fakePayload = {
+          event: "order.payment_status_changed",
+          data: {
+            order_id: testOrderId,
+            payment_status: "paid",
+            customer: {
+              email: testEmail,
+              name: testName,
+              phone: testPhone || null,
+            },
+            product_code: testProductCode,
+          },
+        };
+
+        // Call provision function directly
+        const provisionSecret = Deno.env.get("PROVISION_SECRET") || "";
+        const provisionUrl = `${supabaseUrl}/functions/v1/provision?secret=${encodeURIComponent(provisionSecret)}`;
+
+        const provisionRes = await fetch(provisionUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(fakePayload),
+        });
+
+        const provisionResult = await provisionRes.json();
+
+        return new Response(JSON.stringify({
+          success: provisionRes.ok && provisionResult?.ok,
+          test_order_id: testOrderId,
+          provision_result: provisionResult,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       return new Response(JSON.stringify({ error: "Unknown action" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
