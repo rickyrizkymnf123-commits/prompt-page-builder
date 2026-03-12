@@ -291,9 +291,8 @@ Deno.serve(async (req) => {
       if (action === "test_provision") {
         const testEmail = (email || '').trim().toLowerCase();
         const testName = (name || 'Test User').trim();
-        const testPhone = (req.json && (await req.clone().json().catch(() => ({})))?.phone) || '';
+        const testPhone = (phone || '').trim();
         const testProductCode = tier || 'LPE';
-        const sendWa = (await req.clone().json().catch(() => ({})))?.send_wa ?? false;
 
         if (!testEmail) {
           return new Response(JSON.stringify({ error: "Email wajib diisi" }), {
@@ -318,7 +317,7 @@ Deno.serve(async (req) => {
           },
         };
 
-        // Call provision function directly
+        // Call provision function directly with secret
         const provisionSecret = Deno.env.get("PROVISION_SECRET") || "";
         const provisionUrl = `${supabaseUrl}/functions/v1/provision?secret=${encodeURIComponent(provisionSecret)}`;
 
