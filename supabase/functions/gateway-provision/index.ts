@@ -199,9 +199,6 @@ Deno.serve(async (req) => {
       if (productName.includes("LANDING PAGE") || productName.includes("LPE")) product_code = "LPE";
       else if (productName.includes("STORY WEAVER") || productName.includes("SWA") || productName.includes("EBOOK")) product_code = "SWA";
       else if (productName.includes("PROPERTY") || productName.includes("PEA")) product_code = "PEA";
-      else if (productName.includes("DIGITAL STRATEGY") || productName.includes("DST")) product_code = "DST";
-      else if (productName.includes("META ADS") || productName.includes("MAA")) product_code = "MAA";
-      else if (productName.includes("PROFIT") || productName.includes("PNA")) product_code = "PNA";
     }
 
     // 4. Slug mapping from SCALEV_SLUG_MAP (env var + app_settings DB)
