@@ -842,6 +842,8 @@ function lockBodyScroll(){
 function unlockBodyScroll(){
   if(!__demoScrollLocked) return;
   var y=__demoScrollY;
+  var previousScrollBehavior=document.documentElement.style.scrollBehavior;
+
   document.body.style.position='';
   document.body.style.top='';
   document.body.style.left='';
@@ -849,11 +851,18 @@ function unlockBodyScroll(){
   document.body.style.width='';
   document.body.style.overflow='';
   document.documentElement.style.overflow='';
-  var previousScrollBehavior=document.documentElement.style.scrollBehavior;
+
   document.documentElement.style.scrollBehavior='auto';
   __demoScrollLocked=false;
+
+  // Restore exact position on all engines (iOS/Android/Desktop)
+  document.documentElement.scrollTop=y;
+  document.body.scrollTop=y;
   window.scrollTo(0,y);
+
   requestAnimationFrame(function(){
+    document.documentElement.scrollTop=y;
+    document.body.scrollTop=y;
     window.scrollTo(0,y);
     document.documentElement.style.scrollBehavior=previousScrollBehavior;
   });
@@ -891,12 +900,27 @@ function openDemo(demo,title){
   }
 }
 
-function closeDemo(){
+function closeDemo(event){
+  if(event){
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  var modal=document.getElementById('demo-modal');
+  if(!modal.classList.contains('active')) return false;
+
   var iframe=document.getElementById('demo-iframe');
-  document.getElementById('demo-modal').classList.remove('active');
-  iframe.removeAttribute('srcdoc');
-  iframe.src='about:blank';
+
+  // Keep modal visible while restoring scroll, so user never sees jump-to-top flash
   unlockBodyScroll();
+
+  requestAnimationFrame(function(){
+    modal.classList.remove('active');
+    iframe.removeAttribute('srcdoc');
+    iframe.src='about:blank';
+  });
+
+  return false;
 }
 window.addEventListener('message',function(e){
   if(e.data&&e.data.type==='closeDemo') closeDemo();
