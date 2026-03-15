@@ -408,17 +408,19 @@ const DemoManagementTab = () => {
                   </div>
                 )}
               </CardContent>
-            </Card>
-          );
-        })}
+                </SortableDemoCard>
+              );
+            })}
 
-        {demos.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <Layout className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Belum ada demo. Klik "Tambah" untuk mulai.</p>
+            {demos.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Layout className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">Belum ada demo. Klik "Tambah" untuk mulai.</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </SortableContext>
+      </DndContext>
 
       {previewHtml && <HtmlPreview html={previewHtml} onClose={() => setPreviewHtml(null)} />}
     </div>
