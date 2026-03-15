@@ -6,6 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Save, Eye, X, GripVertical, Power, PowerOff, Layout, Upload, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Demo {
   id: string;
