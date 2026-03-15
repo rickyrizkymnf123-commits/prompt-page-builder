@@ -816,7 +816,7 @@
 })();
 
 function wrapDemoHtml(rawHtml){
-  return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#0b0b18">'+rawHtml+'</body></html>';
+  return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><style>*{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden;max-width:100vw;width:100%}img,video,iframe,table,pre{max-width:100%}img{height:auto}</style></head><body style="margin:0;background:#0b0b18;overflow-x:hidden">'+rawHtml+'</body></html>';
 }
 
 function openDemo(demo,title){
