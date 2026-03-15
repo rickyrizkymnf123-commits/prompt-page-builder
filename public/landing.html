@@ -846,7 +846,7 @@ var __isBodyLocked=false;
 function setTapBlocker(active){
   var blocker=document.getElementById('tap-blocker');
   if(!blocker) return;
-  blocker.style.display=active?'block':'none';
+  blocker.classList.toggle('active', !!active);
 }
 
 function lockBodyScroll(){
