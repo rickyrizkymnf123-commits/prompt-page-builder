@@ -8,8 +8,8 @@
   <link rel="canonical" href="https://what-u-read.lovable.app" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" /></noscript>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" /></noscript>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -17,7 +17,7 @@
         container: { center: true, padding: '1.5rem', screens: { '2xl': '1200px' } },
         extend: {
           fontFamily: {
-            heading: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+            heading: ['"Poppins"', 'system-ui', 'sans-serif'],
             body: ['"Poppins"', 'system-ui', 'sans-serif'],
           },
           colors: {
@@ -40,7 +40,7 @@
     *, *::before, *::after { box-sizing: border-box; border-color: hsl(250 20% 18%); }
     html { scroll-behavior: smooth; }
     body { background: hsl(250 30% 5%); color: hsl(0 0% 95%); font-family: 'Poppins', system-ui, sans-serif; margin: 0; }
-    .font-heading { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .font-heading { font-family: 'Poppins', system-ui, sans-serif; }
 
     .text-gradient-primary {
       background-image: linear-gradient(135deg, hsl(265 85% 65%), hsl(280 80% 70%), hsl(300 75% 65%));
@@ -816,7 +816,7 @@
 })();
 
 function wrapDemoHtml(rawHtml){
-  return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#0b0b18">'+rawHtml+'</body></html>';
+  return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><style>*{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden;max-width:100vw;width:100%}img,video,iframe,table,pre{max-width:100%}img{height:auto}</style></head><body style="margin:0;background:#0b0b18;overflow-x:hidden">'+rawHtml+'</body></html>';
 }
 
 function openDemo(demo,title){
