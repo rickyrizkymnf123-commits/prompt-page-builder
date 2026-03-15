@@ -136,18 +136,19 @@
     }
 
     /* Demo Modal */
-    #demo-modal { display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center; padding:1rem; overflow:hidden; }
+    #demo-modal { display:none; position:fixed; inset:0; z-index:200; flex-direction:column; overflow:hidden; }
     #demo-modal.active { display:flex; }
-    #demo-modal .modal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); }
-    #demo-modal .modal-content { position:relative; width:100%; max-width:64rem; max-height:90vh; border-radius:1rem; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); background:#111; animation:modalIn 0.25s ease; }
-    @keyframes modalIn { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+    #demo-modal .demo-topbar { position:relative; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:hsl(250 30% 8%); border-bottom:1px solid rgba(255,255,255,0.1); flex-shrink:0; }
+    #demo-modal .demo-topbar .live-badge { display:flex; align-items:center; gap:8px; }
+    #demo-modal .demo-topbar .live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 6px #22c55e; animation:pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    #demo-modal .demo-topbar .live-text { font-size:13px; font-weight:600; letter-spacing:0.5px; color:rgba(255,255,255,0.9); }
+    #demo-modal .demo-topbar .close-btn { display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:500; background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8); transition:all 0.2s; }
+    #demo-modal .demo-topbar .close-btn:hover { background:rgba(255,255,255,0.15); color:white; }
+    #demo-modal .demo-body { flex:1; position:relative; overflow:hidden; background:#0a0a0a; }
+    @keyframes modalIn { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
 
-    /* View Mode Toggle */
-    .view-toggle { display:flex; align-items:center; gap:2px; background:rgba(255,255,255,0.05); border-radius:8px; padding:3px; }
-    .view-toggle button { display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:6px; border:none; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s; background:transparent; color:rgba(255,255,255,0.4); }
-    .view-toggle button:hover { color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.05); }
-    .view-toggle button.active { background:hsl(265 85% 60%); color:white; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
-    .view-toggle button svg { width:14px; height:14px; }
+    /* View Mode Toggle - reserved */
     .view-toggle button span { display:none; }
     @media(min-width:640px) { .view-toggle button span { display:inline; } }
     #demo-iframe-wrapper { display:flex; justify-content:center; width:100%; height:calc(90vh - 48px); background:transparent; transition:background 0.2s; overflow:hidden; }
@@ -549,43 +550,19 @@
 
 <!-- Demo Preview Modal -->
 <div id="demo-modal">
-  <div class="modal-backdrop" onclick="closeDemo()"></div>
-  <div class="modal-content">
-    <div class="flex items-center justify-between px-4 py-3" style="background:#0a0a0a;border-bottom:1px solid rgba(255,255,255,0.1)">
-      <div class="flex items-center gap-3">
-        <div class="flex gap-1.5">
-          <div class="w-3 h-3 rounded-full" style="background:rgba(239,68,68,0.7)"></div>
-          <div class="w-3 h-3 rounded-full" style="background:rgba(234,179,8,0.7)"></div>
-          <div class="w-3 h-3 rounded-full" style="background:rgba(34,197,94,0.7)"></div>
-        </div>
-        <span class="text-xs font-medium" id="demo-modal-title" style="color:rgba(255,255,255,0.4)">Live Preview</span>
-      </div>
-
-      <!-- View Mode Toggle -->
-      <div class="view-toggle" id="view-toggle">
-        <button class="active" onclick="setViewMode('desktop')" id="btn-desktop">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          <span>Desktop</span>
-        </button>
-        <button onclick="setViewMode('tablet')" id="btn-tablet">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-          <span>Tablet</span>
-        </button>
-        <button onclick="setViewMode('mobile')" id="btn-mobile">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-          <span>Mobile</span>
-        </button>
-      </div>
-
-      <button onclick="closeDemo()" class="p-1 transition-colors" style="color:rgba(255,255,255,0.4)" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">✕</button>
+  <div class="demo-topbar">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span class="live-text">LIVE PREVIEW WEBSITE</span>
     </div>
-    <div id="demo-iframe-wrapper" style="position:relative">
-      <!-- Loading Spinner -->
-      <div id="demo-loader" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#111;z-index:10">
-        <div style="width:48px;height:48px;border:3px solid rgba(255,255,255,0.1);border-top-color:hsl(265 85% 60%);border-radius:50%;animation:spin 0.8s linear infinite"></div>
-      </div>
-      <iframe id="demo-iframe" src="" sandbox="allow-scripts allow-same-origin allow-popups" style="width:100%;height:100%;border:none;background:#111" allowfullscreen onload="document.getElementById('demo-loader').style.display='none'"></iframe>
+    <button class="close-btn" onclick="closeDemo()">← Tutup</button>
+  </div>
+  <div class="demo-body">
+    <!-- Loading Spinner -->
+    <div id="demo-loader" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0a0a0a;z-index:10">
+      <div style="width:48px;height:48px;border:3px solid rgba(255,255,255,0.1);border-top-color:hsl(265 85% 60%);border-radius:50%;animation:spin 0.8s linear infinite"></div>
     </div>
+    <iframe id="demo-iframe" src="" sandbox="allow-scripts allow-same-origin allow-popups" style="width:100%;height:100%;border:none;background:#0a0a0a" allowfullscreen onload="document.getElementById('demo-loader').style.display='none'"></iframe>
   </div>
 </div>
 
@@ -848,7 +825,6 @@ function wrapDemoHtml(rawHtml){
 
 function openDemo(demo,title){
   var iframe=document.getElementById('demo-iframe');
-  document.getElementById('demo-modal-title').textContent=title+' — Live Preview';
   document.getElementById('demo-loader').style.display='flex';
   iframe.removeAttribute('src');
   iframe.removeAttribute('srcdoc');
@@ -863,7 +839,6 @@ function openDemo(demo,title){
 
   document.getElementById('demo-modal').classList.add('active');
   document.body.style.overflow='hidden';
-  setViewMode('desktop');
 }
 function closeDemo(){
   var iframe=document.getElementById('demo-iframe');
@@ -871,22 +846,6 @@ function closeDemo(){
   iframe.removeAttribute('srcdoc');
   iframe.src='about:blank';
   document.body.style.overflow='';
-}
-function setViewMode(mode){
-  var widths={desktop:'100%',tablet:'768px',mobile:'390px'};
-  var iframe=document.getElementById('demo-iframe');
-  var wrapper=document.getElementById('demo-iframe-wrapper');
-  var btns=document.querySelectorAll('.view-toggle button');
-  btns.forEach(function(b){b.classList.remove('active')});
-  document.getElementById('btn-'+mode).classList.add('active');
-  iframe.style.width=widths[mode];
-  if(mode!=='desktop'){
-    wrapper.classList.add('framed');
-    iframe.style.boxShadow='0 0 40px rgba(0,0,0,0.5)';
-  } else {
-    wrapper.classList.remove('framed');
-    iframe.style.boxShadow='none';
-  }
 }
 window.addEventListener('message',function(e){
   if(e.data&&e.data.type==='closeDemo') closeDemo();
