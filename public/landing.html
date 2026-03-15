@@ -811,6 +811,32 @@ function wrapDemoHtml(rawHtml){
 
 var SUPABASE_URL='https://npgglrvvdlhagztsxsjc.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZ2dscnZ2ZGxoYWd6dHN4c2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTA1OTQsImV4cCI6MjA4NjQ4NjU5NH0.gBtG_TCTr99ALNiF7Xyb9mzAfYF50rOBmMVhaieNH0U';
+var __demoScrollY=0;
+var __demoScrollLocked=false;
+
+function lockBodyScroll(){
+  if(__demoScrollLocked) return;
+  __demoScrollY=window.scrollY||window.pageYOffset||0;
+  document.body.style.position='fixed';
+  document.body.style.top='-'+__demoScrollY+'px';
+  document.body.style.left='0';
+  document.body.style.right='0';
+  document.body.style.width='100%';
+  document.body.style.overflow='hidden';
+  __demoScrollLocked=true;
+}
+
+function unlockBodyScroll(){
+  if(!__demoScrollLocked) return;
+  document.body.style.position='';
+  document.body.style.top='';
+  document.body.style.left='';
+  document.body.style.right='';
+  document.body.style.width='';
+  document.body.style.overflow='';
+  window.scrollTo(0,__demoScrollY);
+  __demoScrollLocked=false;
+}
 
 function openDemo(demo,title){
   var iframe=document.getElementById('demo-iframe');
@@ -819,7 +845,7 @@ function openDemo(demo,title){
   iframe.removeAttribute('srcdoc');
 
   document.getElementById('demo-modal').classList.add('active');
-  document.body.style.overflow='hidden';
+  lockBodyScroll();
 
   // If demo has inline html (legacy), use it; otherwise fetch from DB
   if(demo.html && demo.html.trim()){
@@ -843,12 +869,13 @@ function openDemo(demo,title){
     iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Preview belum tersedia</div>');
   }
 }
+
 function closeDemo(){
   var iframe=document.getElementById('demo-iframe');
   document.getElementById('demo-modal').classList.remove('active');
   iframe.removeAttribute('srcdoc');
   iframe.src='about:blank';
-  document.body.style.overflow='';
+  unlockBodyScroll();
 }
 window.addEventListener('message',function(e){
   if(e.data&&e.data.type==='closeDemo') closeDemo();
