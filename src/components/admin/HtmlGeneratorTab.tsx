@@ -51,7 +51,7 @@ const STEP_LABELS = [
 ];
 
 const defaultConfig: CustomizationConfig = {
-  heroTitle: 'Bikin Landing Page <span class="text-gradient-primary">Professional</span><br>Cuma Modal Klik, Langsung Jadi ⚡',
+  heroTitle: 'Bikin Landing Page <span id="typing-text" class="text-gradient-primary inline-block min-w-[200px] md:min-w-[320px]">Professional<span style="display:inline-block;width:3px;height:0.8em;background:hsl(265 85% 60%);margin-left:4px;vertical-align:middle;border-radius:9999px;animation:blink 1s infinite"></span></span><br>Cuma Modal Klik, Langsung Jadi ⚡',
   heroSubtitle: 'Gak perlu bayar developer jutaan. Gak perlu skill coding. <strong style="color:hsl(0 0% 95%)">Tinggal isi form → klik generate → landing page profesional langsung jadi.</strong> Siap dipasang iklan, siap closing.',
   heroCta: "Lihat Cara Kerjanya — Gampang Banget 👇",
   heroRating: "4.9/5 rating dari 100+ business owner Indonesia",
