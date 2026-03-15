@@ -154,15 +154,14 @@
     #demo-modal .demo-topbar .close-btn:hover { background:rgba(255,255,255,0.15); color:white; }
     #demo-modal .demo-body { flex:1; position:relative; overflow:hidden; background:#0a0a0a; overscroll-behavior:contain; }
     @keyframes modalIn { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
-    #tap-blocker { display:block; position:fixed; inset:0; z-index:260; background:transparent; opacity:0; pointer-events:none; }
-    #tap-blocker.active { opacity:1; pointer-events:auto; }
+    #tap-blocker { display:none; position:fixed; inset:0; z-index:260; background:transparent; pointer-events:none; }
+    #tap-blocker.active { display:block; pointer-events:auto; }
 
     /* View Mode Toggle - reserved */
     .view-toggle button span { display:none; }
     @media(min-width:640px) { .view-toggle button span { display:inline; } }
-    #demo-iframe-wrapper { display:flex; justify-content:center; width:100%; height:calc(90vh - 48px); background:transparent; transition:background 0.2s; overflow:hidden; }
-    #demo-iframe-wrapper.framed { background:#1a1a1a; }
-    #demo-iframe { transition:width 0.3s ease, box-shadow 0.3s ease; max-width:100%; }
+    #demo-iframe-wrapper { width:100%; height:100%; background:transparent; overflow:hidden; }
+    #demo-iframe { max-width:100%; }
 
     #lp-root { min-height: 100vh; background: hsl(250 30% 5%); color: hsl(0 0% 95%); font-family: 'Poppins', system-ui, sans-serif; max-width: 100vw; overflow-x: hidden; position: relative; }
     .decor-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
@@ -213,10 +212,8 @@
       Siap dipasang iklan, siap closing.
     </p>
 
-    <a href="#solution">
-      <button class="btn-primary glow-primary w-full max-w-sm md:max-w-none md:w-auto">
+    <a href="#solution" class="btn-primary glow-primary w-full max-w-sm md:max-w-none md:w-auto inline-flex justify-center text-decoration-none" style="text-decoration:none;color:white">
         Lihat Cara Kerjanya — Gampang Banget 👇
-      </button>
     </a>
 
     <div class="flex items-center justify-center gap-2 mt-6">
@@ -501,7 +498,7 @@
         </ul>
       </div>
 
-      <a id="cta-secondary-link" href="https://example.com" class="block w-full"><button class="btn-primary glow-primary w-full justify-center">⚡ AMANKAN AKSES SEKARANG</button></a>
+      <a id="cta-secondary-link" href="https://example.com" class="btn-primary glow-primary w-full justify-center text-center block" style="text-decoration:none;color:white" rel="noopener" target="_blank">⚡ AMANKAN AKSES SEKARANG</a>
 
       <div class="flex items-center justify-center gap-2 mt-4 text-xs" style="color:hsl(250 10% 55%)">🔒 Transaksi 100% Aman & Terenkripsi</div>
     </div>
@@ -543,9 +540,7 @@
 
     <p class="mb-8 max-w-xl mx-auto" style="color:hsl(250 10% 55%)">💎 <strong style="color:hsl(0 0% 95%)">Ini Bukan Pengeluaran — Ini Investasi.</strong> Satu kali bayar hari ini = senjata bisnis yang bisa lo pakai selamanya.</p>
 
-    <a id="cta-final-link" href="https://example.com" class="block w-full max-w-sm md:max-w-none md:w-auto mx-auto">
-      <button class="btn-primary glow-primary w-full md:w-auto">⚡ AMANKAN AKSES SEKARANG →</button>
-    </a>
+    <a id="cta-final-link" href="https://example.com" class="btn-primary glow-primary w-full md:w-auto justify-center inline-flex mx-auto" style="text-decoration:none;color:white;max-width:24rem" rel="noopener" target="_blank">⚡ AMANKAN AKSES SEKARANG →</a>
     <p class="text-sm mt-6" style="color:hsl(250 10% 55%)">Setiap menit lo tunda, kompetitor lo udah launch duluan 🚀</p>
   </div>
 </section>
@@ -572,11 +567,12 @@
     <button type="button" class="close-btn" onclick="return closeDemo(event)">← Tutup</button>
   </div>
   <div class="demo-body">
-    <!-- Loading Spinner -->
     <div id="demo-loader" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0a0a0a;z-index:10">
       <div style="width:48px;height:48px;border:3px solid rgba(255,255,255,0.1);border-top-color:hsl(265 85% 60%);border-radius:50%;animation:spin 0.8s linear infinite"></div>
     </div>
-    <iframe id="demo-iframe" src="" sandbox="allow-scripts allow-same-origin allow-popups" style="width:100%;height:100%;border:none;background:#0a0a0a" allowfullscreen onload="document.getElementById('demo-loader').style.display='none'"></iframe>
+    <div id="demo-iframe-wrapper">
+      <iframe id="demo-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups" style="width:100%;height:100%;border:none;background:#0a0a0a" allowfullscreen></iframe>
+    </div>
   </div>
 </div>
 <div id="tap-blocker" aria-hidden="true"></div>
@@ -838,171 +834,188 @@ function wrapDemoHtml(rawHtml){
 
 var SUPABASE_URL='https://npgglrvvdlhagztsxsjc.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZ2dscnZ2ZGxoYWd6dHN4c2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTA1OTQsImV4cCI6MjA4NjQ4NjU5NH0.gBtG_TCTr99ALNiF7Xyb9mzAfYF50rOBmMVhaieNH0U';
-var __demoScrollY=0;
-var __tapBlockerTimer=null;
-var __isBodyLocked=false;
-var __demoObjectUrl=null;
-var __demoRequestId=0;
 
-function revokeDemoObjectUrl(){
-  if(!__demoObjectUrl) return;
-  try { URL.revokeObjectURL(__demoObjectUrl); } catch(_) {}
-  __demoObjectUrl=null;
+// === Modal State ===
+var __demoScrollY = 0;
+var __isBodyLocked = false;
+var __demoObjectUrl = null;
+var __demoRequestId = 0;
+var __closeTimer = null;
+var __blockerTimer = null;
+
+// === Memory Management ===
+function revokeDemoObjectUrl() {
+  if (!__demoObjectUrl) return;
+  try { URL.revokeObjectURL(__demoObjectUrl); } catch (_) {}
+  __demoObjectUrl = null;
 }
 
-function resetDemoFrameForOpen(iframe){
-  if(!iframe) return;
+function clearDemoFrame(iframe) {
+  if (!iframe) return;
   revokeDemoObjectUrl();
-  iframe.removeAttribute('src');
-  iframe.removeAttribute('srcdoc');
+  try { iframe.src = 'about:blank'; } catch (_) {}
 }
 
-function clearDemoFrameForClose(iframe){
-  if(!iframe) return;
-  try { iframe.src='about:blank'; } catch(_) {}
-  try { iframe.srcdoc=''; } catch(_) {}
+function renderDemoHtml(iframe, html, requestId) {
+  if (!iframe || requestId !== __demoRequestId) return;
+  var wrapped = wrapDemoHtml(html);
   revokeDemoObjectUrl();
+  try {
+    var blob = new Blob([wrapped], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    __demoObjectUrl = url;
+    iframe.src = url;
+  } catch (_) {
+    // Fallback for environments that don't support Blob URLs
+    iframe.srcdoc = wrapped;
+  }
 }
 
-function renderDemoHtmlInIframe(iframe, html, requestId){
-  if(!iframe || requestId!==__demoRequestId) return;
-  var wrappedHtml=wrapDemoHtml(html);
-  revokeDemoObjectUrl();
-  var blob=new Blob([wrappedHtml], { type:'text/html;charset=utf-8' });
-  var blobUrl=URL.createObjectURL(blob);
-  __demoObjectUrl=blobUrl;
-  iframe.src=blobUrl;
+// === Tap Blocker ===
+function setTapBlocker(on) {
+  var el = document.getElementById('tap-blocker');
+  if (!el) return;
+  if (on) { el.classList.add('active'); }
+  else { el.classList.remove('active'); }
 }
 
-function setTapBlocker(active){
-  var blocker=document.getElementById('tap-blocker');
-  if(!blocker) return;
-  blocker.classList.toggle('active', !!active);
-}
-
-function lockBodyScroll(){
-  if(__isBodyLocked) return;
-  __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
-  // Don't use position:fixed — it breaks inside Scalev wrapper.
-  // Just prevent overflow and touch scrolling.
+// === Scroll Lock (Scalev-compatible) ===
+// We avoid position:fixed on body because Scalev wraps our HTML
+// inside its own scrollable container. Instead we use overflow:hidden
+// + touch-action:none which works in both standalone and embedded.
+function lockBodyScroll() {
+  if (__isBodyLocked) return;
+  __demoScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
   document.documentElement.classList.add('modal-open');
   document.body.classList.add('modal-open');
-  __isBodyLocked=true;
+  __isBodyLocked = true;
 }
 
-function unlockBodyScroll(){
-  if(!__isBodyLocked) return;
-  var y=__demoScrollY||0;
+function unlockBodyScroll() {
+  if (!__isBodyLocked) return;
+  var y = __demoScrollY || 0;
   document.documentElement.classList.remove('modal-open');
   document.body.classList.remove('modal-open');
-  __isBodyLocked=false;
-  // Restore scroll position — use auto behavior to prevent smooth jump
-  var root=document.documentElement;
-  var prevBehavior=root.style.scrollBehavior||'';
-  root.style.scrollBehavior='auto';
+  __isBodyLocked = false;
+  // Temporarily disable smooth scroll to prevent animated jump
+  var root = document.documentElement;
+  var prev = root.style.scrollBehavior || '';
+  root.style.scrollBehavior = 'auto';
   window.scrollTo(0, y);
-  // Double-ensure after repaint
-  requestAnimationFrame(function(){
+  // Safari sometimes needs a frame to settle
+  requestAnimationFrame(function() {
     window.scrollTo(0, y);
-    setTimeout(function(){
-      window.scrollTo(0, y);
-      root.style.scrollBehavior=prevBehavior;
-    }, 50);
+    root.style.scrollBehavior = prev;
   });
 }
 
-function openDemo(demo,title){
-  var iframe=document.getElementById('demo-iframe');
-  var modal=document.getElementById('demo-modal');
-  var loader=document.getElementById('demo-loader');
-  if(!iframe || !modal || !loader) return;
+// === Iframe onload handler ===
+function onDemoIframeLoad() {
+  var loader = document.getElementById('demo-loader');
+  var iframe = document.getElementById('demo-iframe');
+  // Don't hide loader for about:blank loads
+  if (!iframe || !iframe.src || iframe.src === 'about:blank') return;
+  if (loader) loader.style.display = 'none';
+}
+// Attach onload via JS (not inline attribute) to avoid issues
+(function() {
+  var iframe = document.getElementById('demo-iframe');
+  if (iframe) iframe.addEventListener('load', onDemoIframeLoad);
+})();
 
-  var requestId=++__demoRequestId;
-  loader.style.display='flex';
-  resetDemoFrameForOpen(iframe);
+// === Open Demo ===
+function openDemo(demo, title) {
+  var iframe = document.getElementById('demo-iframe');
+  var modal = document.getElementById('demo-modal');
+  var loader = document.getElementById('demo-loader');
+  if (!iframe || !modal) return;
 
-  if(__tapBlockerTimer){ clearTimeout(__tapBlockerTimer); __tapBlockerTimer=null; }
+  // Cancel any pending close
+  if (__closeTimer) { clearTimeout(__closeTimer); __closeTimer = null; }
+  if (__blockerTimer) { clearTimeout(__blockerTimer); __blockerTimer = null; }
   setTapBlocker(false);
+
+  var requestId = ++__demoRequestId;
+  if (loader) loader.style.display = 'flex';
+  clearDemoFrame(iframe);
+
   modal.classList.remove('closing');
   modal.classList.add('active');
   lockBodyScroll();
 
-  // Prevent iOS background scroll via touchmove on modal backdrop
-  modal.ontouchmove=function(e){
-    // Allow scroll inside the iframe wrapper
-    var iframeWrapper=document.getElementById('demo-iframe-wrapper');
-    if(iframeWrapper && iframeWrapper.contains(e.target)) return;
-    e.preventDefault();
-  };
+  var fallbackEmpty = '<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#ccc;font-family:sans-serif">Preview belum tersedia</div>';
+  var fallbackError = '<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#ccc;font-family:sans-serif">Gagal memuat preview</div>';
 
-  var fallbackEmpty='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Preview belum tersedia</div>';
-  var fallbackError='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Gagal memuat preview</div>';
-
-  if(demo.html && demo.html.trim()){
-    renderDemoHtmlInIframe(iframe, demo.html, requestId);
+  if (demo.html && demo.html.trim()) {
+    renderDemoHtml(iframe, demo.html, requestId);
     return;
   }
 
-  if(demo.id){
-    fetch(SUPABASE_URL+'/rest/v1/demos?select=html_code&id=eq.'+demo.id,{
-      headers:{'apikey':SUPABASE_KEY,'Accept':'application/json'}
+  if (demo.id) {
+    fetch(SUPABASE_URL + '/rest/v1/demos?select=html_code&id=eq.' + demo.id, {
+      headers: { 'apikey': SUPABASE_KEY, 'Accept': 'application/json' }
     })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(requestId!==__demoRequestId) return;
-      if(data&&data[0]&&data[0].html_code){
-        renderDemoHtmlInIframe(iframe, data[0].html_code, requestId);
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (requestId !== __demoRequestId) return;
+      if (data && data[0] && data[0].html_code) {
+        renderDemoHtml(iframe, data[0].html_code, requestId);
       } else {
-        renderDemoHtmlInIframe(iframe, fallbackEmpty, requestId);
+        renderDemoHtml(iframe, fallbackEmpty, requestId);
       }
     })
-    .catch(function(){
-      if(requestId!==__demoRequestId) return;
-      renderDemoHtmlInIframe(iframe, fallbackError, requestId);
+    .catch(function() {
+      if (requestId !== __demoRequestId) return;
+      renderDemoHtml(iframe, fallbackError, requestId);
     });
     return;
   }
 
-  renderDemoHtmlInIframe(iframe, fallbackEmpty, requestId);
+  renderDemoHtml(iframe, fallbackEmpty, requestId);
 }
 
-function closeDemo(event){
-  if(event){
+// === Close Demo ===
+function closeDemo(event) {
+  if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
 
-  var modal=document.getElementById('demo-modal');
-  if(!modal.classList.contains('active')) return false;
+  var modal = document.getElementById('demo-modal');
+  if (!modal || !modal.classList.contains('active')) return false;
 
-  var iframe=document.getElementById('demo-iframe');
+  var iframe = document.getElementById('demo-iframe');
 
+  // Increment request ID to cancel any pending fetches
   __demoRequestId++;
-  setTapBlocker(true);
-
-  // Remove touchmove blocker
-  modal.ontouchmove=null;
 
   // Clear iframe immediately to free memory
-  clearDemoFrameForClose(iframe);
+  clearDemoFrame(iframe);
+
+  // Start close animation (matches CSS transition: opacity .18s)
   modal.classList.add('closing');
 
-  setTimeout(function(){
-    modal.classList.remove('active');
-    modal.classList.remove('closing');
+  // Clean up after animation completes
+  if (__closeTimer) clearTimeout(__closeTimer);
+  __closeTimer = setTimeout(function() {
+    modal.classList.remove('active', 'closing');
     unlockBodyScroll();
-  }, 120);
+    __closeTimer = null;
+  }, 200);
 
-  if(__tapBlockerTimer){ clearTimeout(__tapBlockerTimer); }
-  __tapBlockerTimer=setTimeout(function(){
+  // Brief tap blocker to absorb ghost taps on mobile
+  setTapBlocker(true);
+  if (__blockerTimer) clearTimeout(__blockerTimer);
+  __blockerTimer = setTimeout(function() {
     setTapBlocker(false);
-  }, 800);
+    __blockerTimer = null;
+  }, 400);
 
   return false;
 }
 
-window.addEventListener('message',function(e){
-  if(e.data&&e.data.type==='closeDemo') closeDemo();
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'closeDemo') closeDemo();
 });
 
 (function lockStackLayout(){
