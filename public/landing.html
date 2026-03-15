@@ -850,14 +850,32 @@ function setTapBlocker(active){
 }
 
 function lockBodyScroll(){
+  if(__isBodyLocked) return;
   __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
+  document.body.style.top='-'+__demoScrollY+'px';
+  document.documentElement.classList.add('modal-open');
+  document.body.classList.add('modal-open');
+  __isBodyLocked=true;
 }
 
 function unlockBodyScroll(){
-  var y=__demoScrollY;
-  if(Math.abs((window.pageYOffset||0)-y)>1){
-    window.scrollTo(0,y);
+  var y=__demoScrollY||0;
+  var root=document.documentElement;
+
+  if(__isBodyLocked){
+    root.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    document.body.style.top='';
+    __isBodyLocked=false;
   }
+
+  var prevBehavior=root.style.scrollBehavior;
+  root.style.scrollBehavior='auto';
+  window.scrollTo(0,y);
+  requestAnimationFrame(function(){
+    window.scrollTo(0,y);
+    root.style.scrollBehavior=prevBehavior;
+  });
 }
 
 function openDemo(demo,title){
