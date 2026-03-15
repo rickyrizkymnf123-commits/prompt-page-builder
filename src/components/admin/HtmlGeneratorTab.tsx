@@ -307,25 +307,42 @@ const HtmlGeneratorTab = () => {
 
           <Card>
             <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2">🖼️ Gambar Step (Screenshot)</h3>
-              <p className="text-xs text-muted-foreground">Kosongkan jika ingin pakai gambar default. Isi URL gambar untuk mengganti.</p>
+              <h3 className="font-semibold text-sm flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Gambar Step (Screenshot)</h3>
+              <p className="text-xs text-muted-foreground">Upload gambar (PNG, JPG, WebP) untuk mengganti screenshot default tiap step.</p>
               <div className="space-y-3">
                 {STEP_LABELS.map((label, i) => {
                   const num = String(i + 1);
+                  const currentUrl = config.stepImages[num];
+                  const isUploading = uploadingStep === num;
                   return (
-                    <div key={num}>
-                      <label className="text-xs text-muted-foreground mb-1 block">Step {num}: {label}</label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={config.stepImages[num] || ""}
-                          onChange={(e) => setConfig((prev) => ({ ...prev, stepImages: { ...prev.stepImages, [num]: e.target.value } }))}
-                          placeholder={`https://ai-page-craft-96.lovable.app/images/step-${num}.png`}
-                          className="text-xs font-mono"
-                        />
-                        {config.stepImages[num] && (
-                          <img src={config.stepImages[num]} alt={`Step ${num}`} className="w-10 h-10 rounded object-cover border border-border shrink-0" />
+                    <div key={num} className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded border border-border bg-muted/30 shrink-0 overflow-hidden flex items-center justify-center">
+                        {currentUrl ? (
+                          <img src={currentUrl} alt={`Step ${num}`} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground">{num}</span>
                         )}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">Step {num}: {label}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{currentUrl ? "Custom image" : "Default"}</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        ref={(el) => { fileInputRefs.current[num] = el; }}
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadStepImage(num, f); e.target.value = ""; }}
+                      />
+                      <Button size="sm" variant="outline" className="gap-1 text-xs shrink-0" disabled={isUploading} onClick={() => fileInputRefs.current[num]?.click()}>
+                        {isUploading ? <div className="w-3 h-3 border-2 border-muted-foreground/30 border-t-foreground rounded-full animate-spin" /> : <Upload className="w-3 h-3" />}
+                        Upload
+                      </Button>
+                      {currentUrl && (
+                        <Button size="sm" variant="ghost" className="text-xs px-2 shrink-0" onClick={() => removeStepImage(num)}>
+                          <Trash2 className="w-3 h-3 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   );
                 })}
