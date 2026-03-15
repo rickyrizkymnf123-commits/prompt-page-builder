@@ -893,13 +893,17 @@ function closeDemo(event){
   if(!modal.classList.contains('active')) return false;
 
   var iframe=document.getElementById('demo-iframe');
-  __demoSuppressTapUntil=Date.now()+450;
+  __demoSuppressTapUntil=Date.now()+700;
 
-  // First close modal, then unlock page scroll
-  modal.classList.remove('active');
-  iframe.removeAttribute('srcdoc');
-  iframe.src='about:blank';
-  unlockBodyScroll();
+  // Keep overlay briefly to absorb mobile ghost tap, then close
+  modal.classList.add('closing');
+  setTimeout(function(){
+    modal.classList.remove('active');
+    modal.classList.remove('closing');
+    iframe.removeAttribute('srcdoc');
+    iframe.src='about:blank';
+    unlockBodyScroll();
+  }, 180);
 
   return false;
 }
@@ -912,6 +916,13 @@ document.addEventListener('click', function(e){
 }, true);
 
 document.addEventListener('touchend', function(e){
+  if(Date.now()<__demoSuppressTapUntil){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
+document.addEventListener('pointerup', function(e){
   if(Date.now()<__demoSuppressTapUntil){
     e.preventDefault();
     e.stopPropagation();
