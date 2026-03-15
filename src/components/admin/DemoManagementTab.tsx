@@ -57,6 +57,19 @@ const HtmlPreview = ({ html, onClose }: { html: string; onClose: () => void }) =
   );
 };
 
+const SortableDemoCard = ({ id, isExpanded, children }: { id: string; isExpanded: boolean; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  return (
+    <Card ref={setNodeRef} style={style} className={`transition-all ${isExpanded ? "ring-1 ring-primary/30" : ""}`}>
+      <div {...attributes} {...listeners} className="absolute left-2 top-3 cursor-grab active:cursor-grabbing z-10 p-1">
+        <GripVertical className="w-4 h-4 text-muted-foreground/50" />
+      </div>
+      {children}
+    </Card>
+  );
+};
+
 const ACCEPTED_TYPES = ["image/webp", "image/jpeg", "image/png"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
