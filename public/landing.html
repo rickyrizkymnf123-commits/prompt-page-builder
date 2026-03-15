@@ -927,6 +927,14 @@ function openDemo(demo,title){
   modal.classList.add('active');
   lockBodyScroll();
 
+  // Prevent iOS background scroll via touchmove on modal backdrop
+  modal.ontouchmove=function(e){
+    // Allow scroll inside the iframe wrapper
+    var iframeWrapper=document.getElementById('demo-iframe-wrapper');
+    if(iframeWrapper && iframeWrapper.contains(e.target)) return;
+    e.preventDefault();
+  };
+
   var fallbackEmpty='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Preview belum tersedia</div>';
   var fallbackError='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Gagal memuat preview</div>';
 
