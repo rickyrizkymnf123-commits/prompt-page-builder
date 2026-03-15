@@ -834,7 +834,7 @@
     div.style.setProperty('width','100%','important');
     div.style.setProperty('display','block','important');
     div.style.setProperty('margin','0','important');
-    div.onclick=function(){openDemo(BASE+'/demo/'+d.id,d.style)};
+    div.onclick=function(){openDemo(d.img,d.style)};
     div.innerHTML='<div class="px-3 md:px-4 pt-3 md:pt-4 pb-0"><p class="text-xs md:text-sm font-bold" style="color:hsl(265 85% 60%)">Section '+(index+1)+' · Style '+d.id+'</p></div>'
     +'<div class="aspect-[3/4] overflow-hidden"><img src="'+d.img+'" alt="'+d.style+'" width="900" height="1200" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" fetchpriority="low"></div>'
     +'<div class="p-3 md:p-4">'
