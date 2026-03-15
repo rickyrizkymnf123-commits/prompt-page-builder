@@ -830,7 +830,6 @@ function wrapDemoHtml(rawHtml){
 
 function openDemo(demo,title){
   var iframe=document.getElementById('demo-iframe');
-  document.getElementById('demo-modal-title').textContent=title+' — Live Preview';
   document.getElementById('demo-loader').style.display='flex';
   iframe.removeAttribute('src');
   iframe.removeAttribute('srcdoc');
