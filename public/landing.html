@@ -849,10 +849,14 @@ function unlockBodyScroll(){
   document.body.style.width='';
   document.body.style.overflow='';
   document.documentElement.style.overflow='';
+  var previousScrollBehavior=document.documentElement.style.scrollBehavior;
+  document.documentElement.style.scrollBehavior='auto';
   __demoScrollLocked=false;
-  // Restore scroll position synchronously then confirm with rAF
   window.scrollTo(0,y);
-  requestAnimationFrame(function(){window.scrollTo(0,y);});
+  requestAnimationFrame(function(){
+    window.scrollTo(0,y);
+    document.documentElement.style.scrollBehavior=previousScrollBehavior;
+  });
 }
 
 function openDemo(demo,title){
