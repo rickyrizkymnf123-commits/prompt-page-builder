@@ -136,8 +136,9 @@
     }
 
     /* Demo Modal */
-    #demo-modal { display:none; position:fixed; inset:0; z-index:200; flex-direction:column; overflow:hidden; }
+    #demo-modal { display:none; position:fixed; inset:0; z-index:200; flex-direction:column; overflow:hidden; opacity:1; transition:opacity .18s ease; }
     #demo-modal.active { display:flex; }
+    #demo-modal.closing { opacity:0; }
     #demo-modal .demo-topbar { position:relative; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:hsl(250 30% 8%); border-bottom:1px solid rgba(255,255,255,0.1); flex-shrink:0; }
     #demo-modal .demo-topbar .live-badge { display:flex; align-items:center; gap:8px; }
     #demo-modal .demo-topbar .live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 6px #22c55e; animation:pulse-dot 2s infinite; }
