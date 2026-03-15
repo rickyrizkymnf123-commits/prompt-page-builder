@@ -979,6 +979,11 @@ function closeDemo(event){
 
   __demoRequestId++;
   setTapBlocker(true);
+
+  // Remove touchmove blocker
+  modal.ontouchmove=null;
+
+  // Clear iframe immediately to free memory
   clearDemoFrameForClose(iframe);
   modal.classList.add('closing');
 
@@ -986,12 +991,12 @@ function closeDemo(event){
     modal.classList.remove('active');
     modal.classList.remove('closing');
     unlockBodyScroll();
-  }, 90);
+  }, 120);
 
   if(__tapBlockerTimer){ clearTimeout(__tapBlockerTimer); }
   __tapBlockerTimer=setTimeout(function(){
     setTapBlocker(false);
-  }, 700);
+  }, 800);
 
   return false;
 }
