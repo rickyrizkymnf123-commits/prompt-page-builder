@@ -156,9 +156,16 @@ const HtmlGeneratorTab = () => {
 
       const settings = settingsRes.data ?? [];
       const orderUrl = settings.find((item) => item.key === "scalev_order_url")?.value?.trim();
-      if (orderUrl) {
-        setConfig((prev) => ({ ...prev, ctaSecondaryUrl: orderUrl, ctaFinalUrl: orderUrl }));
+      const stepImagesRaw = settings.find((item) => item.key === "step_images")?.value;
+      let savedStepImages: Record<string, string> = {};
+      if (stepImagesRaw) {
+        try { savedStepImages = JSON.parse(stepImagesRaw); } catch {}
       }
+      setConfig((prev) => ({
+        ...prev,
+        ...(orderUrl ? { ctaSecondaryUrl: orderUrl, ctaFinalUrl: orderUrl } : {}),
+        stepImages: savedStepImages,
+      }));
 
       setDemos((demosRes.data as DemoConfig[]) || []);
     };
