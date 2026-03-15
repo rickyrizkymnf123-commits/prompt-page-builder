@@ -176,6 +176,17 @@ const HtmlGeneratorTab = () => {
     const demosSerialized = JSON.stringify(demoPayload).replace(/<\/script/gi, "<\\/script");
     html = html.replace(/const demos\s*=\s*\[[\s\S]*?\];/, `const demos=${demosSerialized};`);
 
+    // Replace step images
+    const DEFAULT_IMGBASE = "https://ai-page-craft-96.lovable.app/images/";
+    Object.entries(config.stepImages).forEach(([stepNum, url]) => {
+      if (url && url.trim()) {
+        html = html.replace(
+          new RegExp(`${DEFAULT_IMGBASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}step-${stepNum}\\.png`, 'g'),
+          url.trim()
+        );
+      }
+    });
+
     html = html.replace(/© 2026 Landing Page Builder by Digital Strategi\. All rights reserved\./, config.footerText);
 
     setGeneratedHtml(html);
