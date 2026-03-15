@@ -32,7 +32,6 @@ import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { sampleTemplates } from "@/data/sampleTemplates";
 import { motion } from "framer-motion";
 import { TypewriterText } from "@/components/TypewriterText";
-import EmbedFormTab from "@/components/admin/EmbedFormTab";
 import DemoManagementTab from "@/components/admin/DemoManagementTab";
 import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 
