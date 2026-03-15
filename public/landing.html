@@ -796,7 +796,7 @@
     var thumbContent = (d.html||'').replace(/<script[\s\S]*?<\/script>/gi,'');
     var safeThumb = thumbContent.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     var thumbnailHtml = d.html
-      ? '<iframe sandbox srcdoc="<!DOCTYPE html><html><head><meta charset=\'utf-8\'><meta name=\'viewport\' content=\'width=device-width,initial-scale=1\'><style>*{box-sizing:border-box;margin:0;padding:0}body{overflow:hidden}img,video,iframe{max-width:100%}</style></head><body>'+safeThumb+'</body></html>" style="width:200%;height:200%;transform:scale(0.5);transform-origin:top left;pointer-events:none;border:none;" scrolling="no"></iframe>'
+      ? '<iframe sandbox srcdoc="<!DOCTYPE html><html><head><meta charset=\'utf-8\'><meta name=\'viewport\' content=\'width=device-width,initial-scale=1\'><style>*{box-sizing:border-box;margin:0;padding:0}body{overflow:hidden}img,video,iframe{max-width:100%}</style></head><body>'+safeThumb+'</body></html>" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;pointer-events:none;border:none;" scrolling="no"></iframe>'
       : '<div class="w-full h-full flex items-center justify-center text-xs" style="background:hsl(250 25% 10%);color:hsl(250 10% 55%)">Preview belum tersedia</div>';
 
     div.className='glass rounded-xl overflow-hidden gradient-border group block cursor-pointer hover:-translate-y-1 transition-transform';
