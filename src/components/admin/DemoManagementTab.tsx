@@ -189,10 +189,11 @@ const DemoManagementTab = () => {
                   <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
                   <span className="text-xs text-muted-foreground font-mono w-6">#{demo.sort_order}</span>
                   {/* Auto-thumbnail from HTML */}
-                  <div className="w-10 h-14 rounded border border-border bg-muted/30 shrink-0 overflow-hidden relative">
+                  <div className="w-16 h-10 rounded border border-border bg-muted/30 shrink-0 overflow-hidden relative">
                     {demo.html_code ? (
                       <iframe
-                        srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box}body{margin:0;overflow:hidden}</style></head><body>${demo.html_code}</body></html>`}
+                        srcDoc={buildThumbnailDoc(demo.html_code)}
+                        sandbox=""
                         className="absolute top-0 left-0 border-0 pointer-events-none"
                         style={{ width: "400%", height: "400%", transform: "scale(0.25)", transformOrigin: "top left" }}
                         scrolling="no"

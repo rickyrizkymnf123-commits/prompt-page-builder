@@ -834,7 +834,17 @@
 })();
 
 function wrapDemoHtml(rawHtml){
-  return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><style>*{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden;max-width:100vw;width:100%}img,video,iframe,table,pre{max-width:100%}img{height:auto}</style></head><body style="margin:0;background:#0b0b18;overflow-x:hidden">'+rawHtml+'</body></html>';
+  var html=(rawHtml||'').trim();
+  var guardStyle='<style id="lp-preview-guard">*{box-sizing:border-box}html,body{margin:0!important;padding:0!important;max-width:100vw!important;overflow-x:hidden!important}img,video,iframe,table,pre,canvas,svg{max-width:100%!important;height:auto}body{background:#0b0b18!important}</style>';
+
+  if(/<html[\s>]/i.test(html)){
+    if(/<head[\s>]/i.test(html)){
+      return html.replace(/<head([^>]*)>/i,'<head$1><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'+guardStyle);
+    }
+    return html.replace(/<html([^>]*)>/i,'<html$1><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'+guardStyle+'</head>');
+  }
+
+  return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'+guardStyle+'</head><body>'+html+'</body></html>';
 }
 
 function openDemo(demo,title){
