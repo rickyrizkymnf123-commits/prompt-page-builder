@@ -63,6 +63,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const DemoManagementTab = () => {
   const { toast } = useToast();
   const [demos, setDemos] = useState<Demo[]>([]);
+  const [loading, setLoading] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
