@@ -883,47 +883,31 @@ function setTapBlocker(active){
 function lockBodyScroll(){
   if(__isBodyLocked) return;
   __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
+  // Don't use position:fixed — it breaks inside Scalev wrapper.
+  // Just prevent overflow and touch scrolling.
   document.documentElement.classList.add('modal-open');
   document.body.classList.add('modal-open');
-  document.body.style.position='fixed';
-  document.body.style.top='-'+__demoScrollY+'px';
-  document.body.style.left='0';
-  document.body.style.right='0';
-  document.body.style.width='100%';
-  document.body.style.overflow='hidden';
   __isBodyLocked=true;
 }
 
 function unlockBodyScroll(){
+  if(!__isBodyLocked) return;
   var y=__demoScrollY||0;
+  document.documentElement.classList.remove('modal-open');
+  document.body.classList.remove('modal-open');
+  __isBodyLocked=false;
+  // Restore scroll position — use auto behavior to prevent smooth jump
   var root=document.documentElement;
-
-  if(__isBodyLocked){
-    root.classList.remove('modal-open');
-    document.body.classList.remove('modal-open');
-    document.body.style.position='';
-    document.body.style.top='';
-    document.body.style.left='';
-    document.body.style.right='';
-    document.body.style.width='';
-    document.body.style.overflow='';
-    __isBodyLocked=false;
-  }
-
-  var prevBehavior=root.style.scrollBehavior;
+  var prevBehavior=root.style.scrollBehavior||'';
   root.style.scrollBehavior='auto';
-  try {
-    window.scrollTo({ top:y, left:0, behavior:'auto' });
-  } catch(_) {
-    window.scrollTo(0,y);
-  }
+  window.scrollTo(0, y);
+  // Double-ensure after repaint
   requestAnimationFrame(function(){
-    try {
-      window.scrollTo({ top:y, left:0, behavior:'auto' });
-    } catch(_) {
-      window.scrollTo(0,y);
-    }
-    root.style.scrollBehavior=prevBehavior;
+    window.scrollTo(0, y);
+    setTimeout(function(){
+      window.scrollTo(0, y);
+      root.style.scrollBehavior=prevBehavior;
+    }, 50);
   });
 }
 
