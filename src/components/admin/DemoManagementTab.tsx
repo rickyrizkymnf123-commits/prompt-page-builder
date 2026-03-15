@@ -6,6 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Save, Eye, X, GripVertical, Power, PowerOff, Layout, Upload, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Demo {
   id: string;
@@ -54,6 +57,19 @@ const HtmlPreview = ({ html, onClose }: { html: string; onClose: () => void }) =
   );
 };
 
+const SortableDemoCard = ({ id, isExpanded, children }: { id: string; isExpanded: boolean; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  return (
+    <Card ref={setNodeRef} style={style} className={`relative transition-all ${isExpanded ? "ring-1 ring-primary/30" : ""}`}>
+      <div {...attributes} {...listeners} className="absolute left-2 top-3 cursor-grab active:cursor-grabbing z-10 p-1">
+        <GripVertical className="w-4 h-4 text-muted-foreground/50" />
+      </div>
+      {children}
+    </Card>
+  );
+};
+
 const ACCEPTED_TYPES = ["image/webp", "image/jpeg", "image/png"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -61,6 +77,7 @@ const DemoManagementTab = () => {
   const { toast } = useToast();
   const [demos, setDemos] = useState<Demo[]>([]);
   const [loading, setLoading] = useState(true);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -151,6 +168,18 @@ const DemoManagementTab = () => {
     setDemos((prev) => prev.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = demos.findIndex((d) => d.id === active.id);
+    const newIndex = demos.findIndex((d) => d.id === over.id);
+    const reordered = arrayMove(demos, oldIndex, newIndex).map((d, i) => ({ ...d, sort_order: i + 1 }));
+    setDemos(reordered);
+    // Save new order to DB
+    await Promise.all(reordered.map((d) => supabase.from("demos").update({ sort_order: d.sort_order }).eq("id", d.id)));
+    toast({ title: "✅ Urutan disimpan" });
+  };
+
   const uploadThumbnail = async (demoId: string, file: File) => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
       toast({ title: "Format tidak didukung", description: "Gunakan file WebP, JPG, atau PNG.", variant: "destructive" });
@@ -222,18 +251,20 @@ const DemoManagementTab = () => {
         </Button>
       </div>
 
-      <div className="space-y-3">
-        {demos.map((demo) => {
-          const isExpanded = expandedId === demo.id;
-          const isUploading = uploading === demo.id;
-          return (
-            <Card key={demo.id} className={`transition-all ${isExpanded ? "ring-1 ring-primary/30" : ""}`}>
-              <CardContent className="p-0">
-                <div
-                  className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => setExpandedId(isExpanded ? null : demo.id)}
-                >
-                  <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={demos.map((d) => d.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-3">
+            {demos.map((demo) => {
+              const isExpanded = expandedId === demo.id;
+              const isUploading = uploading === demo.id;
+              return (
+                <SortableDemoCard key={demo.id} id={demo.id} isExpanded={isExpanded}>
+                  <CardContent className="p-0">
+                    <div
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setExpandedId(isExpanded ? null : demo.id)}
+                    >
+                      <span className="w-4 shrink-0" /> {/* spacer for drag handle */}
                   <span className="text-xs text-muted-foreground font-mono w-6">#{demo.sort_order}</span>
                   {/* Thumbnail preview */}
                   <div className="w-16 h-10 rounded border border-border bg-muted/30 shrink-0 overflow-hidden relative">
@@ -389,17 +420,19 @@ const DemoManagementTab = () => {
                   </div>
                 )}
               </CardContent>
-            </Card>
-          );
-        })}
+                </SortableDemoCard>
+              );
+            })}
 
-        {demos.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <Layout className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Belum ada demo. Klik "Tambah" untuk mulai.</p>
+            {demos.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Layout className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">Belum ada demo. Klik "Tambah" untuk mulai.</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </SortableContext>
+      </DndContext>
 
       {previewHtml && <HtmlPreview html={previewHtml} onClose={() => setPreviewHtml(null)} />}
     </div>
