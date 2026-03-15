@@ -146,7 +146,7 @@ const HtmlGeneratorTab = () => {
   useEffect(() => {
     const loadData = async () => {
       const [settingsRes, demosRes] = await Promise.all([
-        supabase.from("app_settings").select("key,value").in("key", ["scalev_order_url"]),
+        supabase.from("app_settings").select("key,value").in("key", ["scalev_order_url", "step_images"]),
         supabase
           .from("demos")
           .select("id,title,description,type,thumbnail_url,html_code,sort_order,is_active")
