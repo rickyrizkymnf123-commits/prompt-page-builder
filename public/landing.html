@@ -148,12 +148,7 @@
     #demo-modal .demo-body { flex:1; position:relative; overflow:hidden; background:#0a0a0a; }
     @keyframes modalIn { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
 
-    /* View Mode Toggle */
-    .view-toggle { display:flex; align-items:center; gap:2px; background:rgba(255,255,255,0.05); border-radius:8px; padding:3px; }
-    .view-toggle button { display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:6px; border:none; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s; background:transparent; color:rgba(255,255,255,0.4); }
-    .view-toggle button:hover { color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.05); }
-    .view-toggle button.active { background:hsl(265 85% 60%); color:white; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
-    .view-toggle button svg { width:14px; height:14px; }
+    /* View Mode Toggle - reserved */
     .view-toggle button span { display:none; }
     @media(min-width:640px) { .view-toggle button span { display:inline; } }
     #demo-iframe-wrapper { display:flex; justify-content:center; width:100%; height:calc(90vh - 48px); background:transparent; transition:background 0.2s; overflow:hidden; }
