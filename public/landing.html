@@ -785,7 +785,7 @@
     var thumbDoc = buildThumbnailDoc(d.html || '');
     var thumbSrcDoc = thumbDoc ? thumbDoc.replace(/&/g,'&amp;').replace(/"/g,'&quot;') : '';
     var thumbnailHtml = thumbDoc
-      ? '<iframe sandbox="allow-scripts" srcdoc="'+thumbSrcDoc+'" class="absolute top-0 left-0 border-0 pointer-events-none" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;overflow:hidden;" scrolling="no"></iframe>'
+      ? '<iframe loading="lazy" sandbox="allow-scripts" srcdoc="'+thumbSrcDoc+'" class="absolute top-0 left-0 border-0 pointer-events-none" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;overflow:hidden;" scrolling="no"></iframe>'
       : '<div class="w-full h-full flex items-center justify-center" style="background:linear-gradient(135deg,hsl(265 85% 15%),hsl(250 30% 8%));min-height:120px"><p class="text-xs" style="color:hsl(250 10% 55%)">Preview belum tersedia</p></div>';
 
     div.className='glass rounded-xl overflow-hidden gradient-border group block cursor-pointer hover:-translate-y-1 transition-transform';
