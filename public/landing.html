@@ -860,7 +860,8 @@ function openDemo(imgUrl,title){
 }
 function closeDemo(){
   document.getElementById('demo-modal').classList.remove('active');
-  document.getElementById('demo-iframe').src='';
+  var iframe=document.getElementById('demo-iframe');
+  iframe.srcdoc='';iframe.src='';
   document.body.style.overflow='';
 }
 function setViewMode(mode){
