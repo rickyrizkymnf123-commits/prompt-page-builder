@@ -790,13 +790,28 @@
     return;
   }
 
+  function buildThumbnailDoc(rawHtml){
+    var html=(rawHtml||'').trim();
+    if(!html) return '';
+    html=html.replace(/<script[\s\S]*?<\/script>/gi,'');
+    var guardStyle='<style>html,body{margin:0!important;overflow:hidden!important;max-width:100%!important}*{box-sizing:border-box}img,video,iframe,canvas,svg{max-width:100%!important}a,button,input,select,textarea,[role="button"]{pointer-events:none!important}</style>';
+
+    if(/<html[\s>]/i.test(html)){
+      if(/<head[\s>]/i.test(html)){
+        return html.replace(/<head([^>]*)>/i,'<head$1>'+guardStyle);
+      }
+      return html.replace(/<html([^>]*)>/i,'<html$1><head>'+guardStyle+'</head>');
+    }
+
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+guardStyle+'</head><body>'+html+'</body></html>';
+  }
+
   demos.forEach((d, index)=>{
     const div=document.createElement('div');
-    // Strip scripts for lightweight thumbnail
-    var thumbContent = (d.html||'').replace(/<script[\s\S]*?<\/script>/gi,'');
-    var safeThumb = thumbContent.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-    var thumbnailHtml = d.html
-      ? '<iframe sandbox srcdoc="<!DOCTYPE html><html><head><meta charset=\'utf-8\'><meta name=\'viewport\' content=\'width=device-width,initial-scale=1\'><style>*{box-sizing:border-box;margin:0;padding:0}body{overflow:hidden}img,video,iframe{max-width:100%}</style></head><body>'+safeThumb+'</body></html>" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;pointer-events:none;border:none;" scrolling="no"></iframe>'
+    var thumbDoc = buildThumbnailDoc(d.html || '');
+    var thumbSrc = thumbDoc ? ('data:text/html;charset=utf-8,' + encodeURIComponent(thumbDoc)) : '';
+    var thumbnailHtml = thumbDoc
+      ? '<iframe sandbox src="'+thumbSrc+'" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;pointer-events:none;border:none;" scrolling="no"></iframe>'
       : '<div class="w-full h-full flex items-center justify-center text-xs" style="background:hsl(250 25% 10%);color:hsl(250 10% 55%)">Preview belum tersedia</div>';
 
     div.className='glass rounded-xl overflow-hidden gradient-border group block cursor-pointer hover:-translate-y-1 transition-transform';
@@ -805,7 +820,7 @@
     div.style.setProperty('margin','0','important');
     div.onclick=function(){openDemo(d,d.style || ('Style '+(index+1)))};
     div.innerHTML='<div class="px-3 md:px-4 pt-3 md:pt-4 pb-0"><p class="text-xs md:text-sm font-bold" style="color:hsl(265 85% 60%)">Section '+(index+1)+' · Demo '+(index+1)+'</p></div>'
-    +'<div class="aspect-[3/4] overflow-hidden" style="position:relative">'+thumbnailHtml+'</div>'
+    +'<div class="aspect-video overflow-hidden" style="position:relative">'+thumbnailHtml+'</div>'
     +'<div class="p-3 md:p-4">'
     +'<div class="flex items-center justify-between mb-1.5">'
     +'<span class="text-[10px] md:text-xs font-bold uppercase tracking-wider px-2 md:px-3 py-0.5 md:py-1 rounded-full" style="color:hsl(265 85% 60%);background:hsl(265 85% 60%/0.1)">'+(d.type || 'Landing Page')+'</span>'
@@ -819,7 +834,17 @@
 })();
 
 function wrapDemoHtml(rawHtml){
-  return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><style>*{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden;max-width:100vw;width:100%}img,video,iframe,table,pre{max-width:100%}img{height:auto}</style></head><body style="margin:0;background:#0b0b18;overflow-x:hidden">'+rawHtml+'</body></html>';
+  var html=(rawHtml||'').trim();
+  var guardStyle='<style id="lp-preview-guard">*{box-sizing:border-box}html,body{margin:0!important;padding:0!important;max-width:100vw!important;overflow-x:hidden!important}img,video,iframe,table,pre,canvas,svg{max-width:100%!important;height:auto}body{background:#0b0b18!important}</style>';
+
+  if(/<html[\s>]/i.test(html)){
+    if(/<head[\s>]/i.test(html)){
+      return html.replace(/<head([^>]*)>/i,'<head$1><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'+guardStyle);
+    }
+    return html.replace(/<html([^>]*)>/i,'<html$1><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'+guardStyle+'</head>');
+  }
+
+  return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'+guardStyle+'</head><body>'+html+'</body></html>';
 }
 
 function openDemo(demo,title){
