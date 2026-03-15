@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, Save, Eye, X, GripVertical, Power, PowerOff, Layout } from "lucide-react";
+import { Trash2, Plus, Save, Eye, X, GripVertical, Power, PowerOff, Layout, Upload, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Demo {
@@ -54,41 +54,87 @@ const HtmlPreview = ({ html, onClose }: { html: string; onClose: () => void }) =
   );
 };
 
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Gagal membaca file"));
+    reader.readAsDataURL(file);
+  });
+
 const DemoManagementTab = () => {
   const { toast } = useToast();
   const [demos, setDemos] = useState<Demo[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const normalizeDemo = (demo: any): Demo => ({
+    ...demo,
+    title: demo?.title || "",
+    description: demo?.description || "",
+    type: demo?.type || "",
+    thumbnail_url: demo?.thumbnail_url || "",
+    html_code: demo?.html_code || "",
+    sort_order: demo?.sort_order || 0,
+    is_active: typeof demo?.is_active === "boolean" ? demo.is_active : true,
+  });
 
   const fetchDemos = async () => {
     const { data } = await supabase.from("demos").select("*").order("sort_order", { ascending: true });
-    setDemos((data as any as Demo[]) || []);
+    const normalized = ((data as any[]) || []).map(normalizeDemo);
+    setDemos(normalized);
     setLoading(false);
   };
 
-  useEffect(() => { fetchDemos(); }, []);
+  useEffect(() => {
+    fetchDemos();
+  }, []);
 
   const addDemo = async () => {
-    const { data, error } = await supabase.from("demos").insert({
-      title: "Demo Baru",
-      description: "Deskripsi demo",
-      type: "Kategori",
-      sort_order: demos.length + 1,
-    }).select().single();
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    setDemos(prev => [...prev, data as any as Demo]);
-    setExpandedId((data as any).id);
+    const { data, error } = await supabase
+      .from("demos")
+      .insert({
+        title: "Demo Baru",
+        description: "Deskripsi demo",
+        type: "Kategori",
+        sort_order: demos.length + 1,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const normalizedDemo = normalizeDemo(data);
+    setDemos((prev) => [...prev, normalizedDemo]);
+    setExpandedId(normalizedDemo.id);
     toast({ title: "✅ Demo ditambahkan" });
   };
 
   const saveDemo = async (demo: Demo) => {
-    const { error } = await supabase.from("demos").update({
-      title: demo.title, description: demo.description, type: demo.type,
-      thumbnail_url: demo.thumbnail_url, html_code: demo.html_code,
-      sort_order: demo.sort_order, is_active: demo.is_active,
-    }).eq("id", demo.id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    const { error } = await supabase
+      .from("demos")
+      .update({
+        title: demo.title,
+        description: demo.description,
+        type: demo.type,
+        thumbnail_url: demo.thumbnail_url,
+        html_code: demo.html_code,
+        sort_order: demo.sort_order,
+        is_active: demo.is_active,
+      })
+      .eq("id", demo.id);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+
     toast({ title: "✅ Demo tersimpan" });
     fetchDemos();
   };
@@ -96,12 +142,36 @@ const DemoManagementTab = () => {
   const deleteDemo = async (id: string) => {
     if (!confirm("Hapus demo ini?")) return;
     await supabase.from("demos").delete().eq("id", id);
-    setDemos(prev => prev.filter(d => d.id !== id));
+    setDemos((prev) => prev.filter((d) => d.id !== id));
     toast({ title: "✅ Demo dihapus" });
   };
 
   const updateField = (id: string, field: keyof Demo, value: string | number | boolean) => {
-    setDemos(prev => prev.map(d => d.id === id ? { ...d, [field]: value } : d));
+    setDemos((prev) => prev.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
+  };
+
+  const handlePickThumbnail = async (demoId: string, file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "File harus gambar", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Maksimal 2MB", description: "Kompres gambar dulu agar ringan.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      setUploadingId(demoId);
+      const dataUrl = await readFileAsDataUrl(file);
+      updateField(demoId, "thumbnail_url", dataUrl);
+      toast({ title: "✅ Thumbnail berhasil diupload" });
+    } catch {
+      toast({ title: "Gagal upload thumbnail", variant: "destructive" });
+    } finally {
+      setUploadingId(null);
+    }
   };
 
   if (loading) {
@@ -117,7 +187,7 @@ const DemoManagementTab = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-bold text-lg md:text-xl mb-1">Demo Landing Pages</h2>
-          <p className="text-sm text-muted-foreground">{demos.length} demo terdaftar</p>
+          <p className="text-sm text-muted-foreground">{demos.length} demo terdaftar · thumbnail pakai upload gambar (tanpa URL manual)</p>
         </div>
         <Button onClick={addDemo} size="sm" className="gap-1.5">
           <Plus className="w-3.5 h-3.5" /> Tambah
@@ -136,8 +206,12 @@ const DemoManagementTab = () => {
                 >
                   <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
                   <span className="text-xs text-muted-foreground font-mono w-6">#{demo.sort_order}</span>
-                  {demo.thumbnail_url && (
+                  {demo.thumbnail_url ? (
                     <img src={demo.thumbnail_url} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 rounded border border-border bg-muted/30 flex items-center justify-center shrink-0">
+                      <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                    </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{demo.title}</p>
@@ -147,7 +221,15 @@ const DemoManagementTab = () => {
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${demo.is_active ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"}`}>
                       {demo.is_active ? "Aktif" : "Off"}
                     </span>
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); setPreviewHtml(demo.html_code || "<div style='padding:20px;color:#fff'>Belum ada HTML</div>"); }}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewHtml(demo.html_code || "<div style='padding:20px;color:#fff'>Belum ada HTML</div>");
+                      }}
+                    >
                       <Eye className="w-3.5 h-3.5 text-primary" />
                     </Button>
                   </div>
@@ -165,31 +247,78 @@ const DemoManagementTab = () => {
                         <Input value={demo.type} onChange={(e) => updateField(demo.id, "type", e.target.value)} />
                       </div>
                     </div>
+
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">Deskripsi</label>
                       <Textarea value={demo.description} onChange={(e) => updateField(demo.id, "description", e.target.value)} rows={2} />
                     </div>
+
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">Kode HTML Demo</label>
                       <Textarea value={demo.html_code} onChange={(e) => updateField(demo.id, "html_code", e.target.value)} rows={4} className="font-mono text-xs" />
                     </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Thumbnail URL</label>
-                        <Input value={demo.thumbnail_url} onChange={(e) => updateField(demo.id, "thumbnail_url", e.target.value)} className="text-xs" />
+                      <div className="md:col-span-2">
+                        <label className="text-xs text-muted-foreground mb-1 block">Thumbnail (Upload Gambar)</label>
+                        <div className="rounded-lg border border-border p-3 space-y-3 bg-muted/20">
+                          {demo.thumbnail_url ? (
+                            <img src={demo.thumbnail_url} alt={demo.title} className="w-full max-h-40 rounded object-cover border border-border" />
+                          ) : (
+                            <div className="h-24 rounded border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground">
+                              Belum ada thumbnail
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5"
+                              onClick={() => fileInputRefs.current[demo.id]?.click()}
+                              disabled={uploadingId === demo.id}
+                            >
+                              <Upload className="w-3.5 h-3.5" />
+                              {uploadingId === demo.id ? "Uploading..." : "Upload Thumbnail"}
+                            </Button>
+                            {!!demo.thumbnail_url && (
+                              <Button type="button" size="sm" variant="ghost" onClick={() => updateField(demo.id, "thumbnail_url", "")}>Hapus</Button>
+                            )}
+                          </div>
+                          <input
+                            ref={(el) => (fileInputRefs.current[demo.id] = el)}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handlePickThumbnail(demo.id, e.target.files?.[0])}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Sort Order</label>
-                        <Input type="number" value={demo.sort_order} onChange={(e) => updateField(demo.id, "sort_order", parseInt(e.target.value) || 0)} />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Status</label>
-                        <Button variant={demo.is_active ? "default" : "outline"} className="w-full gap-1.5" size="sm" onClick={() => updateField(demo.id, "is_active", !demo.is_active)}>
-                          {demo.is_active ? <Power className="w-3.5 h-3.5" /> : <PowerOff className="w-3.5 h-3.5" />}
-                          {demo.is_active ? "Aktif" : "Nonaktif"}
-                        </Button>
+
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Sort Order</label>
+                          <Input
+                            type="number"
+                            value={demo.sort_order}
+                            onChange={(e) => updateField(demo.id, "sort_order", parseInt(e.target.value, 10) || 0)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Status</label>
+                          <Button
+                            variant={demo.is_active ? "default" : "outline"}
+                            className="w-full gap-1.5"
+                            size="sm"
+                            onClick={() => updateField(demo.id, "is_active", !demo.is_active)}
+                          >
+                            {demo.is_active ? <Power className="w-3.5 h-3.5" /> : <PowerOff className="w-3.5 h-3.5" />}
+                            {demo.is_active ? "Aktif" : "Nonaktif"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
+
                     <div className="flex gap-2 pt-1">
                       <Button onClick={() => saveDemo(demo)} size="sm" className="flex-1 gap-1.5">
                         <Save className="w-3.5 h-3.5" /> Simpan

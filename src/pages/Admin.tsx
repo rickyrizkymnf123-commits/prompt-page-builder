@@ -32,7 +32,6 @@ import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { sampleTemplates } from "@/data/sampleTemplates";
 import { motion } from "framer-motion";
 import { TypewriterText } from "@/components/TypewriterText";
-import EmbedFormTab from "@/components/admin/EmbedFormTab";
 import DemoManagementTab from "@/components/admin/DemoManagementTab";
 import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 
@@ -1163,13 +1162,11 @@ export default function Admin() {
           {/* LP BUILDER TAB */}
           <TabsContent value="lpbuilder">
             <div className="space-y-6">
-              <Tabs defaultValue="embed">
-                <TabsList className="w-full grid grid-cols-3 h-10">
-                  <TabsTrigger value="embed" className="text-xs sm:text-sm gap-1">🔗 Embed Form</TabsTrigger>
+              <Tabs defaultValue="demos">
+                <TabsList className="w-full grid grid-cols-2 h-10">
                   <TabsTrigger value="demos" className="text-xs sm:text-sm gap-1">🖼 Demos</TabsTrigger>
                   <TabsTrigger value="generate" className="text-xs sm:text-sm gap-1">⚡ Generate HTML</TabsTrigger>
                 </TabsList>
-                <TabsContent value="embed" className="mt-6"><EmbedFormTab /></TabsContent>
                 <TabsContent value="demos" className="mt-6"><DemoManagementTab /></TabsContent>
                 <TabsContent value="generate" className="mt-6"><HtmlGeneratorTab /></TabsContent>
               </Tabs>
