@@ -200,7 +200,6 @@ const HtmlGeneratorTab = () => {
       type: demo.type || "Landing Page",
       style: demo.title || "Demo Landing Page",
       desc: demo.description || "Preview landing page demo",
-      img: demo.thumbnail_url || "",
       html: demo.html_code || "",
     }));
 
