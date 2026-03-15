@@ -849,10 +849,11 @@
   });
 })();
 
-function openDemo(url,title){
+function openDemo(imgUrl,title){
   document.getElementById('demo-modal-title').textContent=title+' — Live Preview';
   document.getElementById('demo-loader').style.display='flex';
-  document.getElementById('demo-iframe').src=url;
+  var iframe=document.getElementById('demo-iframe');
+  iframe.srcdoc='<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0b0b18;display:flex;align-items:start;justify-content:center;min-height:100vh}img{width:100%;height:auto;display:block}</style></head><body><img src="'+imgUrl+'" alt="'+title+'" onload="parent.document.getElementById(\'demo-loader\').style.display=\'none\'"></body></html>';
   document.getElementById('demo-modal').classList.add('active');
   document.body.style.overflow='hidden';
   setViewMode('desktop');
