@@ -150,9 +150,9 @@
     .view-toggle button svg { width:14px; height:14px; }
     .view-toggle button span { display:none; }
     @media(min-width:640px) { .view-toggle button span { display:inline; } }
-    #demo-iframe-wrapper { display:flex; justify-content:center; width:100%; height:calc(90vh - 48px); background:transparent; transition:background 0.2s; }
+    #demo-iframe-wrapper { display:flex; justify-content:center; width:100%; height:calc(90vh - 48px); background:transparent; transition:background 0.2s; overflow:hidden; }
     #demo-iframe-wrapper.framed { background:#1a1a1a; }
-    #demo-iframe { transition:width 0.3s ease, box-shadow 0.3s ease; }
+    #demo-iframe { transition:width 0.3s ease, box-shadow 0.3s ease; max-width:100%; }
 
     #lp-root { min-height: 100vh; background: hsl(250 30% 5%); color: hsl(0 0% 95%); font-family: 'Poppins', system-ui, sans-serif; }
 
