@@ -793,14 +793,13 @@
   function buildThumbnailDoc(rawHtml){
     var html=(rawHtml||'').trim();
     if(!html) return '';
-    html=html.replace(/<script[\s\S]*?<\/script>/gi,'');
-    var guardStyle='<style>html,body{margin:0!important;overflow:hidden!important;max-width:100%!important}*{box-sizing:border-box}img,video,iframe,canvas,svg{max-width:100%!important}a,button,input,select,textarea,[role="button"]{pointer-events:none!important}</style>';
+    var guardStyle='<style>html,body{margin:0!important;padding:0!important;overflow:hidden!important;max-width:100%!important;scrollbar-width:none!important}*{box-sizing:border-box}::-webkit-scrollbar{display:none!important}img,video,iframe,canvas,svg{max-width:100%!important}a,button,input,select,textarea,[role="button"]{pointer-events:none!important}</style>';
 
     if(/<html[\s>]/i.test(html)){
       if(/<head[\s>]/i.test(html)){
         return html.replace(/<head([^>]*)>/i,'<head$1>'+guardStyle);
       }
-      return html.replace(/<html([^>]*)>/i,'<html$1><head>'+guardStyle+'</head>');
+      return html.replace(/<html([^>]*)>/i,'<html$1><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+guardStyle+'</head>');
     }
 
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+guardStyle+'</head><body>'+html+'</body></html>';
@@ -811,7 +810,7 @@
     var thumbDoc = buildThumbnailDoc(d.html || '');
     var thumbSrc = thumbDoc ? ('data:text/html;charset=utf-8,' + encodeURIComponent(thumbDoc)) : '';
     var thumbnailHtml = thumbDoc
-      ? '<iframe sandbox src="'+thumbSrc+'" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;pointer-events:none;border:none;" scrolling="no"></iframe>'
+      ? '<iframe sandbox="allow-scripts" src="'+thumbSrc+'" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;pointer-events:none;border:none;overflow:hidden;" scrolling="no"></iframe>'
       : '<div class="w-full h-full flex items-center justify-center text-xs" style="background:hsl(250 25% 10%);color:hsl(250 10% 55%)">Preview belum tersedia</div>';
 
     div.className='glass rounded-xl overflow-hidden gradient-border group block cursor-pointer hover:-translate-y-1 transition-transform';
