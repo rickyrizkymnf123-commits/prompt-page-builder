@@ -135,18 +135,12 @@
       .animate-float { animation: none !important; }
     }
 
-    /* Demo Modal */
+    /* Demo Modal — scroll lock that works inside Scalev wrapper */
     html.modal-open,
     body.modal-open {
       overflow: hidden !important;
       overscroll-behavior: none !important;
-    }
-    body.modal-open {
-      position: fixed !important;
-      left: 0;
-      right: 0;
-      width: 100%;
-      touch-action: none;
+      touch-action: none !important;
     }
     #demo-modal { display:none; position:fixed; inset:0; z-index:200; flex-direction:column; overflow:hidden; opacity:1; transition:opacity .18s ease; }
     #demo-modal.active { display:flex; }
@@ -889,47 +883,31 @@ function setTapBlocker(active){
 function lockBodyScroll(){
   if(__isBodyLocked) return;
   __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
+  // Don't use position:fixed — it breaks inside Scalev wrapper.
+  // Just prevent overflow and touch scrolling.
   document.documentElement.classList.add('modal-open');
   document.body.classList.add('modal-open');
-  document.body.style.position='fixed';
-  document.body.style.top='-'+__demoScrollY+'px';
-  document.body.style.left='0';
-  document.body.style.right='0';
-  document.body.style.width='100%';
-  document.body.style.overflow='hidden';
   __isBodyLocked=true;
 }
 
 function unlockBodyScroll(){
+  if(!__isBodyLocked) return;
   var y=__demoScrollY||0;
+  document.documentElement.classList.remove('modal-open');
+  document.body.classList.remove('modal-open');
+  __isBodyLocked=false;
+  // Restore scroll position — use auto behavior to prevent smooth jump
   var root=document.documentElement;
-
-  if(__isBodyLocked){
-    root.classList.remove('modal-open');
-    document.body.classList.remove('modal-open');
-    document.body.style.position='';
-    document.body.style.top='';
-    document.body.style.left='';
-    document.body.style.right='';
-    document.body.style.width='';
-    document.body.style.overflow='';
-    __isBodyLocked=false;
-  }
-
-  var prevBehavior=root.style.scrollBehavior;
+  var prevBehavior=root.style.scrollBehavior||'';
   root.style.scrollBehavior='auto';
-  try {
-    window.scrollTo({ top:y, left:0, behavior:'auto' });
-  } catch(_) {
-    window.scrollTo(0,y);
-  }
+  window.scrollTo(0, y);
+  // Double-ensure after repaint
   requestAnimationFrame(function(){
-    try {
-      window.scrollTo({ top:y, left:0, behavior:'auto' });
-    } catch(_) {
-      window.scrollTo(0,y);
-    }
-    root.style.scrollBehavior=prevBehavior;
+    window.scrollTo(0, y);
+    setTimeout(function(){
+      window.scrollTo(0, y);
+      root.style.scrollBehavior=prevBehavior;
+    }, 50);
   });
 }
 
@@ -948,6 +926,14 @@ function openDemo(demo,title){
   modal.classList.remove('closing');
   modal.classList.add('active');
   lockBodyScroll();
+
+  // Prevent iOS background scroll via touchmove on modal backdrop
+  modal.ontouchmove=function(e){
+    // Allow scroll inside the iframe wrapper
+    var iframeWrapper=document.getElementById('demo-iframe-wrapper');
+    if(iframeWrapper && iframeWrapper.contains(e.target)) return;
+    e.preventDefault();
+  };
 
   var fallbackEmpty='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Preview belum tersedia</div>';
   var fallbackError='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Gagal memuat preview</div>';
@@ -993,6 +979,11 @@ function closeDemo(event){
 
   __demoRequestId++;
   setTapBlocker(true);
+
+  // Remove touchmove blocker
+  modal.ontouchmove=null;
+
+  // Clear iframe immediately to free memory
   clearDemoFrameForClose(iframe);
   modal.classList.add('closing');
 
@@ -1000,12 +991,12 @@ function closeDemo(event){
     modal.classList.remove('active');
     modal.classList.remove('closing');
     unlockBodyScroll();
-  }, 90);
+  }, 120);
 
   if(__tapBlockerTimer){ clearTimeout(__tapBlockerTimer); }
   __tapBlockerTimer=setTimeout(function(){
     setTapBlocker(false);
-  }, 700);
+  }, 800);
 
   return false;
 }
