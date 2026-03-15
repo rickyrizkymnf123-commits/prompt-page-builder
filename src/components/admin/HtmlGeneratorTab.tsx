@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Download, Eye, X, RefreshCw, CheckCircle2, Palette, Type, Link2, FileCode } from "lucide-react";
+import { Copy, Download, Eye, X, RefreshCw, CheckCircle2, Palette, Type, Link2, FileCode, Upload, Trash2, ImageIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 
