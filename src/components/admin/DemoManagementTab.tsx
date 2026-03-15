@@ -71,9 +71,21 @@ const DemoManagementTab = () => {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  const normalizeDemo = (demo: any): Demo => ({
+    ...demo,
+    title: demo?.title || "",
+    description: demo?.description || "",
+    type: demo?.type || "",
+    thumbnail_url: demo?.thumbnail_url || "",
+    html_code: demo?.html_code || "",
+    sort_order: demo?.sort_order || 0,
+    is_active: typeof demo?.is_active === "boolean" ? demo.is_active : true,
+  });
+
   const fetchDemos = async () => {
     const { data } = await supabase.from("demos").select("*").order("sort_order", { ascending: true });
-    setDemos((data as Demo[]) || []);
+    const normalized = ((data as any[]) || []).map(normalizeDemo);
+    setDemos(normalized);
     setLoading(false);
   };
 
@@ -98,8 +110,9 @@ const DemoManagementTab = () => {
       return;
     }
 
-    setDemos((prev) => [...prev, data as Demo]);
-    setExpandedId((data as Demo).id);
+    const normalizedDemo = normalizeDemo(data);
+    setDemos((prev) => [...prev, normalizedDemo]);
+    setExpandedId(normalizedDemo.id);
     toast({ title: "✅ Demo ditambahkan" });
   };
 
