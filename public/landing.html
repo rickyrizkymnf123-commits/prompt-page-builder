@@ -831,29 +831,21 @@ var __demoSuppressTapUntil=0;
 function lockBodyScroll(){
   if(__demoScrollLocked) return;
   __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
-  document.body.style.position='fixed';
-  document.body.style.top='-'+__demoScrollY+'px';
-  document.body.style.left='0';
-  document.body.style.right='0';
-  document.body.style.width='100%';
-  document.body.style.overflow='hidden';
   document.documentElement.style.overflow='hidden';
+  document.body.style.overflow='hidden';
+  document.body.style.touchAction='none';
   __demoScrollLocked=true;
 }
 
 function unlockBodyScroll(){
   if(!__demoScrollLocked) return;
   var y=__demoScrollY;
-  document.body.style.position='';
-  document.body.style.top='';
-  document.body.style.left='';
-  document.body.style.right='';
-  document.body.style.width='';
-  document.body.style.overflow='';
   document.documentElement.style.overflow='';
+  document.body.style.overflow='';
+  document.body.style.touchAction='';
   __demoScrollLocked=false;
 
-  // Restore only once to avoid visible "jump then bounce"
+  // Keep exact last position user saw before opening demo
   if(Math.abs((window.pageYOffset||0)-y)>1){
     window.scrollTo(0,y);
   }
