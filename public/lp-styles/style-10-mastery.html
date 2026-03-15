@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Ads Mastery - High-End Digital Course</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Space Grotesk', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        surface: {
+                            50: '#050408',
+                            100: '#0d0a12',
+                            200: '#15111f',
+                            300: '#1d172b',
+                            400: '#251e36',
+                        },
+                        meta: {
+                            blue: '#0668E1',
+                            purple: '#8b5cf6',
+                            pink: '#e10098',
+                            glow: 'rgba(139, 92, 246, 0.5)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #050408;
+            --fg: #f5f3ff;
+            --accent: #8b5cf6;
+            --meta-blue: #0668E1;
+            --card: rgba(21, 17, 31, 0.6);
+            --border: rgba(139, 92, 246, 0.15);
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            overflow-x: hidden;
+        }
+
+        .font-display { font-family: 'Space Grotesk', sans-serif; }
+
+        /* Background Graphics */
+        .hero-bg {
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(6, 104, 225, 0.3), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.15), transparent),
+                radial-gradient(ellipse 50% 30% at 20% 80%, rgba(225, 0, 152, 0.1), transparent);
+        }
+
+        .grid-pattern {
+            background-image: 
+                linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+            z-index: 0;
+        }
+        .orb-1 { width: 500px; height: 500px; background: linear-gradient(135deg, #0668E1 0%, #8b5cf6 100%); top: -100px; right: -100px; }
+        .orb-2 { width: 400px; height: 400px; background: linear-gradient(135deg, #e10098 0%, #8b5cf6 100%); bottom: 10%; left: -150px; animation-delay: -5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, -40px) scale(1.1); }
+        }
+
+        /* Glassmorphism */
+        .glass-card {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0668E1 0%, #8b5cf6 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(6, 104, 225, 0.4);
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.6);
+        }
+
+        /* Scroll animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Table & Special elements */
+        .comparison-row:hover { background: rgba(255, 255, 255, 0.03); }
+        
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .faq-item.active .faq-answer { max-height: 200px; padding-bottom: 1.5rem; }
+        .faq-item.active .faq-icon { transform: rotate(45deg); }
+
+        .bonus-glow:hover {
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.2);
+            border-color: #8b5cf6;
+        }
+
+        .timer-box {
+            background: rgba(225, 0, 152, 0.05);
+            border: 1px solid rgba(225, 0, 152, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #0668E1, #8b5cf6, #e10098);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    
+    <!-- MESH GRADIENT BG -->
+    <div class="fixed inset-0 hero-bg -z-10"></div>
+    <div class="fixed inset-0 grid-pattern -z-10 opacity-30"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- HERO SECTION -->
+    <section class="relative min-h-screen flex items-center pt-20 pb-32">
+        <div class="relative z-10 max-w-5xl mx-auto px-6 text-center">
+            
+            <div class="reveal mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm font-medium backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-meta-blue animate-pulse"></span>
+                <span class="text-zinc-300">Terbuka untuk Batch #12 - 15 Slot Tersisa</span>
+            </div>
+
+            <h1 class="reveal font-display text-5xl sm:text-7xl md:text-8xl font-bold leading-[1.1] mb-8 tracking-tight">
+                Kuasi Meta Ads <br>
+                <span class="gradient-text">Ubah Trafik Jadi Profit.</span>
+            </h1>
+
+            <p class="reveal text-lg sm:text-xl text-zinc-400 max-w-3xl mx-auto mb-12 leading-relaxed">
+                Hentikan spekulasi di Ads Manager. Pelajari sistem <span class="text-white font-semibold">Scaling & Psychology</span> yang sudah menghasilkan milyaran omzet untuk UMKM Indonesia.
+            </p>
+
+            <div class="reveal flex flex-col sm:flex-row items-center justify-center gap-5">
+                <button onclick="scrollToPrice()" class="btn-primary w-full sm:w-auto px-10 py-5 rounded-2xl font-display font-bold text-xl text-white uppercase tracking-wider">
+                    Daftar Kelas Sekarang
+                </button>
+                <div class="flex items-center gap-3 text-sm text-zinc-500">
+                    <div class="flex -space-x-2">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" class="w-8 h-8 rounded-full border-2 border-surface-50" alt="Alumni">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=2" class="w-8 h-8 rounded-full border-2 border-surface-50" alt="Alumni">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=3" class="w-8 h-8 rounded-full border-2 border-surface-50" alt="Alumni">
+                    </div>
+                    <span>Join 2,400+ Advertiser Pro</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PAIN POINT SECTION -->
+    <section class="py-28 bg-surface-100/50">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="reveal text-center mb-20">
+                <p class="text-meta-purple font-bold uppercase tracking-widest text-sm mb-4">Masalah Klasik</p>
+                <h2 class="font-display text-3xl sm:text-5xl font-bold text-white leading-tight">
+                    Iklan Jalan, Tapi Tabungan <br> <span class="text-meta-pink italic">Malah Berkurang?</span>
+                </h2>
+            </div>
+
+            <div class="space-y-6">
+                <div class="reveal glass-card rounded-3xl p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
+                    <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center flex-shrink-0 text-red-500">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-display text-xl font-bold text-white mb-2 text-white">Terjebak di "Learning Phase" Tanpa Sales</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed">Iklan cuma dapet impresi tapi conversion rate nol besar. Meta terus menagih budget Anda tanpa memberikan return yang jelas.</p>
+                    </div>
+                </div>
+
+                <div class="reveal glass-card rounded-3xl p-8 flex flex-col md:flex-row items-start md:items-center gap-6 border-meta-blue/20">
+                    <div class="w-16 h-16 rounded-2xl bg-meta-blue/10 flex items-center justify-center flex-shrink-0 text-meta-blue">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-display text-xl font-bold text-white mb-2 text-white">Takut Akun Restricted / AME</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed">Baru mau scale-up, eh akun kena banned. Kami ajarkan cara membangun infrastruktur iklan yang kuat dan tahan banting.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOLUTION INTRO -->
+    <section class="py-32 relative overflow-hidden">
+        <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
+            <div class="reveal mb-10">
+                <span class="px-5 py-2 rounded-full bg-meta-purple/10 border border-meta-purple/30 text-meta-purple text-xs font-bold uppercase tracking-widest">Solusi Terpadu</span>
+            </div>
+            <h2 class="reveal font-display text-4xl sm:text-6xl font-bold text-white mb-8">
+                Mastering Meta Ads <br> <span class="gradient-text">Beyond Clicking Buttons.</span>
+            </h2>
+            <p class="reveal text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                Kami tidak mengajari Anda cara "klik tombol". Kami mengajari Anda strategi <strong class="text-white">Copywriting, Data Analysis, dan Psychology</strong> yang membuat orang berebut membeli produk Anda.
+            </p>
+        </div>
+    </section>
+
+    <!-- CURRICULUM / FEATURES -->
+    <section class="py-28 bg-surface-100">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-8">
+                
+                <div class="reveal glass-card rounded-[2.5rem] p-10 flex flex-col justify-between">
+                    <div>
+                        <div class="w-14 h-14 rounded-2xl bg-meta-blue/20 flex items-center justify-center text-meta-blue mb-8 shadow-[0_0_20px_rgba(6,104,225,0.3)]">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-4 text-white text-white">Full Funnel Strategy</h3>
+                        <p class="text-zinc-400 leading-relaxed mb-6">Mulai dari Awareness sampai Retargeting. Pelajari cara mengarahkan audiens asing menjadi pembeli loyal lewat 3 tahap funneling.</p>
+                    </div>
+                    <ul class="space-y-3 text-sm text-zinc-500">
+                        <li class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-meta-blue"></div> TOF, MOF, BOF Setup</li>
+                        <li class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-meta-blue"></div> Custom & Lookalike Audience</li>
+                    </ul>
+                </div>
+
+                <div class="reveal glass-card rounded-[2.5rem] p-10 flex flex-col justify-between border-meta-purple/30">
+                    <div>
+                        <div class="w-14 h-14 rounded-2xl bg-meta-purple/20 flex items-center justify-center text-meta-purple mb-8 shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        </div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-4 text-white">Winning Creative Testing</h3>
+                        <p class="text-zinc-400 leading-relaxed mb-6">Bukan cuma gambar cantik. Pelajari formulasi visual dan hook yang menaikkan CTR hingga 3% ke atas secara konsisten.</p>
+                    </div>
+                    <ul class="space-y-3 text-sm text-zinc-500">
+                        <li class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-meta-purple"></div> Hook-Story-Offer Framework</li>
+                        <li class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-meta-purple"></div> Video Ad Psychology</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- COMPARISON TABLE -->
+    <section class="py-28">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="reveal font-display text-3xl sm:text-5xl font-bold text-white text-center mb-16 tracking-tight">Kenapa Kelas Ini Berbeda?</h2>
+            
+            <div class="reveal glass-card rounded-[2rem] overflow-hidden border-white/5">
+                <div class="grid grid-cols-2 sm:grid-cols-3 bg-white/5 border-b border-white/5">
+                    <div class="p-6 font-bold text-xs uppercase tracking-widest text-zinc-500">Aspek</div>
+                    <div class="p-6 text-center font-bold text-xs uppercase tracking-widest text-zinc-500 hidden sm:block">Tutorial Gratis</div>
+                    <div class="p-6 text-center font-bold text-xs uppercase tracking-widest text-meta-blue bg-meta-blue/5">Meta Ads Mastery</div>
+                </div>
+                
+                <div class="divide-y divide-white/5">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 comparison-row transition-all">
+                        <div class="p-6 text-sm text-zinc-300">Update Materi</div>
+                        <div class="p-6 text-center text-zinc-500 text-sm hidden sm:block">Video 2-3 Tahun Lalu</div>
+                        <div class="p-6 text-center text-meta-blue font-bold text-sm bg-meta-blue/5">Selalu Update 2024</div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 comparison-row transition-all">
+                        <div class="p-6 text-sm text-zinc-300">Studi Kasus</div>
+                        <div class="p-6 text-center text-zinc-500 text-sm hidden sm:block">Teori Saja</div>
+                        <div class="p-6 text-center text-meta-blue font-bold text-sm bg-meta-blue/5">Real Omzet Milyaran</div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 comparison-row transition-all">
+                        <div class="p-6 text-sm text-zinc-300">Grup Support</div>
+                        <div class="p-6 text-center text-zinc-500 text-sm hidden sm:block">Tidak Ada</div>
+                        <div class="p-6 text-center text-meta-blue font-bold text-sm bg-meta-blue/5">Diskusi 24/7</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BONUS SECTION -->
+    <section class="py-28 bg-surface-50">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="reveal font-display text-3xl sm:text-5xl font-bold text-white mb-16 tracking-tight">Bonus Senilai <span class="text-meta-pink">Rp 2.5 Juta+</span></h2>
+            
+            <div class="grid sm:grid-cols-3 gap-6">
+                <div class="reveal glass-card bonus-glow p-8 rounded-3xl border-white/5">
+                    <div class="text-meta-blue font-black text-3xl mb-4">01</div>
+                    <h4 class="font-bold text-white mb-2">Template Copywriting</h4>
+                    <p class="text-zinc-500 text-xs leading-relaxed">25+ Pola teks iklan yang sudah terbukti closing tinggi.</p>
+                </div>
+                <div class="reveal reveal-delay-1 glass-card bonus-glow p-8 rounded-3xl border-white/5">
+                    <div class="text-meta-purple font-black text-3xl mb-4">02</div>
+                    <h4 class="font-bold text-white mb-2">Checklist AME</h4>
+                    <p class="text-zinc-500 text-xs leading-relaxed">Panduan langkah demi langkah saat akun kena banned.</p>
+                </div>
+                <div class="reveal reveal-delay-2 glass-card bonus-glow p-8 rounded-3xl border-white/5">
+                    <div class="text-meta-pink font-black text-3xl mb-4">03</div>
+                    <h4 class="font-bold text-white mb-2">Creative Assets</h4>
+                    <p class="text-zinc-500 text-xs leading-relaxed">Ribuan icon & elemen grafis untuk visual iklan profesional.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SCARCITY TIMER -->
+    <section class="py-20">
+        <div class="max-w-2xl mx-auto px-6">
+            <div class="reveal timer-box rounded-[3rem] p-10 text-center">
+                <p class="text-meta-pink font-bold uppercase tracking-widest text-xs mb-4">Harga Promo Launching</p>
+                <h3 class="font-display text-2xl sm:text-3xl font-bold text-white mb-8">Berakhir Dalam Hitungan:</h3>
+                
+                <div class="flex justify-center gap-4 mb-8">
+                    <div class="bg-surface-300 w-20 h-24 rounded-2xl flex flex-col items-center justify-center border border-white/5">
+                        <div class="text-3xl font-display font-bold text-white" id="hours">12</div>
+                        <div class="text-[10px] text-zinc-500 uppercase tracking-widest">Jam</div>
+                    </div>
+                    <div class="bg-surface-300 w-20 h-24 rounded-2xl flex flex-col items-center justify-center border border-white/5">
+                        <div class="text-3xl font-display font-bold text-white" id="minutes">45</div>
+                        <div class="text-[10px] text-zinc-500 uppercase tracking-widest">Menit</div>
+                    </div>
+                    <div class="bg-surface-300 w-20 h-24 rounded-2xl flex flex-col items-center justify-center border border-white/5">
+                        <div class="text-3xl font-display font-bold text-white" id="seconds">30</div>
+                        <div class="text-[10px] text-zinc-500 uppercase tracking-widest">Detik</div>
+                    </div>
+                </div>
+                <p class="text-sm text-zinc-400 italic">"Gak perlu nunggu besok kalau profit bisa mulai hari ini."</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING SECTION -->
+    <section id="pricing" class="py-32 relative">
+        <div class="max-w-md mx-auto px-6">
+            <div class="reveal glass-card rounded-[4rem] p-12 text-center relative border-meta-blue">
+                <div class="absolute -top-6 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full bg-meta-blue font-bold text-[10px] uppercase tracking-widest shadow-[0_0_30px_rgba(6,104,225,0.5)]">Recommended</div>
+                
+                <h3 class="font-display text-3xl font-bold mb-2">ELITE MASTER CLASS</h3>
+                <p class="text-zinc-500 text-sm mb-12 uppercase tracking-widest">Materi & Live Mentoring</p>
+
+                <div class="mb-12">
+                    <span class="text-xl text-zinc-600 line-through">Rp 1.499.000</span>
+                    <div class="text-7xl font-display font-black text-white tracking-tighter mt-2">Rp 499rb</div>
+                    <p class="text-meta-pink font-bold text-xs mt-2 uppercase tracking-widest tracking-widest">One Time Payment • Lifetime Access</p>
+                </div>
+
+                <div class="space-y-4 text-left mb-12">
+                    <div class="flex items-center gap-3 text-sm text-zinc-300">
+                        <svg class="w-5 h-5 text-meta-blue" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        50+ Video Materi Full HD
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-zinc-300">
+                        <svg class="w-5 h-5 text-meta-blue" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Weekly Live Mentoring & Q&A
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-zinc-300">
+                        <svg class="w-5 h-5 text-meta-blue" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Audit Campaign Pribadi
+                    </div>
+                </div>
+
+                <button class="btn-primary w-full py-6 rounded-3xl font-display font-black text-2xl uppercase tracking-widest shadow-2xl">
+                    Amankan Kursi
+                </button>
+                <div class="mt-6 flex items-center justify-center gap-2 text-zinc-600 text-[10px] uppercase font-bold tracking-widest">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+                    Slot Sangat Terbatas
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ SECTION -->
+    <section class="py-28 bg-surface-100">
+        <div class="max-w-3xl mx-auto px-6">
+            <h2 class="reveal font-display text-4xl font-bold text-white text-center mb-20 tracking-tight italic">FAQ</h2>
+            <div class="reveal space-y-4">
+                <div class="faq-item glass-card rounded-2xl p-2">
+                    <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-6 text-left">
+                        <span class="font-bold text-zinc-200">Apakah harus punya produk dulu?</span>
+                        <span class="faq-icon text-meta-blue text-2xl font-light transition-transform duration-300">+</span>
+                    </button>
+                    <div class="faq-answer px-6 text-zinc-500 text-sm">
+                        Tidak wajib. Kami juga mengajarkan cara meriset produk yang punya potensi winning tinggi di Meta Ads.
+                    </div>
+                </div>
+                <div class="faq-item glass-card rounded-2xl p-2">
+                    <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-6 text-left">
+                        <span class="font-bold text-zinc-200">Berapa budget iklan minimal?</span>
+                        <span class="faq-icon text-meta-blue text-2xl font-light transition-transform duration-300">+</span>
+                    </button>
+                    <div class="faq-answer px-6 text-zinc-500 text-sm">
+                        Anda bisa mulai dari Rp 50.000 per hari. Fokus kelas ini adalah menumbuhkan profit kecil menjadi besar secara bertahap.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-20 border-t border-white/5 text-center">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="flex items-center justify-center gap-3 mb-10">
+                <div class="w-10 h-10 rounded-2xl bg-meta-blue flex items-center justify-center text-white font-black italic">M</div>
+                <span class="font-display font-black text-2xl tracking-tighter text-white">META ADS MASTERY</span>
+            </div>
+            <p class="text-zinc-600 text-xs mb-10 max-w-xl mx-auto leading-relaxed">© 2024 Meta Ads Mastery Indonesia. Disclaimer: Hasil dapat bervariasi. Kesuksesan tergantung pada niat, usaha, dan konsistensi Anda dalam mengeksekusi strategi.</p>
+            <div class="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">
+                <a href="#" class="hover:text-meta-blue transition-all">Privacy</a>
+                <a href="#" class="hover:text-meta-blue transition-all">Terms</a>
+                <a href="#" class="hover:text-meta-blue transition-all">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Reveal Logic
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // FAQ Logic
+        function toggleFaq(btn) {
+            const item = btn.closest('.faq-item');
+            const isActive = item.classList.contains('active');
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+            if(!isActive) item.classList.add('active');
+        }
+
+        // Scroll Logic
+        function scrollToPrice() {
+            document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Timer Logic
+        let timeLeft = (12 * 3600) + (45 * 60) + 30;
+        const timerInt = setInterval(() => {
+            if (timeLeft <= 0) { clearInterval(timerInt); return; }
+            const h = Math.floor(timeLeft / 3600);
+            const m = Math.floor((timeLeft % 3600) / 60);
+            const s = timeLeft % 60;
+            
+            const hE = document.getElementById('hours');
+            const mE = document.getElementById('minutes');
+            const sE = document.getElementById('seconds');
+            
+            if(hE) hE.innerText = String(h).padStart(2, '0');
+            if(mE) mE.innerText = String(m).padStart(2, '0');
+            if(sE) sE.innerText = String(s).padStart(2, '0');
+            
+            timeLeft--;
+        }, 1000);
+    </script>
+</body>
+</html>

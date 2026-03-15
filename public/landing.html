@@ -8,8 +8,8 @@
   <link rel="canonical" href="https://what-u-read.lovable.app" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" /></noscript>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" /></noscript>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -18,7 +18,7 @@
         extend: {
           fontFamily: {
             heading: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
-            body: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            body: ['"Poppins"', 'system-ui', 'sans-serif'],
           },
           colors: {
             border: 'hsl(250 20% 18%)',
@@ -39,7 +39,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; border-color: hsl(250 20% 18%); }
     html { scroll-behavior: smooth; }
-    body { background: hsl(250 30% 5%); color: hsl(0 0% 95%); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; margin: 0; }
+    body { background: hsl(250 30% 5%); color: hsl(0 0% 95%); font-family: 'Poppins', system-ui, sans-serif; margin: 0; }
     .font-heading { font-family: 'Space Grotesk', system-ui, sans-serif; }
 
     .text-gradient-primary {
@@ -154,7 +154,7 @@
     #demo-iframe-wrapper.framed { background:#1a1a1a; }
     #demo-iframe { transition:width 0.3s ease, box-shadow 0.3s ease; }
 
-    #lp-root { min-height: 100vh; background: hsl(250 30% 5%); color: hsl(0 0% 95%); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    #lp-root { min-height: 100vh; background: hsl(250 30% 5%); color: hsl(0 0% 95%); font-family: 'Poppins', system-ui, sans-serif; }
 
     /* YouTube lazy facade */
     .yt-facade { position:relative; width:100%; height:100%; cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -815,6 +815,8 @@
     {id:6,type:"Wedding",style:"Style 6 — Digital Invitation",desc:"Undangan pernikahan digital cantik & modern.",img:BASE+"/images/demo-6.webp"},
     {id:7,type:"Yoga Studio",style:"Style 7 — Wellness & Yoga",desc:"Yoga studio premium di Bali dengan kelas & retreat.",img:BASE+"/images/demo-7.webp"},
     {id:8,type:"Law Firm",style:"Style 8 — Corporate Legal",desc:"Kantor hukum profesional dengan team & practice areas.",img:BASE+"/images/demo-8.webp"},
+    {id:9,type:"Ebook",style:"Style 9 — Meta Ads Ebook",desc:"Ebook Meta Ads dengan estetika TikTok Red & bold typography.",img:BASE+"/images/demo-9.webp"},
+    {id:10,type:"Digital Course",style:"Style 10 — Meta Ads Mastery",desc:"Kelas digital premium dengan glassmorphism & gradient purple.",img:BASE+"/images/demo-10.webp"},
   ];
   const grid=document.getElementById('demo-grid');
   if(!grid) return;
@@ -832,7 +834,7 @@
     div.style.setProperty('width','100%','important');
     div.style.setProperty('display','block','important');
     div.style.setProperty('margin','0','important');
-    div.onclick=function(){openDemo(BASE+'/demo/'+d.id,d.style)};
+    div.onclick=function(){openDemo(d.img,d.style)};
     div.innerHTML='<div class="px-3 md:px-4 pt-3 md:pt-4 pb-0"><p class="text-xs md:text-sm font-bold" style="color:hsl(265 85% 60%)">Section '+(index+1)+' · Style '+d.id+'</p></div>'
     +'<div class="aspect-[3/4] overflow-hidden"><img src="'+d.img+'" alt="'+d.style+'" width="900" height="1200" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" fetchpriority="low"></div>'
     +'<div class="p-3 md:p-4">'
@@ -847,17 +849,19 @@
   });
 })();
 
-function openDemo(url,title){
+function openDemo(imgUrl,title){
   document.getElementById('demo-modal-title').textContent=title+' — Live Preview';
   document.getElementById('demo-loader').style.display='flex';
-  document.getElementById('demo-iframe').src=url;
+  var iframe=document.getElementById('demo-iframe');
+  iframe.srcdoc='<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0b0b18;display:flex;align-items:start;justify-content:center;min-height:100vh}img{width:100%;height:auto;display:block}</style></head><body><img src="'+imgUrl+'" alt="'+title+'" onload="parent.document.getElementById(\'demo-loader\').style.display=\'none\'"></body></html>';
   document.getElementById('demo-modal').classList.add('active');
   document.body.style.overflow='hidden';
   setViewMode('desktop');
 }
 function closeDemo(){
   document.getElementById('demo-modal').classList.remove('active');
-  document.getElementById('demo-iframe').src='';
+  var iframe=document.getElementById('demo-iframe');
+  iframe.srcdoc='';iframe.src='';
   document.body.style.overflow='';
 }
 function setViewMode(mode){
