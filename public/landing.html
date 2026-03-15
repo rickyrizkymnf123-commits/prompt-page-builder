@@ -568,11 +568,12 @@
     <button type="button" class="close-btn" onclick="return closeDemo(event)">← Tutup</button>
   </div>
   <div class="demo-body">
-    <!-- Loading Spinner -->
     <div id="demo-loader" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0a0a0a;z-index:10">
       <div style="width:48px;height:48px;border:3px solid rgba(255,255,255,0.1);border-top-color:hsl(265 85% 60%);border-radius:50%;animation:spin 0.8s linear infinite"></div>
     </div>
-    <iframe id="demo-iframe" src="" sandbox="allow-scripts allow-same-origin allow-popups" style="width:100%;height:100%;border:none;background:#0a0a0a" allowfullscreen onload="document.getElementById('demo-loader').style.display='none'"></iframe>
+    <div id="demo-iframe-wrapper">
+      <iframe id="demo-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups" style="width:100%;height:100%;border:none;background:#0a0a0a" allowfullscreen></iframe>
+    </div>
   </div>
 </div>
 <div id="tap-blocker" aria-hidden="true"></div>
