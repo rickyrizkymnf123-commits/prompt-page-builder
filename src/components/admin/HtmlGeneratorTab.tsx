@@ -125,13 +125,17 @@ const HtmlGeneratorTab = () => {
   }, [toast, config.stepImages, saveStepImagesToDB]);
 
   const removeStepImage = useCallback(async (stepNum: string) => {
-    setConfig((prev) => {
-      const updated = { ...prev.stepImages };
-      delete updated[stepNum];
-      return { ...prev, stepImages: updated };
-    });
-    toast({ title: `Gambar Step ${stepNum} dihapus (kembali ke default)` });
-  }, [toast]);
+    // Remove from storage
+    const oldExts = ["webp", "jpg", "jpeg", "png"];
+    const oldPaths = oldExts.map((e) => `steps/step-${stepNum}.${e}`);
+    await supabase.storage.from("lp-assets").remove(oldPaths);
+
+    const newStepImages = { ...config.stepImages };
+    delete newStepImages[stepNum];
+    setConfig((prev) => ({ ...prev, stepImages: newStepImages }));
+    await saveStepImagesToDB(newStepImages);
+    toast({ title: `✅ Gambar Step ${stepNum} dihapus (kembali ke default)` });
+  }, [toast, config.stepImages, saveStepImagesToDB]);
   useEffect(() => {
     fetch(LANDING_HTML_URL)
       .then((r) => r.text())
