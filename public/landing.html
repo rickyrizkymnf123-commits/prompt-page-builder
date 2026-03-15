@@ -148,6 +148,7 @@
     #demo-modal .demo-topbar .close-btn:hover { background:rgba(255,255,255,0.15); color:white; }
     #demo-modal .demo-body { flex:1; position:relative; overflow:hidden; background:#0a0a0a; overscroll-behavior:contain; }
     @keyframes modalIn { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    #tap-blocker { display:none; position:fixed; inset:0; z-index:260; background:transparent; }
 
     /* View Mode Toggle - reserved */
     .view-toggle button span { display:none; }
@@ -566,6 +567,7 @@
     <iframe id="demo-iframe" src="" sandbox="allow-scripts allow-same-origin allow-popups" style="width:100%;height:100%;border:none;background:#0a0a0a" allowfullscreen onload="document.getElementById('demo-loader').style.display='none'"></iframe>
   </div>
 </div>
+<div id="tap-blocker" aria-hidden="true"></div>
 
 <!-- ===== FOOTER ===== -->
 <footer class="py-8" style="border-top:1px solid hsl(250 20% 18%/0.3)">
@@ -825,27 +827,20 @@ function wrapDemoHtml(rawHtml){
 var SUPABASE_URL='https://npgglrvvdlhagztsxsjc.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZ2dscnZ2ZGxoYWd6dHN4c2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTA1OTQsImV4cCI6MjA4NjQ4NjU5NH0.gBtG_TCTr99ALNiF7Xyb9mzAfYF50rOBmMVhaieNH0U';
 var __demoScrollY=0;
-var __demoScrollLocked=false;
-var __demoSuppressTapUntil=0;
+var __tapBlockerTimer=null;
+
+function setTapBlocker(active){
+  var blocker=document.getElementById('tap-blocker');
+  if(!blocker) return;
+  blocker.style.display=active?'block':'none';
+}
 
 function lockBodyScroll(){
-  if(__demoScrollLocked) return;
   __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
-  document.documentElement.style.overflow='hidden';
-  document.body.style.overflow='hidden';
-  document.body.style.touchAction='none';
-  __demoScrollLocked=true;
 }
 
 function unlockBodyScroll(){
-  if(!__demoScrollLocked) return;
   var y=__demoScrollY;
-  document.documentElement.style.overflow='';
-  document.body.style.overflow='';
-  document.body.style.touchAction='';
-  __demoScrollLocked=false;
-
-  // Keep exact last position user saw before opening demo
   if(Math.abs((window.pageYOffset||0)-y)>1){
     window.scrollTo(0,y);
   }
@@ -853,11 +848,15 @@ function unlockBodyScroll(){
 
 function openDemo(demo,title){
   var iframe=document.getElementById('demo-iframe');
+  var modal=document.getElementById('demo-modal');
   document.getElementById('demo-loader').style.display='flex';
   iframe.removeAttribute('src');
   iframe.removeAttribute('srcdoc');
 
-  document.getElementById('demo-modal').classList.add('active');
+  if(__tapBlockerTimer){ clearTimeout(__tapBlockerTimer); __tapBlockerTimer=null; }
+  setTapBlocker(false);
+  modal.classList.remove('closing');
+  modal.classList.add('active');
   lockBodyScroll();
 
   // If demo has inline html (legacy), use it; otherwise fetch from DB
@@ -893,41 +892,26 @@ function closeDemo(event){
   if(!modal.classList.contains('active')) return false;
 
   var iframe=document.getElementById('demo-iframe');
-  __demoSuppressTapUntil=Date.now()+700;
 
-  // Keep overlay briefly to absorb mobile ghost tap, then close
+  // Prevent ghost tap to underlying CTA/links on mobile
+  setTapBlocker(true);
   modal.classList.add('closing');
+
   setTimeout(function(){
     modal.classList.remove('active');
     modal.classList.remove('closing');
     iframe.removeAttribute('srcdoc');
     iframe.src='about:blank';
     unlockBodyScroll();
-  }, 180);
+  }, 90);
+
+  if(__tapBlockerTimer){ clearTimeout(__tapBlockerTimer); }
+  __tapBlockerTimer=setTimeout(function(){
+    setTapBlocker(false);
+  }, 700);
 
   return false;
 }
-
-document.addEventListener('click', function(e){
-  if(Date.now()<__demoSuppressTapUntil){
-    e.preventDefault();
-    e.stopPropagation();
-  }
-}, true);
-
-document.addEventListener('touchend', function(e){
-  if(Date.now()<__demoSuppressTapUntil){
-    e.preventDefault();
-    e.stopPropagation();
-  }
-}, true);
-
-document.addEventListener('pointerup', function(e){
-  if(Date.now()<__demoSuppressTapUntil){
-    e.preventDefault();
-    e.stopPropagation();
-  }
-}, true);
 
 window.addEventListener('message',function(e){
   if(e.data&&e.data.type==='closeDemo') closeDemo();
