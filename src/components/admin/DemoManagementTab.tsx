@@ -155,6 +155,18 @@ const DemoManagementTab = () => {
     setDemos((prev) => prev.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = demos.findIndex((d) => d.id === active.id);
+    const newIndex = demos.findIndex((d) => d.id === over.id);
+    const reordered = arrayMove(demos, oldIndex, newIndex).map((d, i) => ({ ...d, sort_order: i + 1 }));
+    setDemos(reordered);
+    // Save new order to DB
+    await Promise.all(reordered.map((d) => supabase.from("demos").update({ sort_order: d.sort_order }).eq("id", d.id)));
+    toast({ title: "✅ Urutan disimpan" });
+  };
+
   const uploadThumbnail = async (demoId: string, file: File) => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
       toast({ title: "Format tidak didukung", description: "Gunakan file WebP, JPG, atau PNG.", variant: "destructive" });
