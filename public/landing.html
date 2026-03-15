@@ -136,7 +136,7 @@
     }
 
     /* Demo Modal */
-    #demo-modal { display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center; padding:1rem; }
+    #demo-modal { display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center; padding:1rem; overflow:hidden; }
     #demo-modal.active { display:flex; }
     #demo-modal .modal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); }
     #demo-modal .modal-content { position:relative; width:100%; max-width:64rem; max-height:90vh; border-radius:1rem; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); background:#111; animation:modalIn 0.25s ease; }
