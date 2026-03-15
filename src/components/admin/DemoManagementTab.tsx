@@ -238,16 +238,19 @@ const DemoManagementTab = () => {
         </Button>
       </div>
 
-      <div className="space-y-3">
-        {demos.map((demo) => {
-          const isExpanded = expandedId === demo.id;
-          const isUploading = uploading === demo.id;
-          return (
-            <Card key={demo.id} className={`transition-all ${isExpanded ? "ring-1 ring-primary/30" : ""}`}>
-              <CardContent className="p-0">
-                <div
-                  className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => setExpandedId(isExpanded ? null : demo.id)}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={demos.map((d) => d.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-3">
+            {demos.map((demo) => {
+              const isExpanded = expandedId === demo.id;
+              const isUploading = uploading === demo.id;
+              return (
+                <SortableDemoCard key={demo.id} id={demo.id} isExpanded={isExpanded}>
+                  <CardContent className="p-0">
+                    <div
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setExpandedId(isExpanded ? null : demo.id)}
+                    >
                 >
                   <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
                   <span className="text-xs text-muted-foreground font-mono w-6">#{demo.sort_order}</span>
