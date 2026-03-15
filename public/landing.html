@@ -859,8 +859,7 @@ function openDemo(url,title){
 }
 function closeDemo(){
   document.getElementById('demo-modal').classList.remove('active');
-  var iframe=document.getElementById('demo-iframe');
-  iframe.srcdoc='';iframe.src='';
+  document.getElementById('demo-iframe').src='';
   document.body.style.overflow='';
 }
 function setViewMode(mode){
