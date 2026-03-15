@@ -85,7 +85,38 @@ const HtmlGeneratorTab = () => {
   const [copied, setCopied] = useState(false);
   const [demos, setDemos] = useState<DemoConfig[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [uploadingStep, setUploadingStep] = useState<string | null>(null);
 
+  const uploadStepImage = useCallback(async (stepNum: string, file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+    if (!["png", "jpg", "jpeg", "webp"].includes(ext)) {
+      toast({ title: "Format tidak didukung. Gunakan PNG, JPG, atau WebP.", variant: "destructive" });
+      return;
+    }
+    setUploadingStep(stepNum);
+    const path = `steps/step-${stepNum}.${ext}`;
+    const { error } = await supabase.storage.from("lp-assets").upload(path, file, { upsert: true, contentType: file.type });
+    if (error) {
+      toast({ title: "Gagal upload: " + error.message, variant: "destructive" });
+      setUploadingStep(null);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("lp-assets").getPublicUrl(path);
+    const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+    setConfig((prev) => ({ ...prev, stepImages: { ...prev.stepImages, [stepNum]: publicUrl } }));
+    toast({ title: `✅ Gambar Step ${stepNum} berhasil diupload!` });
+    setUploadingStep(null);
+  }, [toast]);
+
+  const removeStepImage = useCallback(async (stepNum: string) => {
+    setConfig((prev) => {
+      const updated = { ...prev.stepImages };
+      delete updated[stepNum];
+      return { ...prev, stepImages: updated };
+    });
+    toast({ title: `Gambar Step ${stepNum} dihapus (kembali ke default)` });
+  }, [toast]);
   useEffect(() => {
     fetch(LANDING_HTML_URL)
       .then((r) => r.text())
