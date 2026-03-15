@@ -44,6 +44,12 @@ interface DemoConfig {
   is_active: boolean | null;
 }
 
+const STEP_LABELS = [
+  "Framework & Tone", "Produk & Tujuan", "Target Market", "Detail Produk & Pricing",
+  "Visual & Desain", "Elemen Tambahan", "Platform & Device", "Sales Notification",
+  "Countdown Timer", "Edit Mode", "Event Pixel & Gambar",
+];
+
 const defaultConfig: CustomizationConfig = {
   heroTitle: 'Bikin Landing Page <span class="text-gradient-primary">Professional</span><br>Cuma Modal Klik, Langsung Jadi ⚡',
   heroSubtitle: 'Gak perlu bayar developer jutaan. Gak perlu skill coding. <strong style="color:hsl(0 0% 95%)">Tinggal isi form → klik generate → landing page profesional langsung jadi.</strong> Siap dipasang iklan, siap closing.',
@@ -64,6 +70,7 @@ const defaultConfig: CustomizationConfig = {
   footerText: "© 2026 Landing Page Builder by Digital Strategi. All rights reserved.",
   pageTitle: "Landing Page Builder — Bikin LP Profesional Tanpa Coding",
   metaDescription: "Bikin landing page profesional dalam hitungan menit. Tanpa coding, tanpa bayar developer mahal.",
+  stepImages: {},
 };
 
 const escapeHtmlAttr = (value: string) => value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
