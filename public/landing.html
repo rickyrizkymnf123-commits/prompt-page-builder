@@ -809,7 +809,7 @@
 
 function wrapDemoHtml(rawHtml){
   var html=(rawHtml||'').trim();
-  var guardStyle='<style id="lp-preview-guard">*{box-sizing:border-box}html,body{margin:0!important;padding:0!important;max-width:100vw!important;overflow-x:hidden!important}img,video,iframe,table,pre,canvas,svg{max-width:100%!important;height:auto}body{background:#0b0b18!important}</style>';
+  var guardStyle='<style id="lp-preview-guard">*{box-sizing:border-box}html,body{margin:0!important;padding:0!important;max-width:100vw!important;overflow-x:hidden!important}img,video,iframe,table,pre,canvas,svg{max-width:100%!important;height:auto}a,button,input,select,textarea,[role="button"],form{pointer-events:none!important}body{background:#0b0b18!important;-webkit-tap-highlight-color:transparent}</style>';
 
   if(/<html[\s>]/i.test(html)){
     if(/<head[\s>]/i.test(html)){
@@ -825,10 +825,11 @@ var SUPABASE_URL='https://npgglrvvdlhagztsxsjc.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZ2dscnZ2ZGxoYWd6dHN4c2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTA1OTQsImV4cCI6MjA4NjQ4NjU5NH0.gBtG_TCTr99ALNiF7Xyb9mzAfYF50rOBmMVhaieNH0U';
 var __demoScrollY=0;
 var __demoScrollLocked=false;
+var __demoSuppressTapUntil=0;
 
 function lockBodyScroll(){
   if(__demoScrollLocked) return;
-  __demoScrollY=window.scrollY||window.pageYOffset||0;
+  __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
   document.body.style.position='fixed';
   document.body.style.top='-'+__demoScrollY+'px';
   document.body.style.left='0';
@@ -842,8 +843,6 @@ function lockBodyScroll(){
 function unlockBodyScroll(){
   if(!__demoScrollLocked) return;
   var y=__demoScrollY;
-  var previousScrollBehavior=document.documentElement.style.scrollBehavior;
-
   document.body.style.position='';
   document.body.style.top='';
   document.body.style.left='';
@@ -851,21 +850,12 @@ function unlockBodyScroll(){
   document.body.style.width='';
   document.body.style.overflow='';
   document.documentElement.style.overflow='';
-
-  document.documentElement.style.scrollBehavior='auto';
   __demoScrollLocked=false;
 
-  // Restore exact position on all engines (iOS/Android/Desktop)
-  document.documentElement.scrollTop=y;
-  document.body.scrollTop=y;
-  window.scrollTo(0,y);
-
-  requestAnimationFrame(function(){
-    document.documentElement.scrollTop=y;
-    document.body.scrollTop=y;
+  // Restore only once to avoid visible "jump then bounce"
+  if(Math.abs((window.pageYOffset||0)-y)>1){
     window.scrollTo(0,y);
-    document.documentElement.style.scrollBehavior=previousScrollBehavior;
-  });
+  }
 }
 
 function openDemo(demo,title){
