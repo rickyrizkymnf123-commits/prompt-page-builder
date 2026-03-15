@@ -809,22 +809,39 @@ function wrapDemoHtml(rawHtml){
   return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'+guardStyle+'</head><body>'+html+'</body></html>';
 }
 
+var SUPABASE_URL='https://npgglrvvdlhagztsxsjc.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZ2dscnZ2ZGxoYWd6dHN4c2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTA1OTQsImV4cCI6MjA4NjQ4NjU5NH0.gBtG_TCTr99ALNiF7Xyb9mzAfYF50rOBmMVhaieNH0U';
+
 function openDemo(demo,title){
   var iframe=document.getElementById('demo-iframe');
   document.getElementById('demo-loader').style.display='flex';
   iframe.removeAttribute('src');
   iframe.removeAttribute('srcdoc');
 
-  if(demo && demo.html && demo.html.trim()){
+  document.getElementById('demo-modal').classList.add('active');
+  document.body.style.overflow='hidden';
+
+  // If demo has inline html (legacy), use it; otherwise fetch from DB
+  if(demo.html && demo.html.trim()){
     iframe.srcdoc=wrapDemoHtml(demo.html);
-  } else if(demo && demo.url){
-    iframe.src=demo.url;
+  } else if(demo.id){
+    fetch(SUPABASE_URL+'/rest/v1/demos?select=html_code&id=eq.'+demo.id,{
+      headers:{'apikey':SUPABASE_KEY,'Accept':'application/json'}
+    })
+    .then(function(r){return r.json()})
+    .then(function(data){
+      if(data&&data[0]&&data[0].html_code){
+        iframe.srcdoc=wrapDemoHtml(data[0].html_code);
+      } else {
+        iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Preview belum tersedia</div>');
+      }
+    })
+    .catch(function(){
+      iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Gagal memuat preview</div>');
+    });
   } else {
     iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Preview belum tersedia</div>');
   }
-
-  document.getElementById('demo-modal').classList.add('active');
-  document.body.style.overflow='hidden';
 }
 function closeDemo(){
   var iframe=document.getElementById('demo-iframe');
