@@ -233,13 +233,14 @@ const HtmlGeneratorTab = () => {
     const demosSerialized = JSON.stringify(demoPayload).replace(/<\/script/gi, "<\\/script");
     html = html.replace(/const demos\s*=\s*\[[\s\S]*?\];/, `const demos=${demosSerialized};`);
 
-    // Replace step images
-    const DEFAULT_IMGBASE = "https://ai-page-craft-96.lovable.app/images/";
+    // Replace step images — the landing.html constructs URLs via JS: IMGBASE+"step-N.png"
+    // So we replace the concatenation pattern, not the full URL
     Object.entries(config.stepImages).forEach(([stepNum, url]) => {
       if (url && url.trim()) {
+        // Replace IMGBASE+"step-N.png" with the direct uploaded URL
         html = html.replace(
-          new RegExp(`${DEFAULT_IMGBASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}step-${stepNum}\\.png`, 'g'),
-          url.trim()
+          new RegExp(`IMGBASE\\+"step-${stepNum}\\.png"`, 'g'),
+          `"${url.trim()}"`
         );
       }
     });
