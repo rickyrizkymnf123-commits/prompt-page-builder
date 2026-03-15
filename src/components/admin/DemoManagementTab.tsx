@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, Save, Eye, X, GripVertical, Power, PowerOff, Layout } from "lucide-react";
+import { Trash2, Plus, Save, Eye, X, GripVertical, Power, PowerOff, Layout, Upload, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Demo {
@@ -17,22 +17,6 @@ interface Demo {
   sort_order: number;
   is_active: boolean;
 }
-
-const buildThumbnailDoc = (rawHtml: string) => {
-  const html = (rawHtml || "").trim();
-  if (!html) return "";
-
-  const guardStyle = "<style>html,body{margin:0!important;padding:0!important;overflow:hidden!important;max-width:100%!important;scrollbar-width:none!important}*{box-sizing:border-box}::-webkit-scrollbar{display:none!important}img,video,iframe,canvas,svg{max-width:100%!important}a,button,input,select,textarea,[role='button']{pointer-events:none!important}</style>";
-
-  if (/<html[\s>]/i.test(html)) {
-    if (/<head[\s>]/i.test(html)) {
-      return html.replace(/<head([^>]*)>/i, `<head$1>${guardStyle}`);
-    }
-    return html.replace(/<html([^>]*)>/i, `<html$1><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">${guardStyle}</head>`);
-  }
-
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${guardStyle}</head><body>${html}</body></html>`;
-};
 
 const HtmlPreview = ({ html, onClose }: { html: string; onClose: () => void }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -70,12 +54,17 @@ const HtmlPreview = ({ html, onClose }: { html: string; onClose: () => void }) =
   );
 };
 
+const ACCEPTED_TYPES = ["image/webp", "image/jpeg", "image/png"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 const DemoManagementTab = () => {
   const { toast } = useToast();
   const [demos, setDemos] = useState<Demo[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const normalizeDemo = (demo: any): Demo => ({
     ...demo,
@@ -129,6 +118,7 @@ const DemoManagementTab = () => {
         title: demo.title,
         description: demo.description,
         type: demo.type,
+        thumbnail_url: demo.thumbnail_url,
         html_code: demo.html_code,
         sort_order: demo.sort_order,
         is_active: demo.is_active,
@@ -146,6 +136,12 @@ const DemoManagementTab = () => {
 
   const deleteDemo = async (id: string) => {
     if (!confirm("Hapus demo ini?")) return;
+    // Also delete thumbnail from storage
+    const demo = demos.find((d) => d.id === id);
+    if (demo?.thumbnail_url) {
+      const path = `demos/${id}`;
+      await supabase.storage.from("lp-assets").remove([path]);
+    }
     await supabase.from("demos").delete().eq("id", id);
     setDemos((prev) => prev.filter((d) => d.id !== id));
     toast({ title: "✅ Demo dihapus" });
@@ -153,6 +149,57 @@ const DemoManagementTab = () => {
 
   const updateField = (id: string, field: keyof Demo, value: string | number | boolean) => {
     setDemos((prev) => prev.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
+  };
+
+  const uploadThumbnail = async (demoId: string, file: File) => {
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast({ title: "Format tidak didukung", description: "Gunakan file WebP, JPG, atau PNG.", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ title: "File terlalu besar", description: "Maksimal 5MB.", variant: "destructive" });
+      return;
+    }
+
+    setUploading(demoId);
+
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const filePath = `demos/${demoId}.${ext}`;
+
+    // Remove old file first (different extension maybe)
+    const oldExts = ["webp", "jpg", "jpeg", "png"];
+    const oldPaths = oldExts.map((e) => `demos/${demoId}.${e}`);
+    await supabase.storage.from("lp-assets").remove(oldPaths);
+
+    const { error } = await supabase.storage.from("lp-assets").upload(filePath, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+
+    if (error) {
+      toast({ title: "Upload gagal", description: error.message, variant: "destructive" });
+      setUploading(null);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("lp-assets").getPublicUrl(filePath);
+    const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+
+    // Save to DB immediately
+    await supabase.from("demos").update({ thumbnail_url: publicUrl }).eq("id", demoId);
+
+    updateField(demoId, "thumbnail_url", publicUrl);
+    setUploading(null);
+    toast({ title: "✅ Thumbnail diupload" });
+  };
+
+  const removeThumbnail = async (demoId: string) => {
+    const oldExts = ["webp", "jpg", "jpeg", "png"];
+    const oldPaths = oldExts.map((e) => `demos/${demoId}.${e}`);
+    await supabase.storage.from("lp-assets").remove(oldPaths);
+    await supabase.from("demos").update({ thumbnail_url: "" }).eq("id", demoId);
+    updateField(demoId, "thumbnail_url", "");
+    toast({ title: "✅ Thumbnail dihapus" });
   };
 
   if (loading) {
@@ -168,7 +215,7 @@ const DemoManagementTab = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-bold text-lg md:text-xl mb-1">Demo Landing Pages</h2>
-          <p className="text-sm text-muted-foreground">{demos.length} demo terdaftar · thumbnail otomatis dari hero section HTML</p>
+          <p className="text-sm text-muted-foreground">{demos.length} demo terdaftar · upload thumbnail 16:9 (1280×720 recommended)</p>
         </div>
         <Button onClick={addDemo} size="sm" className="gap-1.5">
           <Plus className="w-3.5 h-3.5" /> Tambah
@@ -178,6 +225,7 @@ const DemoManagementTab = () => {
       <div className="space-y-3">
         {demos.map((demo) => {
           const isExpanded = expandedId === demo.id;
+          const isUploading = uploading === demo.id;
           return (
             <Card key={demo.id} className={`transition-all ${isExpanded ? "ring-1 ring-primary/30" : ""}`}>
               <CardContent className="p-0">
@@ -187,20 +235,17 @@ const DemoManagementTab = () => {
                 >
                   <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
                   <span className="text-xs text-muted-foreground font-mono w-6">#{demo.sort_order}</span>
-                  {/* Auto-thumbnail from HTML */}
+                  {/* Thumbnail preview */}
                   <div className="w-16 h-10 rounded border border-border bg-muted/30 shrink-0 overflow-hidden relative">
-                    {demo.html_code ? (
-                      <iframe
-                        srcDoc={buildThumbnailDoc(demo.html_code)}
-                        sandbox="allow-scripts"
-                        className="absolute top-0 left-0 border-0 pointer-events-none"
-                        style={{ width: "400%", height: "400%", transform: "scale(0.25)", transformOrigin: "top left", overflow: "hidden" }}
-                        scrolling="no"
-                        title="thumb"
+                    {demo.thumbnail_url ? (
+                      <img
+                        src={demo.thumbnail_url}
+                        alt={demo.title}
+                        className="w-full h-full object-cover object-top"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-[8px] text-muted-foreground">—</span>
+                        <ImageIcon className="w-3.5 h-3.5 text-muted-foreground/40" />
                       </div>
                     )}
                   </div>
@@ -228,6 +273,67 @@ const DemoManagementTab = () => {
 
                 {isExpanded && (
                   <div className="px-4 pb-4 pt-1 border-t border-border space-y-3">
+                    {/* Thumbnail Upload */}
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1.5 block">Thumbnail (16:9 · 1280×720 · WebP/JPG/PNG · Max 5MB)</label>
+                      <div className="flex gap-3 items-start">
+                        <div className="w-40 aspect-video rounded-lg border border-border bg-muted/20 overflow-hidden shrink-0 relative">
+                          {demo.thumbnail_url ? (
+                            <img src={demo.thumbnail_url} alt="Thumbnail" className="w-full h-full object-cover object-top" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+                              <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+                              <span className="text-[10px] text-muted-foreground/50">Belum ada</span>
+                            </div>
+                          )}
+                          {isUploading && (
+                            <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <input
+                            ref={(el) => { fileInputRefs.current[demo.id] = el; }}
+                            type="file"
+                            accept=".webp,.jpg,.jpeg,.png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) uploadThumbnail(demo.id, file);
+                              e.target.value = "";
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs"
+                            disabled={isUploading}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              fileInputRefs.current[demo.id]?.click();
+                            }}
+                          >
+                            <Upload className="w-3 h-3" />
+                            {demo.thumbnail_url ? "Ganti" : "Upload"}
+                          </Button>
+                          {demo.thumbnail_url && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="gap-1.5 text-xs text-destructive hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeThumbnail(demo.id);
+                              }}
+                            >
+                              <Trash2 className="w-3 h-3" /> Hapus
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">Judul</label>
