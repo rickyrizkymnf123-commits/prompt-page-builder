@@ -192,9 +192,9 @@ const DemoManagementTab = () => {
                     {demo.html_code ? (
                       <iframe
                         srcDoc={buildThumbnailDoc(demo.html_code)}
-                        sandbox=""
+                        sandbox="allow-scripts"
                         className="absolute top-0 left-0 border-0 pointer-events-none"
-                        style={{ width: "400%", height: "400%", transform: "scale(0.25)", transformOrigin: "top left" }}
+                        style={{ width: "400%", height: "400%", transform: "scale(0.25)", transformOrigin: "top left", overflow: "hidden" }}
                         scrolling="no"
                         title="thumb"
                       />
