@@ -841,14 +841,18 @@ function lockBodyScroll(){
 
 function unlockBodyScroll(){
   if(!__demoScrollLocked) return;
+  var y=__demoScrollY;
   document.body.style.position='';
   document.body.style.top='';
   document.body.style.left='';
   document.body.style.right='';
   document.body.style.width='';
   document.body.style.overflow='';
-  window.scrollTo(0,__demoScrollY);
+  document.documentElement.style.overflow='';
   __demoScrollLocked=false;
+  // Restore scroll position synchronously then confirm with rAF
+  window.scrollTo(0,y);
+  requestAnimationFrame(function(){window.scrollTo(0,y);});
 }
 
 function openDemo(demo,title){
