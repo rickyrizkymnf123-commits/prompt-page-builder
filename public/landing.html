@@ -778,25 +778,11 @@
     return;
   }
 
-  function buildThumbnailDoc(rawHtml){
-    var html=(rawHtml||'').trim();
-    if(!html) return '';
-    var guardStyle='<style>html,body{margin:0!important;padding:0!important;overflow:hidden!important;max-width:100%!important;scrollbar-width:none!important}*{box-sizing:border-box}::-webkit-scrollbar{display:none!important}img,video,iframe,canvas,svg{max-width:100%!important}a,button,input,select,textarea,[role="button"]{pointer-events:none!important}</style>';
-    if(/<html[\s>]/i.test(html)){
-      if(/<head[\s>]/i.test(html)){
-        return html.replace(/<head([^>]*)>/i,'<head$1>'+guardStyle);
-      }
-      return html.replace(/<html([^>]*)>/i,'<html$1><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+guardStyle+'</head>');
-    }
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+guardStyle+'</head><body>'+html+'</body></html>';
-  }
-
   demos.forEach((d, index)=>{
     const div=document.createElement('div');
-    var thumbDoc = buildThumbnailDoc(d.html || '');
-    var thumbSrcDoc = thumbDoc ? thumbDoc.replace(/&/g,'&amp;').replace(/"/g,'&quot;') : '';
-    var thumbnailHtml = thumbDoc
-      ? '<iframe loading="lazy" sandbox="allow-scripts" srcdoc="'+thumbSrcDoc+'" class="absolute top-0 left-0 border-0 pointer-events-none" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;overflow:hidden;" scrolling="no"></iframe>'
+    // Use static thumbnail image instead of live iframe to prevent mobile crashes
+    var thumbnailHtml = d.thumb
+      ? '<img src="'+d.thumb+'" alt="'+(d.style || 'Demo preview')+'" loading="lazy" decoding="async" class="w-full h-full object-cover object-top" style="min-height:120px">'
       : '<div class="w-full h-full flex items-center justify-center" style="background:linear-gradient(135deg,hsl(265 85% 15%),hsl(250 30% 8%));min-height:120px"><p class="text-xs" style="color:hsl(250 10% 55%)">Preview belum tersedia</p></div>';
 
     div.className='glass rounded-xl overflow-hidden gradient-border group block cursor-pointer hover:-translate-y-1 transition-transform';
