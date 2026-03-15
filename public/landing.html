@@ -900,18 +900,31 @@ function closeDemo(event){
   if(!modal.classList.contains('active')) return false;
 
   var iframe=document.getElementById('demo-iframe');
+  __demoSuppressTapUntil=Date.now()+450;
 
-  // Keep modal visible while restoring scroll, so user never sees jump-to-top flash
+  // First close modal, then unlock page scroll
+  modal.classList.remove('active');
+  iframe.removeAttribute('srcdoc');
+  iframe.src='about:blank';
   unlockBodyScroll();
-
-  requestAnimationFrame(function(){
-    modal.classList.remove('active');
-    iframe.removeAttribute('srcdoc');
-    iframe.src='about:blank';
-  });
 
   return false;
 }
+
+document.addEventListener('click', function(e){
+  if(Date.now()<__demoSuppressTapUntil){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
+document.addEventListener('touchend', function(e){
+  if(Date.now()<__demoSuppressTapUntil){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
 window.addEventListener('message',function(e){
   if(e.data&&e.data.type==='closeDemo') closeDemo();
 });
