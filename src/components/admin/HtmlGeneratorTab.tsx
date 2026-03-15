@@ -30,6 +30,7 @@ interface CustomizationConfig {
   footerText: string;
   pageTitle: string;
   metaDescription: string;
+  stepImages: Record<string, string>;
 }
 
 interface DemoConfig {
@@ -42,6 +43,12 @@ interface DemoConfig {
   sort_order: number | null;
   is_active: boolean | null;
 }
+
+const STEP_LABELS = [
+  "Framework & Tone", "Produk & Tujuan", "Target Market", "Detail Produk & Pricing",
+  "Visual & Desain", "Elemen Tambahan", "Platform & Device", "Sales Notification",
+  "Countdown Timer", "Edit Mode", "Event Pixel & Gambar",
+];
 
 const defaultConfig: CustomizationConfig = {
   heroTitle: 'Bikin Landing Page <span class="text-gradient-primary">Professional</span><br>Cuma Modal Klik, Langsung Jadi ⚡',
@@ -63,6 +70,7 @@ const defaultConfig: CustomizationConfig = {
   footerText: "© 2026 Landing Page Builder by Digital Strategi. All rights reserved.",
   pageTitle: "Landing Page Builder — Bikin LP Profesional Tanpa Coding",
   metaDescription: "Bikin landing page profesional dalam hitungan menit. Tanpa coding, tanpa bayar developer mahal.",
+  stepImages: {},
 };
 
 const escapeHtmlAttr = (value: string) => value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
@@ -168,6 +176,17 @@ const HtmlGeneratorTab = () => {
     const demosSerialized = JSON.stringify(demoPayload).replace(/<\/script/gi, "<\\/script");
     html = html.replace(/const demos\s*=\s*\[[\s\S]*?\];/, `const demos=${demosSerialized};`);
 
+    // Replace step images
+    const DEFAULT_IMGBASE = "https://ai-page-craft-96.lovable.app/images/";
+    Object.entries(config.stepImages).forEach(([stepNum, url]) => {
+      if (url && url.trim()) {
+        html = html.replace(
+          new RegExp(`${DEFAULT_IMGBASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}step-${stepNum}\\.png`, 'g'),
+          url.trim()
+        );
+      }
+    });
+
     html = html.replace(/© 2026 Landing Page Builder by Digital Strategi\. All rights reserved\./, config.footerText);
 
     setGeneratedHtml(html);
@@ -251,6 +270,34 @@ const HtmlGeneratorTab = () => {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">YouTube Embed URL</label>
                 <Input value={config.solutionVideoUrl} onChange={(e) => updateConfig("solutionVideoUrl", e.target.value)} className="text-xs font-mono" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2">🖼️ Gambar Step (Screenshot)</h3>
+              <p className="text-xs text-muted-foreground">Kosongkan jika ingin pakai gambar default. Isi URL gambar untuk mengganti.</p>
+              <div className="space-y-3">
+                {STEP_LABELS.map((label, i) => {
+                  const num = String(i + 1);
+                  return (
+                    <div key={num}>
+                      <label className="text-xs text-muted-foreground mb-1 block">Step {num}: {label}</label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={config.stepImages[num] || ""}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, stepImages: { ...prev.stepImages, [num]: e.target.value } }))}
+                          placeholder={`https://ai-page-craft-96.lovable.app/images/step-${num}.png`}
+                          className="text-xs font-mono"
+                        />
+                        {config.stepImages[num] && (
+                          <img src={config.stepImages[num]} alt={`Step ${num}`} className="w-10 h-10 rounded object-cover border border-border shrink-0" />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
