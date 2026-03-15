@@ -18,6 +18,23 @@ interface Demo {
   is_active: boolean;
 }
 
+const buildThumbnailDoc = (rawHtml: string) => {
+  const html = (rawHtml || "").trim();
+  if (!html) return "";
+
+  const withoutScripts = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+  const guardStyle = "<style>html,body{margin:0!important;overflow:hidden!important;max-width:100%!important}*{box-sizing:border-box}img,video,iframe,canvas,svg{max-width:100%!important}a,button,input,select,textarea,[role='button']{pointer-events:none!important}</style>";
+
+  if (/<html[\s>]/i.test(withoutScripts)) {
+    if (/<head[\s>]/i.test(withoutScripts)) {
+      return withoutScripts.replace(/<head([^>]*)>/i, `<head$1>${guardStyle}`);
+    }
+    return withoutScripts.replace(/<html([^>]*)>/i, `<html$1><head>${guardStyle}</head>`);
+  }
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${guardStyle}</head><body>${withoutScripts}</body></html>`;
+};
+
 const HtmlPreview = ({ html, onClose }: { html: string; onClose: () => void }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
