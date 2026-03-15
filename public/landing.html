@@ -847,6 +847,38 @@ var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 var __demoScrollY=0;
 var __tapBlockerTimer=null;
 var __isBodyLocked=false;
+var __demoObjectUrl=null;
+var __demoRequestId=0;
+
+function revokeDemoObjectUrl(){
+  if(!__demoObjectUrl) return;
+  try { URL.revokeObjectURL(__demoObjectUrl); } catch(_) {}
+  __demoObjectUrl=null;
+}
+
+function resetDemoFrameForOpen(iframe){
+  if(!iframe) return;
+  revokeDemoObjectUrl();
+  iframe.removeAttribute('src');
+  iframe.removeAttribute('srcdoc');
+}
+
+function clearDemoFrameForClose(iframe){
+  if(!iframe) return;
+  try { iframe.src='about:blank'; } catch(_) {}
+  try { iframe.srcdoc=''; } catch(_) {}
+  revokeDemoObjectUrl();
+}
+
+function renderDemoHtmlInIframe(iframe, html, requestId){
+  if(!iframe || requestId!==__demoRequestId) return;
+  var wrappedHtml=wrapDemoHtml(html);
+  revokeDemoObjectUrl();
+  var blob=new Blob([wrappedHtml], { type:'text/html;charset=utf-8' });
+  var blobUrl=URL.createObjectURL(blob);
+  __demoObjectUrl=blobUrl;
+  iframe.src=blobUrl;
+}
 
 function setTapBlocker(active){
   var blocker=document.getElementById('tap-blocker');
@@ -857,9 +889,14 @@ function setTapBlocker(active){
 function lockBodyScroll(){
   if(__isBodyLocked) return;
   __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
-  document.body.style.top='-'+__demoScrollY+'px';
   document.documentElement.classList.add('modal-open');
   document.body.classList.add('modal-open');
+  document.body.style.position='fixed';
+  document.body.style.top='-'+__demoScrollY+'px';
+  document.body.style.left='0';
+  document.body.style.right='0';
+  document.body.style.width='100%';
+  document.body.style.overflow='hidden';
   __isBodyLocked=true;
 }
 
@@ -870,15 +907,28 @@ function unlockBodyScroll(){
   if(__isBodyLocked){
     root.classList.remove('modal-open');
     document.body.classList.remove('modal-open');
+    document.body.style.position='';
     document.body.style.top='';
+    document.body.style.left='';
+    document.body.style.right='';
+    document.body.style.width='';
+    document.body.style.overflow='';
     __isBodyLocked=false;
   }
 
   var prevBehavior=root.style.scrollBehavior;
   root.style.scrollBehavior='auto';
-  window.scrollTo(0,y);
-  requestAnimationFrame(function(){
+  try {
+    window.scrollTo({ top:y, left:0, behavior:'auto' });
+  } catch(_) {
     window.scrollTo(0,y);
+  }
+  requestAnimationFrame(function(){
+    try {
+      window.scrollTo({ top:y, left:0, behavior:'auto' });
+    } catch(_) {
+      window.scrollTo(0,y);
+    }
     root.style.scrollBehavior=prevBehavior;
   });
 }
@@ -886,9 +936,12 @@ function unlockBodyScroll(){
 function openDemo(demo,title){
   var iframe=document.getElementById('demo-iframe');
   var modal=document.getElementById('demo-modal');
-  document.getElementById('demo-loader').style.display='flex';
-  iframe.removeAttribute('src');
-  iframe.removeAttribute('srcdoc');
+  var loader=document.getElementById('demo-loader');
+  if(!iframe || !modal || !loader) return;
+
+  var requestId=++__demoRequestId;
+  loader.style.display='flex';
+  resetDemoFrameForOpen(iframe);
 
   if(__tapBlockerTimer){ clearTimeout(__tapBlockerTimer); __tapBlockerTimer=null; }
   setTapBlocker(false);
@@ -896,27 +949,35 @@ function openDemo(demo,title){
   modal.classList.add('active');
   lockBodyScroll();
 
-  // If demo has inline html (legacy), use it; otherwise fetch from DB
+  var fallbackEmpty='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Preview belum tersedia</div>';
+  var fallbackError='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Gagal memuat preview</div>';
+
   if(demo.html && demo.html.trim()){
-    iframe.srcdoc=wrapDemoHtml(demo.html);
-  } else if(demo.id){
+    renderDemoHtmlInIframe(iframe, demo.html, requestId);
+    return;
+  }
+
+  if(demo.id){
     fetch(SUPABASE_URL+'/rest/v1/demos?select=html_code&id=eq.'+demo.id,{
       headers:{'apikey':SUPABASE_KEY,'Accept':'application/json'}
     })
-    .then(function(r){return r.json()})
+    .then(function(r){ return r.json(); })
     .then(function(data){
+      if(requestId!==__demoRequestId) return;
       if(data&&data[0]&&data[0].html_code){
-        iframe.srcdoc=wrapDemoHtml(data[0].html_code);
+        renderDemoHtmlInIframe(iframe, data[0].html_code, requestId);
       } else {
-        iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Preview belum tersedia</div>');
+        renderDemoHtmlInIframe(iframe, fallbackEmpty, requestId);
       }
     })
     .catch(function(){
-      iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Gagal memuat preview</div>');
+      if(requestId!==__demoRequestId) return;
+      renderDemoHtmlInIframe(iframe, fallbackError, requestId);
     });
-  } else {
-    iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Preview belum tersedia</div>');
+    return;
   }
+
+  renderDemoHtmlInIframe(iframe, fallbackEmpty, requestId);
 }
 
 function closeDemo(event){
@@ -930,15 +991,14 @@ function closeDemo(event){
 
   var iframe=document.getElementById('demo-iframe');
 
-  // Prevent ghost tap to underlying CTA/links on mobile
+  __demoRequestId++;
   setTapBlocker(true);
+  clearDemoFrameForClose(iframe);
   modal.classList.add('closing');
 
   setTimeout(function(){
     modal.classList.remove('active');
     modal.classList.remove('closing');
-    iframe.removeAttribute('srcdoc');
-    iframe.src='about:blank';
     unlockBodyScroll();
   }, 90);
 
