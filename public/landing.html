@@ -767,28 +767,14 @@
     return;
   }
 
-  function buildThumbnailDoc(rawHtml){
-    var html=(rawHtml||'').trim();
-    if(!html) return '';
-    var guardStyle='<style>html,body{margin:0!important;padding:0!important;overflow:hidden!important;max-width:100%!important;scrollbar-width:none!important}*{box-sizing:border-box}::-webkit-scrollbar{display:none!important}img,video,iframe,canvas,svg{max-width:100%!important}a,button,input,select,textarea,[role="button"]{pointer-events:none!important}</style>';
-
-    if(/<html[\s>]/i.test(html)){
-      if(/<head[\s>]/i.test(html)){
-        return html.replace(/<head([^>]*)>/i,'<head$1>'+guardStyle);
-      }
-      return html.replace(/<html([^>]*)>/i,'<html$1><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+guardStyle+'</head>');
-    }
-
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+guardStyle+'</head><body>'+html+'</body></html>';
-  }
-
   demos.forEach((d, index)=>{
     const div=document.createElement('div');
-    var thumbDoc = buildThumbnailDoc(d.html || '');
-    var thumbSrc = thumbDoc ? ('data:text/html;charset=utf-8,' + encodeURIComponent(thumbDoc)) : '';
-    var thumbnailHtml = thumbDoc
-      ? '<iframe sandbox="allow-scripts" src="'+thumbSrc+'" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;pointer-events:none;border:none;overflow:hidden;" scrolling="no"></iframe>'
-      : '<div class="w-full h-full flex items-center justify-center text-xs" style="background:hsl(250 25% 10%);color:hsl(250 10% 55%)">Preview belum tersedia</div>';
+    // Simple placeholder thumbnail - no heavy HTML iframe
+    var thumbnailHtml = '<div class="w-full h-full flex items-center justify-center" style="background:linear-gradient(135deg,hsl(265 85% 15%),hsl(250 30% 8%));min-height:120px">'
+      +'<div class="text-center">'
+      +'<svg style="width:32px;height:32px;color:hsl(265 85% 60%);margin:0 auto 8px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5"/><path d="M3 9h18M9 21V9" stroke-width="1.5"/></svg>'
+      +'<p class="text-xs font-medium" style="color:hsl(265 85% 60%)">'+(d.type || 'Landing Page')+'</p>'
+      +'</div></div>';
 
     div.className='glass rounded-xl overflow-hidden gradient-border group block cursor-pointer hover:-translate-y-1 transition-transform';
     div.style.setProperty('width','100%','important');
@@ -823,22 +809,39 @@ function wrapDemoHtml(rawHtml){
   return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'+guardStyle+'</head><body>'+html+'</body></html>';
 }
 
+var SUPABASE_URL='https://npgglrvvdlhagztsxsjc.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZ2dscnZ2ZGxoYWd6dHN4c2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTA1OTQsImV4cCI6MjA4NjQ4NjU5NH0.gBtG_TCTr99ALNiF7Xyb9mzAfYF50rOBmMVhaieNH0U';
+
 function openDemo(demo,title){
   var iframe=document.getElementById('demo-iframe');
   document.getElementById('demo-loader').style.display='flex';
   iframe.removeAttribute('src');
   iframe.removeAttribute('srcdoc');
 
-  if(demo && demo.html && demo.html.trim()){
+  document.getElementById('demo-modal').classList.add('active');
+  document.body.style.overflow='hidden';
+
+  // If demo has inline html (legacy), use it; otherwise fetch from DB
+  if(demo.html && demo.html.trim()){
     iframe.srcdoc=wrapDemoHtml(demo.html);
-  } else if(demo && demo.url){
-    iframe.src=demo.url;
+  } else if(demo.id){
+    fetch(SUPABASE_URL+'/rest/v1/demos?select=html_code&id=eq.'+demo.id,{
+      headers:{'apikey':SUPABASE_KEY,'Accept':'application/json'}
+    })
+    .then(function(r){return r.json()})
+    .then(function(data){
+      if(data&&data[0]&&data[0].html_code){
+        iframe.srcdoc=wrapDemoHtml(data[0].html_code);
+      } else {
+        iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Preview belum tersedia</div>');
+      }
+    })
+    .catch(function(){
+      iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Gagal memuat preview</div>');
+    });
   } else {
     iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Preview belum tersedia</div>');
   }
-
-  document.getElementById('demo-modal').classList.add('active');
-  document.body.style.overflow='hidden';
 }
 function closeDemo(){
   var iframe=document.getElementById('demo-iframe');
