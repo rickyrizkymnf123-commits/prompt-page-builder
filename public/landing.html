@@ -488,41 +488,10 @@
         </ul>
       </div>
 
-      <a href="#checkout" class="block w-full"><button class="btn-primary glow-primary w-full justify-center">⚡ AMANKAN AKSES SEKARANG</button></a>
+      <a id="cta-secondary-link" href="https://example.com" class="block w-full"><button class="btn-primary glow-primary w-full justify-center">⚡ AMANKAN AKSES SEKARANG</button></a>
 
       <div class="flex items-center justify-center gap-2 mt-4 text-xs" style="color:hsl(250 10% 55%)">🔒 Transaksi 100% Aman & Terenkripsi</div>
     </div>
-  </div>
-</section>
-
-<!-- ===== CHECKOUT ===== -->
-<section class="relative py-20 md:py-28 overflow-hidden" id="checkout" style="background: radial-gradient(ellipse 70% 50% at 50% 50%, hsl(265 85% 15% / 0.15), transparent);">
-  <div class="container relative z-10">
-    <div class="flex justify-center mb-6">
-      <span class="glass px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase" style="color:hsl(265 85% 60%)">💳 Checkout</span>
-    </div>
-    <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-6 leading-tight" style="font-family:'Space Grotesk',sans-serif;">Amankan Akses Lo <span class="text-gradient-primary">Sekarang</span></h2>
-    <p class="text-center text-lg max-w-2xl mx-auto mb-12" style="color:hsl(250 10% 55%)">Isi data di bawah, pilih metode pembayaran, dan langsung dapatkan akses penuh ke AI Landing Page Builder + semua bonusnya.</p>
-    <div class="max-w-3xl mx-auto rounded-3xl overflow-visible glow-primary gradient-border glass" style="padding:0.75rem;">
-      <iframe id="scalev-checkout" frameborder="0" scrolling="no" src="https://akademi-digital-trade.myscalev.com/lpe" title="Checkout - AI Landing Page Builder" style="width:100%;min-height:1800px;border:0;border-radius:1rem;background:transparent;filter:invert(0.92) hue-rotate(180deg) saturate(1.5);overflow:hidden" allow="payment"></iframe>
-    </div>
-    <script>
-    (function(){
-      var iframe=document.getElementById('scalev-checkout');
-      function isUrl(s){try{new URL(s);return true}catch(_){return false}}
-      function isJSONObject(s){try{var p=JSON.parse(s);return typeof p==='object'&&p!==null}catch(e){return false}}
-      function isIframeSameOrigin(){try{iframe.contentDocument||iframe.contentWindow.document;return true}catch(e){return false}}
-      window.addEventListener('message',function(e){
-        if(e.origin==='https://akademi-digital-trade.myscalev.com'){
-          if(isUrl(e.data)){location.href=e.data}
-          if(isJSONObject(e.data)&&!isIframeSameOrigin()){var msg=JSON.parse(e.data);if(msg.type==='resize'){iframe.style.height=msg.height+'px'}}
-        }
-      },false);
-      var obs=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){iframe.src=iframe.src;obs.disconnect()}})});
-      obs.observe(iframe);
-    })();
-    </script>
-    <p class="text-center text-sm mt-4" style="color:hsl(250 10% 55%)">🔒 Transaksi 100% aman & terenkripsi</p>
   </div>
 </section>
 
