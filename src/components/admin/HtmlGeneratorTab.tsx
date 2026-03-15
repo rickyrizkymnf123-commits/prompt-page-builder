@@ -88,6 +88,13 @@ const HtmlGeneratorTab = () => {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [uploadingStep, setUploadingStep] = useState<string | null>(null);
 
+  const saveStepImagesToDB = useCallback(async (stepImages: Record<string, string>) => {
+    await supabase.from("app_settings").upsert(
+      { key: "step_images", value: JSON.stringify(stepImages), updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+  }, []);
+
   const uploadStepImage = useCallback(async (stepNum: string, file: File) => {
     const ext = file.name.split(".").pop()?.toLowerCase() || "png";
     if (!["png", "jpg", "jpeg", "webp"].includes(ext)) {
@@ -95,6 +102,12 @@ const HtmlGeneratorTab = () => {
       return;
     }
     setUploadingStep(stepNum);
+
+    // Remove old files with different extensions
+    const oldExts = ["webp", "jpg", "jpeg", "png"];
+    const oldPaths = oldExts.map((e) => `steps/step-${stepNum}.${e}`);
+    await supabase.storage.from("lp-assets").remove(oldPaths);
+
     const path = `steps/step-${stepNum}.${ext}`;
     const { error } = await supabase.storage.from("lp-assets").upload(path, file, { upsert: true, contentType: file.type });
     if (error) {
@@ -104,19 +117,25 @@ const HtmlGeneratorTab = () => {
     }
     const { data: urlData } = supabase.storage.from("lp-assets").getPublicUrl(path);
     const publicUrl = urlData.publicUrl + "?t=" + Date.now();
-    setConfig((prev) => ({ ...prev, stepImages: { ...prev.stepImages, [stepNum]: publicUrl } }));
+    const newStepImages = { ...config.stepImages, [stepNum]: publicUrl };
+    setConfig((prev) => ({ ...prev, stepImages: newStepImages }));
+    await saveStepImagesToDB(newStepImages);
     toast({ title: `✅ Gambar Step ${stepNum} berhasil diupload!` });
     setUploadingStep(null);
-  }, [toast]);
+  }, [toast, config.stepImages, saveStepImagesToDB]);
 
   const removeStepImage = useCallback(async (stepNum: string) => {
-    setConfig((prev) => {
-      const updated = { ...prev.stepImages };
-      delete updated[stepNum];
-      return { ...prev, stepImages: updated };
-    });
-    toast({ title: `Gambar Step ${stepNum} dihapus (kembali ke default)` });
-  }, [toast]);
+    // Remove from storage
+    const oldExts = ["webp", "jpg", "jpeg", "png"];
+    const oldPaths = oldExts.map((e) => `steps/step-${stepNum}.${e}`);
+    await supabase.storage.from("lp-assets").remove(oldPaths);
+
+    const newStepImages = { ...config.stepImages };
+    delete newStepImages[stepNum];
+    setConfig((prev) => ({ ...prev, stepImages: newStepImages }));
+    await saveStepImagesToDB(newStepImages);
+    toast({ title: `✅ Gambar Step ${stepNum} dihapus (kembali ke default)` });
+  }, [toast, config.stepImages, saveStepImagesToDB]);
   useEffect(() => {
     fetch(LANDING_HTML_URL)
       .then((r) => r.text())
@@ -127,7 +146,7 @@ const HtmlGeneratorTab = () => {
   useEffect(() => {
     const loadData = async () => {
       const [settingsRes, demosRes] = await Promise.all([
-        supabase.from("app_settings").select("key,value").in("key", ["scalev_order_url"]),
+        supabase.from("app_settings").select("key,value").in("key", ["scalev_order_url", "step_images"]),
         supabase
           .from("demos")
           .select("id,title,description,type,thumbnail_url,html_code,sort_order,is_active")
@@ -137,9 +156,16 @@ const HtmlGeneratorTab = () => {
 
       const settings = settingsRes.data ?? [];
       const orderUrl = settings.find((item) => item.key === "scalev_order_url")?.value?.trim();
-      if (orderUrl) {
-        setConfig((prev) => ({ ...prev, ctaSecondaryUrl: orderUrl, ctaFinalUrl: orderUrl }));
+      const stepImagesRaw = settings.find((item) => item.key === "step_images")?.value;
+      let savedStepImages: Record<string, string> = {};
+      if (stepImagesRaw) {
+        try { savedStepImages = JSON.parse(stepImagesRaw); } catch {}
       }
+      setConfig((prev) => ({
+        ...prev,
+        ...(orderUrl ? { ctaSecondaryUrl: orderUrl, ctaFinalUrl: orderUrl } : {}),
+        stepImages: savedStepImages,
+      }));
 
       setDemos((demosRes.data as DemoConfig[]) || []);
     };
