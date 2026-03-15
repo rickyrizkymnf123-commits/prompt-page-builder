@@ -774,19 +774,7 @@
 
 // === Demo Grid ===
 (function(){
-  const BASE='https://ai-page-craft-96.lovable.app';
-  const demos=[
-    {id:1,type:"Coffee Shop",style:"Style 1 — Dark Luxury Cafe",desc:"Website kafe premium dengan estetika dark & gold.",img:BASE+"/images/demo-1.webp"},
-    {id:2,type:"Skincare",style:"Style 2 — Editorial Beauty",desc:"Brand skincare mewah dengan layout editorial.",img:BASE+"/images/demo-2.webp"},
-    {id:3,type:"Crypto Trading",style:"Style 3 — Trading Platform",desc:"Platform trading crypto dengan dashboard & live prices.",img:BASE+"/images/demo-3.webp"},
-    {id:4,type:"Photography",style:"Style 4 — Photography Studio",desc:"Studio fotografi profesional dengan portfolio & packages.",img:BASE+"/images/demo-4.webp"},
-    {id:5,type:"Coffee Shop",style:"Style 5 — Artisan Coffee",desc:"Kafe artisan dengan menu, lokasi, dan cerita brand.",img:BASE+"/images/demo-5.webp"},
-    {id:6,type:"Wedding",style:"Style 6 — Digital Invitation",desc:"Undangan pernikahan digital cantik & modern.",img:BASE+"/images/demo-6.webp"},
-    {id:7,type:"Yoga Studio",style:"Style 7 — Wellness & Yoga",desc:"Yoga studio premium di Bali dengan kelas & retreat.",img:BASE+"/images/demo-7.webp"},
-    {id:8,type:"Law Firm",style:"Style 8 — Corporate Legal",desc:"Kantor hukum profesional dengan team & practice areas.",img:BASE+"/images/demo-8.webp"},
-    {id:9,type:"Ebook",style:"Style 9 — Meta Ads Ebook",desc:"Ebook Meta Ads dengan estetika TikTok Red & bold typography.",img:BASE+"/images/demo-9.webp"},
-    {id:10,type:"Digital Course",style:"Style 10 — Meta Ads Mastery",desc:"Kelas digital premium dengan glassmorphism & gradient purple.",img:BASE+"/images/demo-10.webp"},
-  ];
+  const demos=[];
   const grid=document.getElementById('demo-grid');
   if(!grid) return;
   grid.innerHTML='';
@@ -797,38 +785,64 @@
   grid.style.setProperty('max-width','48rem','important');
   grid.style.setProperty('margin','0 auto','important');
 
+  if(!demos.length){
+    grid.innerHTML='<div class="glass rounded-xl p-5 text-center" style="color:hsl(250 10% 55%)">Demo style belum ditambahkan dari dashboard admin.</div>';
+    return;
+  }
+
   demos.forEach((d, index)=>{
     const div=document.createElement('div');
+    const thumbnail=d.img
+      ? '<img src="'+d.img+'" alt="'+d.style+'" width="900" height="1200" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" fetchpriority="low">'
+      : '<div class="w-full h-full flex items-center justify-center text-xs" style="background:hsl(250 25% 10%);color:hsl(250 10% 55%)">Thumbnail belum tersedia</div>';
+
     div.className='glass rounded-xl overflow-hidden gradient-border group block cursor-pointer hover:-translate-y-1 transition-transform';
     div.style.setProperty('width','100%','important');
     div.style.setProperty('display','block','important');
     div.style.setProperty('margin','0','important');
-    div.onclick=function(){openDemo(BASE+'/demo/'+d.id,d.style)};
-    div.innerHTML='<div class="px-3 md:px-4 pt-3 md:pt-4 pb-0"><p class="text-xs md:text-sm font-bold" style="color:hsl(265 85% 60%)">Section '+(index+1)+' · Style '+d.id+'</p></div>'
-    +'<div class="aspect-[3/4] overflow-hidden"><img src="'+d.img+'" alt="'+d.style+'" width="900" height="1200" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" fetchpriority="low"></div>'
+    div.onclick=function(){openDemo(d,d.style || ('Style '+(index+1)))};
+    div.innerHTML='<div class="px-3 md:px-4 pt-3 md:pt-4 pb-0"><p class="text-xs md:text-sm font-bold" style="color:hsl(265 85% 60%)">Section '+(index+1)+' · Demo '+(index+1)+'</p></div>'
+    +'<div class="aspect-[3/4] overflow-hidden">'+thumbnail+'</div>'
     +'<div class="p-3 md:p-4">'
     +'<div class="flex items-center justify-between mb-1.5">'
-    +'<span class="text-[10px] md:text-xs font-bold uppercase tracking-wider px-2 md:px-3 py-0.5 md:py-1 rounded-full" style="color:hsl(265 85% 60%);background:hsl(265 85% 60%/0.1)">'+d.type+'</span>'
+    +'<span class="text-[10px] md:text-xs font-bold uppercase tracking-wider px-2 md:px-3 py-0.5 md:py-1 rounded-full" style="color:hsl(265 85% 60%);background:hsl(265 85% 60%/0.1)">'+(d.type || 'Landing Page')+'</span>'
     +'<span style="color:hsl(250 10% 55%)">↗</span>'
     +'</div>'
-    +'<h3 class="font-heading font-bold text-xs md:text-sm mb-0.5">'+d.style+'</h3>'
-    +'<p class="text-[10px] md:text-xs" style="color:hsl(250 10% 55%)">'+d.desc+'</p>'
+    +'<h3 class="font-heading font-bold text-xs md:text-sm mb-0.5">'+(d.style || ('Style '+(index+1)))+'</h3>'
+    +'<p class="text-[10px] md:text-xs" style="color:hsl(250 10% 55%)">'+(d.desc || 'Preview landing page demo')+'</p>'
     +'</div>';
     grid.appendChild(div);
   });
 })();
 
-function openDemo(url,title){
+function wrapDemoHtml(rawHtml){
+  return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#0b0b18">'+rawHtml+'</body></html>';
+}
+
+function openDemo(demo,title){
+  var iframe=document.getElementById('demo-iframe');
   document.getElementById('demo-modal-title').textContent=title+' — Live Preview';
   document.getElementById('demo-loader').style.display='flex';
-  document.getElementById('demo-iframe').src=url;
+  iframe.removeAttribute('src');
+  iframe.removeAttribute('srcdoc');
+
+  if(demo && demo.html && demo.html.trim()){
+    iframe.srcdoc=wrapDemoHtml(demo.html);
+  } else if(demo && demo.url){
+    iframe.src=demo.url;
+  } else {
+    iframe.srcdoc=wrapDemoHtml('<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-family:sans-serif">Preview belum tersedia</div>');
+  }
+
   document.getElementById('demo-modal').classList.add('active');
   document.body.style.overflow='hidden';
   setViewMode('desktop');
 }
 function closeDemo(){
+  var iframe=document.getElementById('demo-iframe');
   document.getElementById('demo-modal').classList.remove('active');
-  document.getElementById('demo-iframe').src='';
+  iframe.removeAttribute('srcdoc');
+  iframe.src='about:blank';
   document.body.style.overflow='';
 }
 function setViewMode(mode){
