@@ -834,171 +834,188 @@ function wrapDemoHtml(rawHtml){
 
 var SUPABASE_URL='https://npgglrvvdlhagztsxsjc.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZ2dscnZ2ZGxoYWd6dHN4c2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTA1OTQsImV4cCI6MjA4NjQ4NjU5NH0.gBtG_TCTr99ALNiF7Xyb9mzAfYF50rOBmMVhaieNH0U';
-var __demoScrollY=0;
-var __tapBlockerTimer=null;
-var __isBodyLocked=false;
-var __demoObjectUrl=null;
-var __demoRequestId=0;
 
-function revokeDemoObjectUrl(){
-  if(!__demoObjectUrl) return;
-  try { URL.revokeObjectURL(__demoObjectUrl); } catch(_) {}
-  __demoObjectUrl=null;
+// === Modal State ===
+var __demoScrollY = 0;
+var __isBodyLocked = false;
+var __demoObjectUrl = null;
+var __demoRequestId = 0;
+var __closeTimer = null;
+var __blockerTimer = null;
+
+// === Memory Management ===
+function revokeDemoObjectUrl() {
+  if (!__demoObjectUrl) return;
+  try { URL.revokeObjectURL(__demoObjectUrl); } catch (_) {}
+  __demoObjectUrl = null;
 }
 
-function resetDemoFrameForOpen(iframe){
-  if(!iframe) return;
+function clearDemoFrame(iframe) {
+  if (!iframe) return;
   revokeDemoObjectUrl();
-  iframe.removeAttribute('src');
-  iframe.removeAttribute('srcdoc');
+  try { iframe.src = 'about:blank'; } catch (_) {}
 }
 
-function clearDemoFrameForClose(iframe){
-  if(!iframe) return;
-  try { iframe.src='about:blank'; } catch(_) {}
-  try { iframe.srcdoc=''; } catch(_) {}
+function renderDemoHtml(iframe, html, requestId) {
+  if (!iframe || requestId !== __demoRequestId) return;
+  var wrapped = wrapDemoHtml(html);
   revokeDemoObjectUrl();
+  try {
+    var blob = new Blob([wrapped], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    __demoObjectUrl = url;
+    iframe.src = url;
+  } catch (_) {
+    // Fallback for environments that don't support Blob URLs
+    iframe.srcdoc = wrapped;
+  }
 }
 
-function renderDemoHtmlInIframe(iframe, html, requestId){
-  if(!iframe || requestId!==__demoRequestId) return;
-  var wrappedHtml=wrapDemoHtml(html);
-  revokeDemoObjectUrl();
-  var blob=new Blob([wrappedHtml], { type:'text/html;charset=utf-8' });
-  var blobUrl=URL.createObjectURL(blob);
-  __demoObjectUrl=blobUrl;
-  iframe.src=blobUrl;
+// === Tap Blocker ===
+function setTapBlocker(on) {
+  var el = document.getElementById('tap-blocker');
+  if (!el) return;
+  if (on) { el.classList.add('active'); }
+  else { el.classList.remove('active'); }
 }
 
-function setTapBlocker(active){
-  var blocker=document.getElementById('tap-blocker');
-  if(!blocker) return;
-  blocker.classList.toggle('active', !!active);
-}
-
-function lockBodyScroll(){
-  if(__isBodyLocked) return;
-  __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
-  // Don't use position:fixed — it breaks inside Scalev wrapper.
-  // Just prevent overflow and touch scrolling.
+// === Scroll Lock (Scalev-compatible) ===
+// We avoid position:fixed on body because Scalev wraps our HTML
+// inside its own scrollable container. Instead we use overflow:hidden
+// + touch-action:none which works in both standalone and embedded.
+function lockBodyScroll() {
+  if (__isBodyLocked) return;
+  __demoScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
   document.documentElement.classList.add('modal-open');
   document.body.classList.add('modal-open');
-  __isBodyLocked=true;
+  __isBodyLocked = true;
 }
 
-function unlockBodyScroll(){
-  if(!__isBodyLocked) return;
-  var y=__demoScrollY||0;
+function unlockBodyScroll() {
+  if (!__isBodyLocked) return;
+  var y = __demoScrollY || 0;
   document.documentElement.classList.remove('modal-open');
   document.body.classList.remove('modal-open');
-  __isBodyLocked=false;
-  // Restore scroll position — use auto behavior to prevent smooth jump
-  var root=document.documentElement;
-  var prevBehavior=root.style.scrollBehavior||'';
-  root.style.scrollBehavior='auto';
+  __isBodyLocked = false;
+  // Temporarily disable smooth scroll to prevent animated jump
+  var root = document.documentElement;
+  var prev = root.style.scrollBehavior || '';
+  root.style.scrollBehavior = 'auto';
   window.scrollTo(0, y);
-  // Double-ensure after repaint
-  requestAnimationFrame(function(){
+  // Safari sometimes needs a frame to settle
+  requestAnimationFrame(function() {
     window.scrollTo(0, y);
-    setTimeout(function(){
-      window.scrollTo(0, y);
-      root.style.scrollBehavior=prevBehavior;
-    }, 50);
+    root.style.scrollBehavior = prev;
   });
 }
 
-function openDemo(demo,title){
-  var iframe=document.getElementById('demo-iframe');
-  var modal=document.getElementById('demo-modal');
-  var loader=document.getElementById('demo-loader');
-  if(!iframe || !modal || !loader) return;
+// === Iframe onload handler ===
+function onDemoIframeLoad() {
+  var loader = document.getElementById('demo-loader');
+  var iframe = document.getElementById('demo-iframe');
+  // Don't hide loader for about:blank loads
+  if (!iframe || !iframe.src || iframe.src === 'about:blank') return;
+  if (loader) loader.style.display = 'none';
+}
+// Attach onload via JS (not inline attribute) to avoid issues
+(function() {
+  var iframe = document.getElementById('demo-iframe');
+  if (iframe) iframe.addEventListener('load', onDemoIframeLoad);
+})();
 
-  var requestId=++__demoRequestId;
-  loader.style.display='flex';
-  resetDemoFrameForOpen(iframe);
+// === Open Demo ===
+function openDemo(demo, title) {
+  var iframe = document.getElementById('demo-iframe');
+  var modal = document.getElementById('demo-modal');
+  var loader = document.getElementById('demo-loader');
+  if (!iframe || !modal) return;
 
-  if(__tapBlockerTimer){ clearTimeout(__tapBlockerTimer); __tapBlockerTimer=null; }
+  // Cancel any pending close
+  if (__closeTimer) { clearTimeout(__closeTimer); __closeTimer = null; }
+  if (__blockerTimer) { clearTimeout(__blockerTimer); __blockerTimer = null; }
   setTapBlocker(false);
+
+  var requestId = ++__demoRequestId;
+  if (loader) loader.style.display = 'flex';
+  clearDemoFrame(iframe);
+
   modal.classList.remove('closing');
   modal.classList.add('active');
   lockBodyScroll();
 
-  // Prevent iOS background scroll via touchmove on modal backdrop
-  modal.ontouchmove=function(e){
-    // Allow scroll inside the iframe wrapper
-    var iframeWrapper=document.getElementById('demo-iframe-wrapper');
-    if(iframeWrapper && iframeWrapper.contains(e.target)) return;
-    e.preventDefault();
-  };
+  var fallbackEmpty = '<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#ccc;font-family:sans-serif">Preview belum tersedia</div>';
+  var fallbackError = '<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#ccc;font-family:sans-serif">Gagal memuat preview</div>';
 
-  var fallbackEmpty='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Preview belum tersedia</div>';
-  var fallbackError='<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:hsl(220 16% 83%);font-family:sans-serif">Gagal memuat preview</div>';
-
-  if(demo.html && demo.html.trim()){
-    renderDemoHtmlInIframe(iframe, demo.html, requestId);
+  if (demo.html && demo.html.trim()) {
+    renderDemoHtml(iframe, demo.html, requestId);
     return;
   }
 
-  if(demo.id){
-    fetch(SUPABASE_URL+'/rest/v1/demos?select=html_code&id=eq.'+demo.id,{
-      headers:{'apikey':SUPABASE_KEY,'Accept':'application/json'}
+  if (demo.id) {
+    fetch(SUPABASE_URL + '/rest/v1/demos?select=html_code&id=eq.' + demo.id, {
+      headers: { 'apikey': SUPABASE_KEY, 'Accept': 'application/json' }
     })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(requestId!==__demoRequestId) return;
-      if(data&&data[0]&&data[0].html_code){
-        renderDemoHtmlInIframe(iframe, data[0].html_code, requestId);
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (requestId !== __demoRequestId) return;
+      if (data && data[0] && data[0].html_code) {
+        renderDemoHtml(iframe, data[0].html_code, requestId);
       } else {
-        renderDemoHtmlInIframe(iframe, fallbackEmpty, requestId);
+        renderDemoHtml(iframe, fallbackEmpty, requestId);
       }
     })
-    .catch(function(){
-      if(requestId!==__demoRequestId) return;
-      renderDemoHtmlInIframe(iframe, fallbackError, requestId);
+    .catch(function() {
+      if (requestId !== __demoRequestId) return;
+      renderDemoHtml(iframe, fallbackError, requestId);
     });
     return;
   }
 
-  renderDemoHtmlInIframe(iframe, fallbackEmpty, requestId);
+  renderDemoHtml(iframe, fallbackEmpty, requestId);
 }
 
-function closeDemo(event){
-  if(event){
+// === Close Demo ===
+function closeDemo(event) {
+  if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
 
-  var modal=document.getElementById('demo-modal');
-  if(!modal.classList.contains('active')) return false;
+  var modal = document.getElementById('demo-modal');
+  if (!modal || !modal.classList.contains('active')) return false;
 
-  var iframe=document.getElementById('demo-iframe');
+  var iframe = document.getElementById('demo-iframe');
 
+  // Increment request ID to cancel any pending fetches
   __demoRequestId++;
-  setTapBlocker(true);
-
-  // Remove touchmove blocker
-  modal.ontouchmove=null;
 
   // Clear iframe immediately to free memory
-  clearDemoFrameForClose(iframe);
+  clearDemoFrame(iframe);
+
+  // Start close animation (matches CSS transition: opacity .18s)
   modal.classList.add('closing');
 
-  setTimeout(function(){
-    modal.classList.remove('active');
-    modal.classList.remove('closing');
+  // Clean up after animation completes
+  if (__closeTimer) clearTimeout(__closeTimer);
+  __closeTimer = setTimeout(function() {
+    modal.classList.remove('active', 'closing');
     unlockBodyScroll();
-  }, 120);
+    __closeTimer = null;
+  }, 200);
 
-  if(__tapBlockerTimer){ clearTimeout(__tapBlockerTimer); }
-  __tapBlockerTimer=setTimeout(function(){
+  // Brief tap blocker to absorb ghost taps on mobile
+  setTapBlocker(true);
+  if (__blockerTimer) clearTimeout(__blockerTimer);
+  __blockerTimer = setTimeout(function() {
     setTapBlocker(false);
-  }, 800);
+    __blockerTimer = null;
+  }, 400);
 
   return false;
 }
 
-window.addEventListener('message',function(e){
-  if(e.data&&e.data.type==='closeDemo') closeDemo();
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'closeDemo') closeDemo();
 });
 
 (function lockStackLayout(){
