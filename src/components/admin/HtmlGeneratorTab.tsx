@@ -273,6 +273,34 @@ const HtmlGeneratorTab = () => {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2">🖼️ Gambar Step (Screenshot)</h3>
+              <p className="text-xs text-muted-foreground">Kosongkan jika ingin pakai gambar default. Isi URL gambar untuk mengganti.</p>
+              <div className="space-y-3">
+                {STEP_LABELS.map((label, i) => {
+                  const num = String(i + 1);
+                  return (
+                    <div key={num}>
+                      <label className="text-xs text-muted-foreground mb-1 block">Step {num}: {label}</label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={config.stepImages[num] || ""}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, stepImages: { ...prev.stepImages, [num]: e.target.value } }))}
+                          placeholder={`https://ai-page-craft-96.lovable.app/images/step-${num}.png`}
+                          className="text-xs font-mono"
+                        />
+                        {config.stepImages[num] && (
+                          <img src={config.stepImages[num]} alt={`Step ${num}`} className="w-10 h-10 rounded object-cover border border-border shrink-0" />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="pricing" className="mt-4 space-y-4">
