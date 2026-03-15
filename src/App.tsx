@@ -2,12 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AppPage from "./pages/AppPage";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+
+const DemoPage = lazy(() => import("./pages/DemoPage"));
 
 const queryClient = new QueryClient();
 
@@ -22,6 +25,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<AppPage />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/demo/:id" element={<Suspense fallback={null}><DemoPage /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
