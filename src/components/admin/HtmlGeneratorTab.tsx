@@ -200,6 +200,7 @@ const HtmlGeneratorTab = () => {
       type: demo.type || "Landing Page",
       style: demo.title || "Demo Landing Page",
       desc: demo.description || "Preview landing page demo",
+      html: demo.html_code || "",
     }));
 
     const demosSerialized = JSON.stringify(demoPayload).replace(/<\/script/gi, "<\\/script");
