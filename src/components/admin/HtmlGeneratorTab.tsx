@@ -122,7 +122,10 @@ const HtmlGeneratorTab = () => {
     let html = baseHtml;
 
     html = html.replace(/<title>.*?<\/title>/, `<title>${config.pageTitle}</title>`);
-    html = html.replace(/<meta name="description" content="[^"]*"\s*\/?/i, `<meta name="description" content="${escapeHtmlAttr(config.metaDescription)}"`);
+    html = html.replace(
+      /<meta name="description" content="[^"]*"\s*\/?\s*>/i,
+      `<meta name="description" content="${escapeHtmlAttr(config.metaDescription)}" />`
+    );
 
     if (config.primaryColor !== defaultConfig.primaryColor) html = html.replace(/265 85% 60%/g, config.primaryColor);
     if (config.accentColor !== defaultConfig.accentColor) html = html.replace(/280 80% 65%/g, config.accentColor);
