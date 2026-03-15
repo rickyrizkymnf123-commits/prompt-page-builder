@@ -136,8 +136,9 @@
     }
 
     /* Demo Modal */
-    #demo-modal { display:none; position:fixed; inset:0; z-index:200; flex-direction:column; overflow:hidden; }
+    #demo-modal { display:none; position:fixed; inset:0; z-index:200; flex-direction:column; overflow:hidden; opacity:1; transition:opacity .18s ease; }
     #demo-modal.active { display:flex; }
+    #demo-modal.closing { opacity:0; }
     #demo-modal .demo-topbar { position:relative; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:hsl(250 30% 8%); border-bottom:1px solid rgba(255,255,255,0.1); flex-shrink:0; }
     #demo-modal .demo-topbar .live-badge { display:flex; align-items:center; gap:8px; }
     #demo-modal .demo-topbar .live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 6px #22c55e; animation:pulse-dot 2s infinite; }
@@ -830,29 +831,21 @@ var __demoSuppressTapUntil=0;
 function lockBodyScroll(){
   if(__demoScrollLocked) return;
   __demoScrollY=window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
-  document.body.style.position='fixed';
-  document.body.style.top='-'+__demoScrollY+'px';
-  document.body.style.left='0';
-  document.body.style.right='0';
-  document.body.style.width='100%';
-  document.body.style.overflow='hidden';
   document.documentElement.style.overflow='hidden';
+  document.body.style.overflow='hidden';
+  document.body.style.touchAction='none';
   __demoScrollLocked=true;
 }
 
 function unlockBodyScroll(){
   if(!__demoScrollLocked) return;
   var y=__demoScrollY;
-  document.body.style.position='';
-  document.body.style.top='';
-  document.body.style.left='';
-  document.body.style.right='';
-  document.body.style.width='';
-  document.body.style.overflow='';
   document.documentElement.style.overflow='';
+  document.body.style.overflow='';
+  document.body.style.touchAction='';
   __demoScrollLocked=false;
 
-  // Restore only once to avoid visible "jump then bounce"
+  // Keep exact last position user saw before opening demo
   if(Math.abs((window.pageYOffset||0)-y)>1){
     window.scrollTo(0,y);
   }
@@ -900,13 +893,17 @@ function closeDemo(event){
   if(!modal.classList.contains('active')) return false;
 
   var iframe=document.getElementById('demo-iframe');
-  __demoSuppressTapUntil=Date.now()+450;
+  __demoSuppressTapUntil=Date.now()+700;
 
-  // First close modal, then unlock page scroll
-  modal.classList.remove('active');
-  iframe.removeAttribute('srcdoc');
-  iframe.src='about:blank';
-  unlockBodyScroll();
+  // Keep overlay briefly to absorb mobile ghost tap, then close
+  modal.classList.add('closing');
+  setTimeout(function(){
+    modal.classList.remove('active');
+    modal.classList.remove('closing');
+    iframe.removeAttribute('srcdoc');
+    iframe.src='about:blank';
+    unlockBodyScroll();
+  }, 180);
 
   return false;
 }
@@ -919,6 +916,13 @@ document.addEventListener('click', function(e){
 }, true);
 
 document.addEventListener('touchend', function(e){
+  if(Date.now()<__demoSuppressTapUntil){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
+document.addEventListener('pointerup', function(e){
   if(Date.now()<__demoSuppressTapUntil){
     e.preventDefault();
     e.stopPropagation();
