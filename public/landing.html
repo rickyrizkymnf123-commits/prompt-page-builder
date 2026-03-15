@@ -845,7 +845,6 @@ function openDemo(demo,title){
 
   document.getElementById('demo-modal').classList.add('active');
   document.body.style.overflow='hidden';
-  setViewMode('desktop');
 }
 function closeDemo(){
   var iframe=document.getElementById('demo-iframe');
@@ -853,22 +852,6 @@ function closeDemo(){
   iframe.removeAttribute('srcdoc');
   iframe.src='about:blank';
   document.body.style.overflow='';
-}
-function setViewMode(mode){
-  var widths={desktop:'100%',tablet:'768px',mobile:'390px'};
-  var iframe=document.getElementById('demo-iframe');
-  var wrapper=document.getElementById('demo-iframe-wrapper');
-  var btns=document.querySelectorAll('.view-toggle button');
-  btns.forEach(function(b){b.classList.remove('active')});
-  document.getElementById('btn-'+mode).classList.add('active');
-  iframe.style.width=widths[mode];
-  if(mode!=='desktop'){
-    wrapper.classList.add('framed');
-    iframe.style.boxShadow='0 0 40px rgba(0,0,0,0.5)';
-  } else {
-    wrapper.classList.remove('framed');
-    iframe.style.boxShadow='none';
-  }
 }
 window.addEventListener('message',function(e){
   if(e.data&&e.data.type==='closeDemo') closeDemo();
