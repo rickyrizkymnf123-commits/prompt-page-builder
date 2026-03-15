@@ -30,6 +30,7 @@ interface CustomizationConfig {
   footerText: string;
   pageTitle: string;
   metaDescription: string;
+  stepImages: Record<string, string>;
 }
 
 interface DemoConfig {
