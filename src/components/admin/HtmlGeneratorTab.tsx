@@ -337,6 +337,7 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
             </CardContent>
           </Card>
 
+          {isAdmin && (
           <Card>
             <CardContent className="p-4 space-y-4">
               <h3 className="font-semibold text-sm flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Gambar Step (Screenshot)</h3>
@@ -381,6 +382,7 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
               </div>
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="pricing" className="mt-4 space-y-4">
