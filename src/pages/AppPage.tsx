@@ -17,7 +17,7 @@ import { TemplateGallery } from "@/components/templates/TemplateGallery";
 import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, BonusItem } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound } from "lucide-react";
+import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound, PlayCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,6 +26,7 @@ import { CostBreakdownModal } from "@/components/CostBreakdownModal";
 import { TutorialPanel } from "@/components/TutorialPanel";
 import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 import UserWebhookSettings from "@/components/user/UserWebhookSettings";
+import { TutorialFullPage } from "@/components/TutorialFullPage";
 
 function Stepper({ current }: { current: number }) {
   return (
@@ -165,7 +166,7 @@ export default function AppPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [promptUsage, setPromptUsage] = useState(0);
   const [usageLimitReached, setUsageLimitReached] = useState(false);
-  const [activePage, setActivePage] = useState<'generator' | 'lpbuilder' | 'webhook'>('generator');
+  const [activePage, setActivePage] = useState<'generator' | 'lpbuilder' | 'webhook' | 'tutorial'>('generator');
   const [userId, setUserId] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
@@ -315,6 +316,10 @@ export default function AppPage() {
                 className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'webhook' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
                 <KeyRound className="w-3.5 h-3.5" /> Webhook
               </button>
+              <button type="button" onClick={() => setActivePage('tutorial')}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'tutorial' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                <PlayCircle className="w-3.5 h-3.5" /> Tutorial
+              </button>
             </>
           )}
           {!isPaid && (
@@ -337,6 +342,13 @@ export default function AppPage() {
       {activePage === 'webhook' && isPaid && (
         <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
           <UserWebhookSettings userId={userId} userEmail={userEmail} />
+        </div>
+      )}
+
+      {/* Tutorial Page */}
+      {activePage === 'tutorial' && isPaid && (
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
+          <TutorialFullPage />
         </div>
       )}
 
