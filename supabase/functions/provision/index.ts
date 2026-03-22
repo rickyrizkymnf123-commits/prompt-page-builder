@@ -309,6 +309,7 @@ Deno.serve(async (req) => {
       email,
       status: "success",
       message: `User provisioned successfully. Phone: ${phone || "N/A"}`,
+      source_label: sourceLabel,
     });
 
     const APP_DOMAIN = (Deno.env.get("APP_DOMAIN") || "https://ai-page-craft-96.lovable.app").replace(/\/+$/, "");
