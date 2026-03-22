@@ -298,6 +298,51 @@ export default function AppPage() {
     <div className="min-h-screen bg-background">
       <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} />
 
+      {/* Top-level page navigation */}
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4">
+        <div className="flex gap-1 border-b border-border pb-0 mb-0">
+          <button type="button" onClick={() => setActivePage('generator')}
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'generator' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+            <Zap className="w-3.5 h-3.5" /> Prompt Generator
+          </button>
+          {isPaid && (
+            <>
+              <button type="button" onClick={() => setActivePage('lpbuilder')}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'lpbuilder' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                <FileCode className="w-3.5 h-3.5" /> LP Builder
+              </button>
+              <button type="button" onClick={() => setActivePage('webhook')}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'webhook' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                <KeyRound className="w-3.5 h-3.5" /> Webhook
+              </button>
+            </>
+          )}
+          {!isPaid && (
+            <button type="button" onClick={handleUpgrade}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-all border-b-2 -mb-px border-transparent">
+              <Lock className="w-3.5 h-3.5" /> LP Builder & Webhook <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* LP Builder Page */}
+      {activePage === 'lpbuilder' && isPaid && (
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
+          <HtmlGeneratorTab isAdmin={false} />
+        </div>
+      )}
+
+      {/* Webhook Settings Page */}
+      {activePage === 'webhook' && isPaid && (
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
+          <UserWebhookSettings userId={userId} userEmail={userEmail} />
+        </div>
+      )}
+
+      {/* Prompt Generator Page (original content) */}
+      {activePage === 'generator' && (
+      <>
       {/* Upgrade banner for free users */}
       {!isPaid && currentStep === 1 && (
         <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4">
