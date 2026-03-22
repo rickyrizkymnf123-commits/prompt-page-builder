@@ -177,6 +177,8 @@ export default function AppPage() {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
+      setUserId(session.user.id);
+      setUserEmail(session.user.email || '');
       const { data: entitlements } = await supabase
         .from("entitlements")
         .select("id, product_code")
@@ -198,7 +200,6 @@ export default function AppPage() {
         setPromptUsage(count);
         setUsageLimitReached(count >= 5);
       }
-      
       
       setLoading(false);
     };
