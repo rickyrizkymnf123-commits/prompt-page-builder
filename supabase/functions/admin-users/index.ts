@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       }
 
 
-      const { action, user_id, email, password, name, role, tier, members, phone, send_wa } = await req.json();
+      const { action, user_id, email, password, name, role, tier, members, phone, send_wa, partner_secret } = await req.json();
 
       // Check admin role (skip for initial setup)
       const { data: roles } = await adminClient
@@ -340,7 +340,7 @@ Deno.serve(async (req) => {
 
       // --- TEST PARTNER WEBHOOK ---
       if (action === "test_partner_webhook") {
-        const partnerSecret = (body.partner_secret || '').trim();
+        const partnerSecret = (partner_secret || '').trim();
         const testEmail = (email || 'test@example.com').trim().toLowerCase();
         const testName = (name || 'Test Partner').trim();
         const testPhone = (phone || '').trim();
