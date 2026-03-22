@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       }
 
 
-      const { action, user_id, email, password, name, role, tier, members, phone, send_wa } = await req.json();
+      const { action, user_id, email, password, name, role, tier, members, phone, send_wa, partner_secret } = await req.json();
 
       // Check admin role (skip for initial setup)
       const { data: roles } = await adminClient
