@@ -26,6 +26,7 @@ import { CostBreakdownModal } from "@/components/CostBreakdownModal";
 import { TutorialPanel } from "@/components/TutorialPanel";
 import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 import UserWebhookSettings from "@/components/user/UserWebhookSettings";
+import { TutorialFullPage } from "@/components/TutorialFullPage";
 
 function Stepper({ current }: { current: number }) {
   return (
