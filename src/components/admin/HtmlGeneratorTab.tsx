@@ -418,10 +418,49 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
         </TabsContent>
 
         <TabsContent value="style" className="mt-4 space-y-4">
+          {/* Theme Presets */}
           <Card>
             <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Warna (HSL)</h3>
-              <p className="text-xs text-muted-foreground">Format: "hue saturation% lightness%"</p>
+              <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Tema Warna</h3>
+              <p className="text-xs text-muted-foreground">Pilih tema warna untuk landing page. Klik untuk langsung menerapkan.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {THEME_PRESETS.map((preset) => {
+                  const isActive = config.primaryColor === preset.primary && config.accentColor === preset.accent && config.backgroundColor === preset.background;
+                  return (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => {
+                        setConfig(prev => ({
+                          ...prev,
+                          primaryColor: preset.primary,
+                          accentColor: preset.accent,
+                          backgroundColor: preset.background,
+                        }));
+                      }}
+                      className={`relative flex items-center gap-2 p-2.5 rounded-lg border text-left transition-all ${
+                        isActive
+                          ? "border-primary bg-primary/10 ring-1 ring-primary"
+                          : "border-border bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      <div
+                        className="w-6 h-6 rounded-full shrink-0 border border-border"
+                        style={{ backgroundColor: preset.preview }}
+                      />
+                      <span className="text-xs font-medium text-foreground truncate">{preset.name}</span>
+                      {isActive && <Check className="w-3 h-3 text-primary absolute top-1 right-1" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Warna Custom (HSL)</h3>
+              <p className="text-xs text-muted-foreground">Format: "hue saturation% lightness%" — atau gunakan tema di atas.</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div><label className="text-xs text-muted-foreground mb-1 block">Primary</label><Input value={config.primaryColor} onChange={(e) => updateConfig("primaryColor", e.target.value)} className="font-mono text-xs" /></div>
                 <div><label className="text-xs text-muted-foreground mb-1 block">Accent</label><Input value={config.accentColor} onChange={(e) => updateConfig("accentColor", e.target.value)} className="font-mono text-xs" /></div>
