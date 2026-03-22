@@ -194,6 +194,7 @@ Deno.serve(async (req) => {
         email,
         status: "duplicate",
         message: "Entitlement already exists for this order_id",
+        source_label: sourceLabel,
       });
       return new Response(
         JSON.stringify({ ok: true, duplicate: true }),
