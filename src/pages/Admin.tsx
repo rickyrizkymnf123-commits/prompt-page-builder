@@ -677,6 +677,10 @@ export default function Admin() {
                   {["all","pending","active","rejected"].map(s => (
                     <Button key={s} size="sm" variant={filterStatus===s?"default":"outline"} onClick={() => setFilterStatus(s)} className="text-[10px] sm:text-xs capitalize h-7 sm:h-8 px-2 sm:px-3">{s==="all"?"Semua":s}</Button>
                   ))}
+                  <span className="text-muted-foreground text-xs">|</span>
+                  {[{k:"all",l:"Semua Tier"},{k:"paid",l:"⭐ Berbayar"},{k:"free",l:"🆓 Gratis"}].map(t => (
+                    <Button key={t.k} size="sm" variant={filterTier===t.k?"default":"outline"} onClick={() => setFilterTier(t.k)} className="text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3">{t.l}</Button>
+                  ))}
                   {selectedUsers.size > 0 && (
                     <div className="flex gap-1 flex-wrap w-full sm:w-auto sm:ml-auto mt-1 sm:mt-0">
                       <span className="text-[10px] sm:text-xs text-muted-foreground self-center mr-1">{selectedUsers.size} dipilih</span>
