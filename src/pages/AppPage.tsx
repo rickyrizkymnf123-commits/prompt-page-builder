@@ -316,6 +316,10 @@ export default function AppPage() {
                 className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'webhook' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
                 <KeyRound className="w-3.5 h-3.5" /> Webhook
               </button>
+              <button type="button" onClick={() => setActivePage('tutorial')}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'tutorial' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                <PlayCircle className="w-3.5 h-3.5" /> Tutorial
+              </button>
             </>
           )}
           {!isPaid && (
