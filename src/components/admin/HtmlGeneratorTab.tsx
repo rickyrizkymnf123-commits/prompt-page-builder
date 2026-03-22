@@ -4,11 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Download, Eye, X, RefreshCw, CheckCircle2, Palette, Type, Link2, FileCode, Upload, Trash2, ImageIcon } from "lucide-react";
+import { Copy, Download, Eye, X, RefreshCw, CheckCircle2, Palette, Type, Link2, FileCode, Upload, Trash2, ImageIcon, Check } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { THEME_PRESETS } from "@/data/themePresets";
 
 const LANDING_HTML_URL = "/landing.html";
+
+interface HtmlGeneratorTabProps {
+  isAdmin?: boolean;
+}
 
 interface CustomizationConfig {
   heroTitle: string;
