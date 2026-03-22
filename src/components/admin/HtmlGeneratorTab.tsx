@@ -80,7 +80,7 @@ const defaultConfig: CustomizationConfig = {
 
 const escapeHtmlAttr = (value: string) => value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
-const HtmlGeneratorTab = () => {
+const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
   const { toast } = useToast();
   const [config, setConfig] = useState<CustomizationConfig>(defaultConfig);
   const [baseHtml, setBaseHtml] = useState("");
