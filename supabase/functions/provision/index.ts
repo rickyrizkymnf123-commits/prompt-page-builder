@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
     const scalevSignature = req.headers.get("x-scalev-hmac-sha256");
     const url = new URL(req.url);
     const querySecret = url.searchParams.get("secret");
+    const sourceLabel = url.searchParams.get("source_label") || null;
 
     let authorized = false;
 
@@ -172,6 +173,7 @@ Deno.serve(async (req) => {
         email,
         status: "skipped",
         message: `event: ${event || "unknown"}, payment_status: ${payment_status}`,
+        source_label: sourceLabel,
       });
       return new Response(
         JSON.stringify({ ok: true, skipped: true }),
@@ -192,6 +194,7 @@ Deno.serve(async (req) => {
         email,
         status: "duplicate",
         message: "Entitlement already exists for this order_id",
+        source_label: sourceLabel,
       });
       return new Response(
         JSON.stringify({ ok: true, duplicate: true }),
@@ -236,6 +239,7 @@ Deno.serve(async (req) => {
           email,
           status: "failed",
           message: `Failed to create user: ${createError?.message}`,
+          source_label: sourceLabel,
         });
         return new Response(
           JSON.stringify({ ok: false, error: createError?.message }),
@@ -287,6 +291,7 @@ Deno.serve(async (req) => {
           email,
           status: "failed",
           message: `Failed to create entitlement: ${entitlementError.message}`,
+          source_label: sourceLabel,
         });
         return new Response(
           JSON.stringify({ ok: false, error: entitlementError.message }),
@@ -304,6 +309,7 @@ Deno.serve(async (req) => {
       email,
       status: "success",
       message: `User provisioned successfully. Phone: ${phone || "N/A"}`,
+      source_label: sourceLabel,
     });
 
     const APP_DOMAIN = (Deno.env.get("APP_DOMAIN") || "https://ai-page-craft-96.lovable.app").replace(/\/+$/, "");

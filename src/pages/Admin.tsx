@@ -44,6 +44,7 @@ interface AdminUser {
 interface ProvisionLog {
   id: string; order_id: string | null; email: string | null;
   status: string; message: string | null; created_at: string;
+  source_label: string | null;
 }
 interface DbTemplate {
   id: string; title: string; description: string | null; category: string | null;
@@ -712,14 +713,15 @@ export default function Admin() {
               <CardContent className="p-3 sm:p-6 pt-0">
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader><TableRow><TableHead className="text-xs">Order ID</TableHead><TableHead className="text-xs">Email</TableHead><TableHead className="text-xs">Status</TableHead><TableHead className="text-xs hidden sm:table-cell">Message</TableHead><TableHead className="text-xs">Tanggal</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead className="text-xs">Order ID</TableHead><TableHead className="text-xs">Email</TableHead><TableHead className="text-xs">Status</TableHead><TableHead className="text-xs hidden sm:table-cell">Sumber</TableHead><TableHead className="text-xs hidden sm:table-cell">Message</TableHead><TableHead className="text-xs">Tanggal</TableHead></TableRow></TableHeader>
                     <TableBody>
-                      {logs.length===0 ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8 text-sm">Belum ada log.</TableCell></TableRow>
+                      {logs.length===0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8 text-sm">Belum ada log.</TableCell></TableRow>
                       : logs.map(log => (
                         <TableRow key={log.id}>
                           <TableCell className="font-mono text-[10px] sm:text-xs">{log.order_id?.slice(0, 8) || "-"}</TableCell>
                           <TableCell className="text-[10px] sm:text-sm max-w-[100px] truncate">{log.email||"-"}</TableCell>
                           <TableCell><StatusBadge status={log.status} /></TableCell>
+                          <TableCell className="text-xs hidden sm:table-cell">{log.source_label ? <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent text-accent-foreground">{log.source_label}</span> : <span className="text-muted-foreground">-</span>}</TableCell>
                           <TableCell className="text-xs max-w-[300px] truncate hidden sm:table-cell">{log.message||"-"}</TableCell>
                           <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">{new Date(log.created_at).toLocaleDateString("id-ID")}</TableCell>
                         </TableRow>

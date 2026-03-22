@@ -243,6 +243,7 @@ export type Database = {
           id: string
           message: string | null
           order_id: string | null
+          source_label: string | null
           status: string
         }
         Insert: {
@@ -251,6 +252,7 @@ export type Database = {
           id?: string
           message?: string | null
           order_id?: string | null
+          source_label?: string | null
           status: string
         }
         Update: {
@@ -259,6 +261,7 @@ export type Database = {
           id?: string
           message?: string | null
           order_id?: string | null
+          source_label?: string | null
           status?: string
         }
         Relationships: []

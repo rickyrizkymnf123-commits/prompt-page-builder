@@ -43,12 +43,17 @@ async function verifyScalevSignature(
   }
 }
 
-async function getAllSigningSecrets(): Promise<string[]> {
-  const secrets: string[] = [];
+interface SecretEntry {
+  secret: string;
+  label: string;
+}
+
+async function getAllSigningSecrets(): Promise<SecretEntry[]> {
+  const secrets: SecretEntry[] = [];
   
   // Primary secret from env
   const primary = Deno.env.get("PROVISION_SECRET");
-  if (primary) secrets.push(primary);
+  if (primary) secrets.push({ secret: primary, label: "Primary" });
   
   // Additional secrets from app_settings (webhook_signing_secrets)
   try {
@@ -65,7 +70,8 @@ async function getAllSigningSecrets(): Promise<string[]> {
         if (Array.isArray(parsed)) {
           for (const entry of parsed) {
             const s = typeof entry === "string" ? entry : entry?.secret;
-            if (s && !secrets.includes(s)) secrets.push(s);
+            const l = typeof entry === "string" ? "Partner" : (entry?.label || "Partner");
+            if (s && !secrets.some(e => e.secret === s)) secrets.push({ secret: s, label: l });
           }
         }
       }
@@ -128,17 +134,20 @@ Deno.serve(async (req) => {
 
     let authorized = false;
     let matchedSecret = "";
+    let matchedLabel = "";
     if (scalevSignature) {
-      for (const secret of signingSecrets) {
-        if (await verifyScalevSignature(rawBody, scalevSignature, secret)) {
+      for (const entry of signingSecrets) {
+        if (await verifyScalevSignature(rawBody, scalevSignature, entry.secret)) {
           authorized = true;
-          matchedSecret = secret;
+          matchedSecret = entry.secret;
+          matchedLabel = entry.label;
           break;
         }
       }
     } else if (querySecret) {
-      authorized = signingSecrets.includes(querySecret);
-      if (authorized) matchedSecret = querySecret;
+      const found = signingSecrets.find(e => e.secret === querySecret);
+      authorized = !!found;
+      if (found) { matchedSecret = found.secret; matchedLabel = found.label; }
     }
 
     // Allow test events without auth
@@ -383,8 +392,8 @@ Deno.serve(async (req) => {
     // LOCAL = process in this project's provision function
     if (targetUrl === "LOCAL") {
       const provisionSecret = Deno.env.get("PROVISION_SECRET") || matchedSecret;
-      const localUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/provision?secret=${encodeURIComponent(provisionSecret)}`;
-      console.log("Routing to LOCAL provision (using query secret)");
+      const localUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/provision?secret=${encodeURIComponent(provisionSecret)}&source_label=${encodeURIComponent(matchedLabel)}`;
+      console.log("Routing to LOCAL provision (using query secret), source:", matchedLabel);
 
       const forwardResponse = await fetch(localUrl, {
         method: "POST",
