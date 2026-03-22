@@ -345,6 +345,13 @@ export default function AppPage() {
         </div>
       )}
 
+      {/* Tutorial Page */}
+      {activePage === 'tutorial' && isPaid && (
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
+          <TutorialFullPage />
+        </div>
+      )}
+
       {/* Prompt Generator Page (original content) */}
       {activePage === 'generator' && (
       <>
