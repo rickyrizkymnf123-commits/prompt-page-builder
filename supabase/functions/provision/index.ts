@@ -173,6 +173,7 @@ Deno.serve(async (req) => {
         email,
         status: "skipped",
         message: `event: ${event || "unknown"}, payment_status: ${payment_status}`,
+        source_label: sourceLabel,
       });
       return new Response(
         JSON.stringify({ ok: true, skipped: true }),
