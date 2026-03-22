@@ -482,9 +482,11 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
         </TabsContent>
       </Tabs>
 
-      <div className="rounded-lg border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        Demo aktif tersinkron otomatis dari tab <strong className="text-foreground">Demos</strong>: {demos.length} item.
-      </div>
+      {isAdmin && (
+        <div className="rounded-lg border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+          Demo aktif tersinkron otomatis dari tab <strong className="text-foreground">Demos</strong>: {demos.length} item.
+        </div>
+      )}
 
       <Button onClick={generateHtml} className="w-full h-12 text-base gap-2" disabled={generating || !baseHtml}>
         {generating ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <RefreshCw className="w-4 h-4" />}

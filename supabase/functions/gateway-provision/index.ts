@@ -55,13 +55,15 @@ async function getAllSigningSecrets(): Promise<SecretEntry[]> {
   const primary = Deno.env.get("PROVISION_SECRET");
   if (primary) secrets.push({ secret: primary, label: "Primary" });
   
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const headers = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
+
   // Additional secrets from app_settings (webhook_signing_secrets)
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const res = await fetch(
       `${supabaseUrl}/rest/v1/app_settings?key=eq.webhook_signing_secrets&select=value`,
-      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+      { headers }
     );
     if (res.ok) {
       const rows = await res.json();
@@ -78,6 +80,26 @@ async function getAllSigningSecrets(): Promise<SecretEntry[]> {
     }
   } catch (e) {
     console.error("Failed to fetch additional signing secrets:", e);
+  }
+
+  // User-submitted signing secrets from user_signing_secrets table
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/user_signing_secrets?select=secret,label`,
+      { headers }
+    );
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows)) {
+        for (const row of rows) {
+          if (row.secret && !secrets.some(e => e.secret === row.secret)) {
+            secrets.push({ secret: row.secret, label: row.label || "User" });
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Failed to fetch user signing secrets:", e);
   }
   
   return secrets;
