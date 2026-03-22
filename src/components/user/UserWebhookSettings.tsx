@@ -23,7 +23,7 @@ export default function UserWebhookSettings({ userId, userEmail }: UserWebhookSe
   const [loading, setLoading] = useState(true);
   const [affiliateLink, setAffiliateLink] = useState("");
 
-  const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-provision`;
+  const webhookUrl = "https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision";
 
   // Load existing secret + affiliate link
   useEffect(() => {
