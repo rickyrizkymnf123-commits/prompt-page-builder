@@ -93,6 +93,7 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [uploadingStep, setUploadingStep] = useState<string | null>(null);
+  const [lpDarkMode, setLpDarkMode] = useState(true);
 
   const saveStepImagesToDB = useCallback(async (stepImages: Record<string, string>) => {
     await supabase.from("app_settings").upsert(
