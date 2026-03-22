@@ -392,8 +392,8 @@ Deno.serve(async (req) => {
     // LOCAL = process in this project's provision function
     if (targetUrl === "LOCAL") {
       const provisionSecret = Deno.env.get("PROVISION_SECRET") || matchedSecret;
-      const localUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/provision?secret=${encodeURIComponent(provisionSecret)}`;
-      console.log("Routing to LOCAL provision (using query secret)");
+      const localUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/provision?secret=${encodeURIComponent(provisionSecret)}&source_label=${encodeURIComponent(matchedLabel)}`;
+      console.log("Routing to LOCAL provision (using query secret), source:", matchedLabel);
 
       const forwardResponse = await fetch(localUrl, {
         method: "POST",
