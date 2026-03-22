@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
     const scalevSignature = req.headers.get("x-scalev-hmac-sha256");
     const url = new URL(req.url);
     const querySecret = url.searchParams.get("secret");
+    const sourceLabel = url.searchParams.get("source_label") || null;
 
     let authorized = false;
 
