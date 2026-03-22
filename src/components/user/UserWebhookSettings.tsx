@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { KeyRound, Copy, Eye, EyeOff, ExternalLink, Check } from "lucide-react";
+import { KeyRound, Copy, Eye, EyeOff, ExternalLink, Check, UserPlus } from "lucide-react";
 
 interface UserWebhookSettingsProps {
   userId: string;
@@ -19,22 +19,26 @@ export default function UserWebhookSettings({ userId, userEmail }: UserWebhookSe
   const [showSecret, setShowSecret] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedAffiliate, setCopiedAffiliate] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [affiliateLink, setAffiliateLink] = useState("");
 
   const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-provision`;
 
-  // Load existing secret
+  // Load existing secret + affiliate link
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
-        .from("user_signing_secrets")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (data) {
-        setSavedSecret({ secret: (data as any).secret, label: (data as any).label || "" });
-        setSecret((data as any).secret);
-        setLabel((data as any).label || "");
+      const [secretRes, settingsRes] = await Promise.all([
+        supabase.from("user_signing_secrets").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("app_settings").select("key,value").eq("key", "affiliate_link").maybeSingle(),
+      ]);
+      if (secretRes.data) {
+        setSavedSecret({ secret: (secretRes.data as any).secret, label: (secretRes.data as any).label || "" });
+        setSecret((secretRes.data as any).secret);
+        setLabel((secretRes.data as any).label || "");
+      }
+      if (settingsRes.data) {
+        setAffiliateLink((settingsRes.data as any).value || "");
       }
       setLoading(false);
     };
@@ -79,6 +83,13 @@ export default function UserWebhookSettings({ userId, userEmail }: UserWebhookSe
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copyAffiliateLink = async () => {
+    await navigator.clipboard.writeText(affiliateLink);
+    setCopiedAffiliate(true);
+    toast({ title: "📋 Link undangan disalin!" });
+    setTimeout(() => setCopiedAffiliate(false), 2000);
+  };
+
   if (loading) return <div className="text-center text-muted-foreground text-sm py-8">Memuat...</div>;
 
   return (
@@ -102,6 +113,28 @@ export default function UserWebhookSettings({ userId, userEmail }: UserWebhookSe
           </div>
         </CardContent>
       </Card>
+
+      {/* Undangan Produk / Affiliate Link */}
+      {affiliateLink && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <h3 className="font-semibold text-sm flex items-center gap-2"><UserPlus className="w-4 h-4" /> Undangan Produk (Affiliate)</h3>
+            <p className="text-xs text-muted-foreground">Klik link di bawah untuk mengajukan kolaborasi dan menjual produk ini sebagai partner/affiliate.</p>
+            <div className="flex gap-2">
+              <Input value={affiliateLink} readOnly className="text-xs flex-1" />
+              <Button size="sm" variant="outline" className="gap-1 shrink-0" onClick={copyAffiliateLink}>
+                {copiedAffiliate ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedAffiliate ? "Disalin!" : "Copy"}
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1 shrink-0" asChild>
+                <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3.5 h-3.5" /> Buka
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Signing Secret */}
       <Card>

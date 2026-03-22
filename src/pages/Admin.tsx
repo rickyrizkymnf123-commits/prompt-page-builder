@@ -186,6 +186,7 @@ export default function Admin() {
 
   // Settings state
   const [orderUrl, setOrderUrl] = useState('');
+  const [affiliateLink, setAffiliateLink] = useState('');
   const [signingSecrets, setSigningSecrets] = useState<{ label: string; secret: string }[]>([]);
   const [newSecretLabel, setNewSecretLabel] = useState('');
   const [newSecretValue, setNewSecretValue] = useState('');
@@ -234,6 +235,8 @@ export default function Admin() {
       if (data) {
         const s = (data as any[]).find((r: any) => r.key === 'scalev_order_url');
         if (s) setOrderUrl(s.value || '');
+        const al = (data as any[]).find((r: any) => r.key === 'affiliate_link');
+        if (al) setAffiliateLink(al.value || '');
         const ws = (data as any[]).find((r: any) => r.key === 'webhook_signing_secrets');
         if (ws?.value) {
           try {
@@ -785,6 +788,19 @@ export default function Admin() {
                     <Button onClick={async () => {
                       await (supabase as any).from('app_settings').update({ value: orderUrl }).eq('key', 'scalev_order_url');
                       showToast({ title: '✅ Link disimpan!' });
+                    }}>Simpan</Button>
+                  </div>
+                </div>
+
+                {/* Affiliate / Undangan Produk Link */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Link Undangan Produk (Affiliate)</label>
+                  <p className="text-xs text-muted-foreground">Link ini akan ditampilkan ke user untuk mengajukan kolaborasi/affiliate. User bisa klik link ini untuk mendaftar sebagai partner.</p>
+                  <div className="flex gap-2">
+                    <Input value={affiliateLink} onChange={(e) => setAffiliateLink(e.target.value)} placeholder="https://scalev.id/affiliate/..." className="flex-1" />
+                    <Button onClick={async () => {
+                      await (supabase as any).from('app_settings').upsert({ key: 'affiliate_link', value: affiliateLink, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+                      showToast({ title: '✅ Link undangan disimpan!' });
                     }}>Simpan</Button>
                   </div>
                 </div>
