@@ -17,13 +17,15 @@ import { TemplateGallery } from "@/components/templates/TemplateGallery";
 import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, BonusItem } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, ExternalLink, Lock } from "lucide-react";
+import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TypewriterText } from "@/components/TypewriterText";
 import { CostBreakdownModal } from "@/components/CostBreakdownModal";
 import { TutorialPanel } from "@/components/TutorialPanel";
+import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
+import UserWebhookSettings from "@/components/user/UserWebhookSettings";
 
 function Stepper({ current }: { current: number }) {
   return (
@@ -163,6 +165,9 @@ export default function AppPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [promptUsage, setPromptUsage] = useState(0);
   const [usageLimitReached, setUsageLimitReached] = useState(false);
+  const [activePage, setActivePage] = useState<'generator' | 'lpbuilder' | 'webhook'>('generator');
+  const [userId, setUserId] = useState('');
+  const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
   const FREE_LIMIT = 5;
 
@@ -172,6 +177,8 @@ export default function AppPage() {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
+      setUserId(session.user.id);
+      setUserEmail(session.user.email || '');
       const { data: entitlements } = await supabase
         .from("entitlements")
         .select("id, product_code")
@@ -193,7 +200,6 @@ export default function AppPage() {
         setPromptUsage(count);
         setUsageLimitReached(count >= 5);
       }
-      
       
       setLoading(false);
     };
@@ -292,6 +298,51 @@ export default function AppPage() {
     <div className="min-h-screen bg-background">
       <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} />
 
+      {/* Top-level page navigation */}
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4">
+        <div className="flex gap-1 border-b border-border pb-0 mb-0">
+          <button type="button" onClick={() => setActivePage('generator')}
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'generator' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+            <Zap className="w-3.5 h-3.5" /> Prompt Generator
+          </button>
+          {isPaid && (
+            <>
+              <button type="button" onClick={() => setActivePage('lpbuilder')}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'lpbuilder' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                <FileCode className="w-3.5 h-3.5" /> LP Builder
+              </button>
+              <button type="button" onClick={() => setActivePage('webhook')}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'webhook' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                <KeyRound className="w-3.5 h-3.5" /> Webhook
+              </button>
+            </>
+          )}
+          {!isPaid && (
+            <button type="button" onClick={handleUpgrade}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-all border-b-2 -mb-px border-transparent">
+              <Lock className="w-3.5 h-3.5" /> LP Builder & Webhook <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* LP Builder Page */}
+      {activePage === 'lpbuilder' && isPaid && (
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
+          <HtmlGeneratorTab isAdmin={false} />
+        </div>
+      )}
+
+      {/* Webhook Settings Page */}
+      {activePage === 'webhook' && isPaid && (
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
+          <UserWebhookSettings userId={userId} userEmail={userEmail} />
+        </div>
+      )}
+
+      {/* Prompt Generator Page (original content) */}
+      {activePage === 'generator' && (
+      <>
       {/* Upgrade banner for free users */}
       {!isPaid && currentStep === 1 && (
         <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4">
@@ -439,6 +490,8 @@ export default function AppPage() {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

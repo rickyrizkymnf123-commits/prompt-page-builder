@@ -99,6 +99,45 @@ function AdminGeneratingLoader() {
     </div>
   );
 }
+
+function UserSecretsPanel() {
+  const [userSecrets, setUserSecrets] = useState<{ id: string; label: string; secret: string; user_id: string }[]>([]);
+  const [showUserSecrets, setShowUserSecrets] = useState(false);
+  const { toast: showToast } = useToast();
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from("user_signing_secrets").select("*");
+      if (data) setUserSecrets(data as any[]);
+    };
+    load();
+  }, []);
+
+  if (userSecrets.length === 0) return null;
+
+  return (
+    <div className="border-t border-border pt-6 space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">👤 User Signing Secrets</h3>
+        <p className="text-xs text-muted-foreground mt-1">Secret yang dimasukkan oleh user dari dashboard mereka. Otomatis digunakan oleh gateway untuk verifikasi webhook.</p>
+      </div>
+      <div className="space-y-2">
+        {userSecrets.map((entry) => (
+          <div key={entry.id} className="flex items-center gap-2 rounded-lg bg-secondary border border-border p-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground truncate">{entry.label || "User"}</p>
+              <p className="text-xs font-mono text-muted-foreground truncate">{showUserSecrets ? entry.secret : "••••••••" + entry.secret.slice(-6)}</p>
+            </div>
+          </div>
+        ))}
+        <button type="button" onClick={() => setShowUserSecrets(!showUserSecrets)} className="text-xs text-primary hover:underline flex items-center gap-1">
+          {showUserSecrets ? <><EyeOff className="h-3 w-3" /> Sembunyikan</> : <><Eye className="h-3 w-3" /> Tampilkan Secret</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
 
   const [loading, setLoading] = useState(true);
@@ -819,6 +858,9 @@ export default function Admin() {
                     </div>
                   </div>
                 </div>
+
+                {/* User-submitted Signing Secrets (read-only view) */}
+                <UserSecretsPanel />
 
                 {/* Scalev Slug Map Management */}
                 <div className="border-t border-border pt-6 space-y-4">

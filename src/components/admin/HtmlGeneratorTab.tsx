@@ -4,11 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Download, Eye, X, RefreshCw, CheckCircle2, Palette, Type, Link2, FileCode, Upload, Trash2, ImageIcon } from "lucide-react";
+import { Copy, Download, Eye, X, RefreshCw, CheckCircle2, Palette, Type, Link2, FileCode, Upload, Trash2, ImageIcon, Check } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { THEME_PRESETS } from "@/data/themePresets";
 
 const LANDING_HTML_URL = "/landing.html";
+
+interface HtmlGeneratorTabProps {
+  isAdmin?: boolean;
+}
 
 interface CustomizationConfig {
   heroTitle: string;
@@ -75,7 +80,7 @@ const defaultConfig: CustomizationConfig = {
 
 const escapeHtmlAttr = (value: string) => value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
-const HtmlGeneratorTab = () => {
+const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
   const { toast } = useToast();
   const [config, setConfig] = useState<CustomizationConfig>(defaultConfig);
   const [baseHtml, setBaseHtml] = useState("");
@@ -332,6 +337,7 @@ const HtmlGeneratorTab = () => {
             </CardContent>
           </Card>
 
+          {isAdmin && (
           <Card>
             <CardContent className="p-4 space-y-4">
               <h3 className="font-semibold text-sm flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Gambar Step (Screenshot)</h3>
@@ -376,6 +382,7 @@ const HtmlGeneratorTab = () => {
               </div>
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="pricing" className="mt-4 space-y-4">
@@ -413,10 +420,49 @@ const HtmlGeneratorTab = () => {
         </TabsContent>
 
         <TabsContent value="style" className="mt-4 space-y-4">
+          {/* Theme Presets */}
           <Card>
             <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Warna (HSL)</h3>
-              <p className="text-xs text-muted-foreground">Format: "hue saturation% lightness%"</p>
+              <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Tema Warna</h3>
+              <p className="text-xs text-muted-foreground">Pilih tema warna untuk landing page. Klik untuk langsung menerapkan.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {THEME_PRESETS.map((preset) => {
+                  const isActive = config.primaryColor === preset.primary && config.accentColor === preset.accent && config.backgroundColor === preset.background;
+                  return (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => {
+                        setConfig(prev => ({
+                          ...prev,
+                          primaryColor: preset.primary,
+                          accentColor: preset.accent,
+                          backgroundColor: preset.background,
+                        }));
+                      }}
+                      className={`relative flex items-center gap-2 p-2.5 rounded-lg border text-left transition-all ${
+                        isActive
+                          ? "border-primary bg-primary/10 ring-1 ring-primary"
+                          : "border-border bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      <div
+                        className="w-6 h-6 rounded-full shrink-0 border border-border"
+                        style={{ backgroundColor: preset.preview }}
+                      />
+                      <span className="text-xs font-medium text-foreground truncate">{preset.name}</span>
+                      {isActive && <Check className="w-3 h-3 text-primary absolute top-1 right-1" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Warna Custom (HSL)</h3>
+              <p className="text-xs text-muted-foreground">Format: "hue saturation% lightness%" — atau gunakan tema di atas.</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div><label className="text-xs text-muted-foreground mb-1 block">Primary</label><Input value={config.primaryColor} onChange={(e) => updateConfig("primaryColor", e.target.value)} className="font-mono text-xs" /></div>
                 <div><label className="text-xs text-muted-foreground mb-1 block">Accent</label><Input value={config.accentColor} onChange={(e) => updateConfig("accentColor", e.target.value)} className="font-mono text-xs" /></div>
@@ -436,9 +482,11 @@ const HtmlGeneratorTab = () => {
         </TabsContent>
       </Tabs>
 
-      <div className="rounded-lg border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        Demo aktif tersinkron otomatis dari tab <strong className="text-foreground">Demos</strong>: {demos.length} item.
-      </div>
+      {isAdmin && (
+        <div className="rounded-lg border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+          Demo aktif tersinkron otomatis dari tab <strong className="text-foreground">Demos</strong>: {demos.length} item.
+        </div>
+      )}
 
       <Button onClick={generateHtml} className="w-full h-12 text-base gap-2" disabled={generating || !baseHtml}>
         {generating ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <RefreshCw className="w-4 h-4" />}
