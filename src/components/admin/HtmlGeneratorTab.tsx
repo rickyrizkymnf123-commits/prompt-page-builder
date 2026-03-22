@@ -207,9 +207,18 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
       `<meta name="description" content="${escapeHtmlAttr(config.metaDescription)}" />`
     );
 
+    // Replace all theme colors
     if (config.primaryColor !== defaultConfig.primaryColor) html = html.replace(/265 85% 60%/g, config.primaryColor);
     if (config.accentColor !== defaultConfig.accentColor) html = html.replace(/280 80% 65%/g, config.accentColor);
     if (config.backgroundColor !== defaultConfig.backgroundColor) html = html.replace(/250 30% 5%/g, config.backgroundColor);
+    if (config.textColor !== defaultConfig.textColor) html = html.replace(/0 0% 95%/g, config.textColor);
+    if (config.subtitleColor !== defaultConfig.subtitleColor) html = html.replace(/250 10% 55%/g, config.subtitleColor);
+    if (config.cardColor !== defaultConfig.cardColor) html = html.replace(/250 25% 14%/g, config.cardColor);
+    if (config.borderColor !== defaultConfig.borderColor) html = html.replace(/250 20% 18%/g, config.borderColor);
+    // Also replace muted background (close to card)
+    if (config.cardColor !== defaultConfig.cardColor) html = html.replace(/250 20% 15%/g, config.cardColor);
+    // Replace secondary foreground (0 0% 90%) with a value derived from text color
+    if (config.textColor !== defaultConfig.textColor) html = html.replace(/0 0% 90%/g, config.textColor);
 
     html = html.replace(/Bikin Landing Page <span id="typing-text".*?<\/span>\s*<br>\s*Cuma Modal Klik, Langsung Jadi ⚡/s, config.heroTitle);
     html = html.replace(/Gak perlu bayar developer jutaan\..*?Siap dipasang iklan, siap closing\./s, config.heroSubtitle);
