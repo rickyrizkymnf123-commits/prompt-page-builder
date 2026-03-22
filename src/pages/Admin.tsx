@@ -791,6 +791,19 @@ export default function Admin() {
                     }}>Simpan</Button>
                   </div>
                 </div>
+
+                {/* Affiliate / Undangan Produk Link */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Link Undangan Produk (Affiliate)</label>
+                  <p className="text-xs text-muted-foreground">Link ini akan ditampilkan ke user untuk mengajukan kolaborasi/affiliate. User bisa klik link ini untuk mendaftar sebagai partner.</p>
+                  <div className="flex gap-2">
+                    <Input value={affiliateLink} onChange={(e) => setAffiliateLink(e.target.value)} placeholder="https://scalev.id/affiliate/..." className="flex-1" />
+                    <Button onClick={async () => {
+                      await (supabase as any).from('app_settings').upsert({ key: 'affiliate_link', value: affiliateLink, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+                      showToast({ title: '✅ Link undangan disimpan!' });
+                    }}>Simpan</Button>
+                  </div>
+                </div>
                 <div className="rounded-xl border border-border bg-secondary p-4 space-y-2">
                   <h3 className="text-sm font-semibold text-foreground">ℹ️ Panduan Tier Akses</h3>
                   <ul className="text-xs text-muted-foreground space-y-1">
