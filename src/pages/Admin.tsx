@@ -235,6 +235,8 @@ export default function Admin() {
       if (data) {
         const s = (data as any[]).find((r: any) => r.key === 'scalev_order_url');
         if (s) setOrderUrl(s.value || '');
+        const al = (data as any[]).find((r: any) => r.key === 'affiliate_link');
+        if (al) setAffiliateLink(al.value || '');
         const ws = (data as any[]).find((r: any) => r.key === 'webhook_signing_secrets');
         if (ws?.value) {
           try {
