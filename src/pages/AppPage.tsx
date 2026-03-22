@@ -165,6 +165,9 @@ export default function AppPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [promptUsage, setPromptUsage] = useState(0);
   const [usageLimitReached, setUsageLimitReached] = useState(false);
+  const [activePage, setActivePage] = useState<'generator' | 'lpbuilder' | 'webhook'>('generator');
+  const [userId, setUserId] = useState('');
+  const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
   const FREE_LIMIT = 5;
 
