@@ -833,9 +833,9 @@ export default function Admin() {
                     <p className="text-xs text-muted-foreground mt-1">Berikan URL ini kepada partner Anda untuk digunakan sebagai Webhook Endpoint di akun Scalev mereka. Subscribe ke event <strong>order.payment_status_changed</strong>.</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Input readOnly value="https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision?product=LPE" className="font-mono text-xs bg-muted" />
+                    <Input readOnly value="https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision" className="font-mono text-xs bg-muted" />
                     <Button size="sm" variant="outline" onClick={() => {
-                      navigator.clipboard.writeText('https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision?product=LPE');
+                      navigator.clipboard.writeText('https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision');
                       showToast({ title: '📋 URL disalin!' });
                     }}>Copy</Button>
                   </div>
