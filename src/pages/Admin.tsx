@@ -44,6 +44,7 @@ interface AdminUser {
 interface ProvisionLog {
   id: string; order_id: string | null; email: string | null;
   status: string; message: string | null; created_at: string;
+  source_label: string | null;
 }
 interface DbTemplate {
   id: string; title: string; description: string | null; category: string | null;
