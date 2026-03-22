@@ -8,7 +8,7 @@ import { Copy, Download, Eye, X, RefreshCw, CheckCircle2, Palette, Type, Link2, 
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { THEME_PRESETS } from "@/data/themePresets";
+import { THEME_PRESETS, hslToHex, hexToHsl } from "@/data/themePresets";
 
 const LANDING_HTML_URL = "/landing.html";
 
