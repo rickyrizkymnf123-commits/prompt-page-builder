@@ -422,14 +422,55 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
         </TabsContent>
 
         <TabsContent value="style" className="mt-4 space-y-4">
+          {/* Dark / Light Mode Toggle */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                {lpDarkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />} Mode Tampilan
+              </h3>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sun className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Terang</span>
+                </div>
+                <Switch
+                  checked={lpDarkMode}
+                  onCheckedChange={(checked) => {
+                    setLpDarkMode(checked);
+                    // Update background color based on mode
+                    const activePreset = THEME_PRESETS.find(
+                      (p) => p.primary === config.primaryColor && p.accent === config.accentColor
+                    );
+                    if (activePreset) {
+                      setConfig((prev) => ({
+                        ...prev,
+                        backgroundColor: checked ? activePreset.darkBackground : activePreset.lightBackground,
+                      }));
+                    } else {
+                      // For custom colors, toggle between dark/light generic backgrounds
+                      setConfig((prev) => ({
+                        ...prev,
+                        backgroundColor: checked ? "250 30% 5%" : "0 0% 97%",
+                      }));
+                    }
+                  }}
+                />
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground">Gelap</span>
+                  <Moon className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Theme Presets */}
           <Card>
             <CardContent className="p-4 space-y-4">
               <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Tema Warna</h3>
-              <p className="text-xs text-muted-foreground">Pilih tema warna untuk landing page. Klik untuk langsung menerapkan.</p>
+              <p className="text-xs text-muted-foreground">Pilih tema warna untuk landing page.</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {THEME_PRESETS.map((preset) => {
-                  const isActive = config.primaryColor === preset.primary && config.accentColor === preset.accent && config.backgroundColor === preset.background;
+                  const isActive = config.primaryColor === preset.primary && config.accentColor === preset.accent;
                   return (
                     <button
                       key={preset.name}
@@ -439,7 +480,7 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
                           ...prev,
                           primaryColor: preset.primary,
                           accentColor: preset.accent,
-                          backgroundColor: preset.background,
+                          backgroundColor: lpDarkMode ? preset.darkBackground : preset.lightBackground,
                         }));
                       }}
                       className={`relative flex items-center gap-2 p-2.5 rounded-lg border text-left transition-all ${
@@ -461,14 +502,35 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
             </CardContent>
           </Card>
 
+          {/* Visual Color Pickers */}
           <Card>
             <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Warna Custom (HSL)</h3>
-              <p className="text-xs text-muted-foreground">Format: "hue saturation% lightness%" — atau gunakan tema di atas.</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div><label className="text-xs text-muted-foreground mb-1 block">Primary</label><Input value={config.primaryColor} onChange={(e) => updateConfig("primaryColor", e.target.value)} className="font-mono text-xs" /></div>
-                <div><label className="text-xs text-muted-foreground mb-1 block">Accent</label><Input value={config.accentColor} onChange={(e) => updateConfig("accentColor", e.target.value)} className="font-mono text-xs" /></div>
-                <div><label className="text-xs text-muted-foreground mb-1 block">Background</label><Input value={config.backgroundColor} onChange={(e) => updateConfig("backgroundColor", e.target.value)} className="font-mono text-xs" /></div>
+              <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Warna Custom</h3>
+              <p className="text-xs text-muted-foreground">Pilih warna secara visual atau gunakan tema di atas.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { label: "Primary", key: "primaryColor" as const },
+                  { label: "Accent", key: "accentColor" as const },
+                  { label: "Background", key: "backgroundColor" as const },
+                ].map(({ label, key }) => (
+                  <div key={key} className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">{label}</label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <input
+                          type="color"
+                          value={hslToHex(config[key])}
+                          onChange={(e) => updateConfig(key, hexToHsl(e.target.value))}
+                          className="w-10 h-10 rounded-lg cursor-pointer border border-border p-0.5"
+                        />
+                      </div>
+                      <div
+                        className="flex-1 h-10 rounded-lg border border-border"
+                        style={{ backgroundColor: hslToHex(config[key]) }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
