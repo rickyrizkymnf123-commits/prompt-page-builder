@@ -643,15 +643,20 @@ export default function Admin() {
 
           {/* USERS TAB */}
           <TabsContent value="users">
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
               {[
-                { label: "Total User", count: users.length, icon: <Users className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />, filter: "all" },
-                { label: "Pending", count: pendingCount, icon: <Clock className="h-5 w-5 sm:h-8 sm:w-8 text-amber-500" />, filter: "pending" },
-                { label: "Aktif", count: activeCount, icon: <UserCheck className="h-5 w-5 sm:h-8 sm:w-8 text-emerald-500" />, filter: "active" },
-                { label: "Ditolak", count: rejectedCount, icon: <UserX className="h-5 w-5 sm:h-8 sm:w-8 text-destructive" />, filter: "rejected" },
+                { label: "Total User", count: users.length, icon: <Users className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />, filter: "all", type: "status" },
+                { label: "Pending", count: pendingCount, icon: <Clock className="h-5 w-5 sm:h-7 sm:w-7 text-amber-500" />, filter: "pending", type: "status" },
+                { label: "Aktif", count: activeCount, icon: <UserCheck className="h-5 w-5 sm:h-7 sm:w-7 text-emerald-500" />, filter: "active", type: "status" },
+                { label: "Ditolak", count: rejectedCount, icon: <UserX className="h-5 w-5 sm:h-7 sm:w-7 text-destructive" />, filter: "rejected", type: "status" },
+                { label: "Berbayar", count: paidCount, icon: <span className="text-lg sm:text-2xl">⭐</span>, filter: "paid", type: "tier" },
+                { label: "Gratis", count: freeCount, icon: <span className="text-lg sm:text-2xl">🆓</span>, filter: "free", type: "tier" },
               ].map(s => (
-                <Card key={s.filter} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setFilterStatus(s.filter)}>
-                  <CardContent className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">{s.icon}<div><p className="text-lg sm:text-2xl font-bold text-foreground">{s.count}</p><p className="text-[10px] sm:text-xs text-muted-foreground">{s.label}</p></div></CardContent>
+                <Card key={s.filter} className={`cursor-pointer hover:border-primary/50 transition-colors ${(s.type === 'status' ? filterStatus === s.filter : filterTier === s.filter) ? 'border-primary' : ''}`} onClick={() => {
+                  if (s.type === 'tier') { setFilterTier(filterTier === s.filter ? 'all' : s.filter); }
+                  else { setFilterStatus(s.filter); }
+                }}>
+                  <CardContent className="p-2 sm:p-3 flex items-center gap-2">{s.icon}<div><p className="text-base sm:text-xl font-bold text-foreground">{s.count}</p><p className="text-[9px] sm:text-[10px] text-muted-foreground">{s.label}</p></div></CardContent>
                 </Card>
               ))}
             </div>
