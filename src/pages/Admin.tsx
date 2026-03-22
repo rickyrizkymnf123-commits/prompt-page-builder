@@ -820,6 +820,9 @@ export default function Admin() {
                   </div>
                 </div>
 
+                {/* User-submitted Signing Secrets (read-only view) */}
+                <UserSecretsPanel />
+
                 {/* Scalev Slug Map Management */}
                 <div className="border-t border-border pt-6 space-y-4">
                   <div>
