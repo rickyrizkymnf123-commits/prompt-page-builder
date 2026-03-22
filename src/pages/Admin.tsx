@@ -458,6 +458,8 @@ export default function Admin() {
   const pendingCount = users.filter(u => u.status === "pending").length;
   const activeCount = users.filter(u => u.status === "active").length;
   const rejectedCount = users.filter(u => u.status === "rejected").length;
+  const paidCount = users.filter(u => u.product_code === "LPE").length;
+  const freeCount = users.filter(u => u.product_code !== "LPE").length;
 
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><div className="flex items-center gap-3"><RefreshCw className="h-5 w-5 animate-spin text-primary" /><p className="text-muted-foreground">{authorized ? "Memuat data..." : "Memeriksa akses..."}</p></div></div>;
