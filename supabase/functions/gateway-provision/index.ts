@@ -134,17 +134,20 @@ Deno.serve(async (req) => {
 
     let authorized = false;
     let matchedSecret = "";
+    let matchedLabel = "";
     if (scalevSignature) {
-      for (const secret of signingSecrets) {
-        if (await verifyScalevSignature(rawBody, scalevSignature, secret)) {
+      for (const entry of signingSecrets) {
+        if (await verifyScalevSignature(rawBody, scalevSignature, entry.secret)) {
           authorized = true;
-          matchedSecret = secret;
+          matchedSecret = entry.secret;
+          matchedLabel = entry.label;
           break;
         }
       }
     } else if (querySecret) {
-      authorized = signingSecrets.includes(querySecret);
-      if (authorized) matchedSecret = querySecret;
+      const found = signingSecrets.find(e => e.secret === querySecret);
+      authorized = !!found;
+      if (found) { matchedSecret = found.secret; matchedLabel = found.label; }
     }
 
     // Allow test events without auth
