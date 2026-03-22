@@ -147,6 +147,7 @@ export default function Admin() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterTier, setFilterTier] = useState<string>("all");
   const [resetDialog, setResetDialog] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: "", email: "" });
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -451,11 +452,14 @@ export default function Admin() {
   const filteredUsers = users.filter(u => {
     const matchSearch = !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.name?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "all" || u.status === filterStatus;
-    return matchSearch && matchStatus;
+    const matchTier = filterTier === "all" || (filterTier === "paid" ? u.product_code === "LPE" : u.product_code !== "LPE");
+    return matchSearch && matchStatus && matchTier;
   });
   const pendingCount = users.filter(u => u.status === "pending").length;
   const activeCount = users.filter(u => u.status === "active").length;
   const rejectedCount = users.filter(u => u.status === "rejected").length;
+  const paidCount = users.filter(u => u.product_code === "LPE").length;
+  const freeCount = users.filter(u => u.product_code !== "LPE").length;
 
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><div className="flex items-center gap-3"><RefreshCw className="h-5 w-5 animate-spin text-primary" /><p className="text-muted-foreground">{authorized ? "Memuat data..." : "Memeriksa akses..."}</p></div></div>;
@@ -639,15 +643,20 @@ export default function Admin() {
 
           {/* USERS TAB */}
           <TabsContent value="users">
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
               {[
-                { label: "Total User", count: users.length, icon: <Users className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />, filter: "all" },
-                { label: "Pending", count: pendingCount, icon: <Clock className="h-5 w-5 sm:h-8 sm:w-8 text-amber-500" />, filter: "pending" },
-                { label: "Aktif", count: activeCount, icon: <UserCheck className="h-5 w-5 sm:h-8 sm:w-8 text-emerald-500" />, filter: "active" },
-                { label: "Ditolak", count: rejectedCount, icon: <UserX className="h-5 w-5 sm:h-8 sm:w-8 text-destructive" />, filter: "rejected" },
+                { label: "Total User", count: users.length, icon: <Users className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />, filter: "all", type: "status" },
+                { label: "Pending", count: pendingCount, icon: <Clock className="h-5 w-5 sm:h-7 sm:w-7 text-amber-500" />, filter: "pending", type: "status" },
+                { label: "Aktif", count: activeCount, icon: <UserCheck className="h-5 w-5 sm:h-7 sm:w-7 text-emerald-500" />, filter: "active", type: "status" },
+                { label: "Ditolak", count: rejectedCount, icon: <UserX className="h-5 w-5 sm:h-7 sm:w-7 text-destructive" />, filter: "rejected", type: "status" },
+                { label: "Berbayar", count: paidCount, icon: <span className="text-lg sm:text-2xl">⭐</span>, filter: "paid", type: "tier" },
+                { label: "Gratis", count: freeCount, icon: <span className="text-lg sm:text-2xl">🆓</span>, filter: "free", type: "tier" },
               ].map(s => (
-                <Card key={s.filter} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setFilterStatus(s.filter)}>
-                  <CardContent className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">{s.icon}<div><p className="text-lg sm:text-2xl font-bold text-foreground">{s.count}</p><p className="text-[10px] sm:text-xs text-muted-foreground">{s.label}</p></div></CardContent>
+                <Card key={s.filter} className={`cursor-pointer hover:border-primary/50 transition-colors ${(s.type === 'status' ? filterStatus === s.filter : filterTier === s.filter) ? 'border-primary' : ''}`} onClick={() => {
+                  if (s.type === 'tier') { setFilterTier(filterTier === s.filter ? 'all' : s.filter); }
+                  else { setFilterStatus(s.filter); }
+                }}>
+                  <CardContent className="p-2 sm:p-3 flex items-center gap-2">{s.icon}<div><p className="text-base sm:text-xl font-bold text-foreground">{s.count}</p><p className="text-[9px] sm:text-[10px] text-muted-foreground">{s.label}</p></div></CardContent>
                 </Card>
               ))}
             </div>
@@ -667,6 +676,10 @@ export default function Admin() {
                 <div className="flex gap-1.5 sm:gap-2 mb-3 sm:mb-4 flex-wrap items-center">
                   {["all","pending","active","rejected"].map(s => (
                     <Button key={s} size="sm" variant={filterStatus===s?"default":"outline"} onClick={() => setFilterStatus(s)} className="text-[10px] sm:text-xs capitalize h-7 sm:h-8 px-2 sm:px-3">{s==="all"?"Semua":s}</Button>
+                  ))}
+                  <span className="text-muted-foreground text-xs">|</span>
+                  {[{k:"all",l:"Semua Tier"},{k:"paid",l:"⭐ Berbayar"},{k:"free",l:"🆓 Gratis"}].map(t => (
+                    <Button key={t.k} size="sm" variant={filterTier===t.k?"default":"outline"} onClick={() => setFilterTier(t.k)} className="text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3">{t.l}</Button>
                   ))}
                   {selectedUsers.size > 0 && (
                     <div className="flex gap-1 flex-wrap w-full sm:w-auto sm:ml-auto mt-1 sm:mt-0">
