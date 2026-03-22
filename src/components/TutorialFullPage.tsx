@@ -18,7 +18,7 @@ function toEmbedUrl(url: string): string {
 
 export function TutorialFullPage() {
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
-  const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,11 +28,7 @@ export function TutorialFullPage() {
         .select('id, title, description, youtube_url, sort_order')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
-      if (data) {
-        const items = data as Tutorial[];
-        setTutorials(items);
-        if (items.length > 0) setActiveVideo(items[0].youtube_url);
-      }
+      if (data) setTutorials(data as Tutorial[]);
       setLoading(false);
     };
     load();
@@ -40,6 +36,8 @@ export function TutorialFullPage() {
 
   if (loading) return <div className="text-center text-muted-foreground text-sm py-12">Memuat tutorial...</div>;
   if (tutorials.length === 0) return <div className="text-center text-muted-foreground text-sm py-12">Belum ada tutorial tersedia.</div>;
+
+  const active = tutorials[activeIndex];
 
   return (
     <div className="space-y-4">
@@ -55,48 +53,62 @@ export function TutorialFullPage() {
         </p>
       </div>
 
-      {/* Video Player */}
-      {activeVideo && (
-        <div className="rounded-xl overflow-hidden border border-border bg-black aspect-video">
-          <iframe
-            src={toEmbedUrl(activeVideo)}
-            className="w-full h-full border-0"
-            allowFullScreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            title="Tutorial video"
-          />
+      {/* Side-by-side layout: video left, list right */}
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Video Player */}
+        <div className="flex-1 min-w-0">
+          <div className="rounded-xl overflow-hidden border border-border bg-black aspect-video">
+            <iframe
+              src={toEmbedUrl(active.youtube_url)}
+              className="w-full h-full border-0"
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              title={active.title}
+            />
+          </div>
+          <div className="mt-3">
+            <h3 className="text-base font-semibold text-foreground">{active.title}</h3>
+            {active.description && (
+              <p className="text-sm text-muted-foreground mt-1">{active.description}</p>
+            )}
+          </div>
         </div>
-      )}
 
-      {/* Video List */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
-        {tutorials.map((t, i) => {
-          const isActive = activeVideo === t.youtube_url;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setActiveVideo(t.youtube_url)}
-              className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${
-                isActive ? 'bg-primary/5' : 'hover:bg-muted/30'
-              }`}
-            >
-              <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 ${
-                isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
-              }`}>
-                {isActive ? '▶' : i + 1}
-              </span>
-              <div className="min-w-0">
-                <p className={`text-sm font-medium ${isActive ? 'text-primary' : 'text-foreground'}`}>
-                  {t.title}
-                </p>
-                {t.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
-                )}
-              </div>
-            </button>
-          );
-        })}
+        {/* Video List */}
+        <div className="lg:w-[340px] xl:w-[380px] flex-shrink-0 rounded-xl border border-border bg-card overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Daftar Video</p>
+          </div>
+          <div className="divide-y divide-border max-h-[400px] lg:max-h-[480px] overflow-y-auto">
+            {tutorials.map((t, i) => {
+              const isActive = i === activeIndex;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveIndex(i)}
+                  className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${
+                    isActive ? 'bg-primary/10' : 'hover:bg-muted/30'
+                  }`}
+                >
+                  <span className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold mt-0.5 ${
+                    isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                  }`}>
+                    {isActive ? '▶' : i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className={`text-sm font-medium leading-snug ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                      {t.title}
+                    </p>
+                    {t.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.description}</p>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
