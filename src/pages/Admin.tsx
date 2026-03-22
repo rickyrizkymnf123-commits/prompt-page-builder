@@ -186,6 +186,7 @@ export default function Admin() {
 
   // Settings state
   const [orderUrl, setOrderUrl] = useState('');
+  const [affiliateLink, setAffiliateLink] = useState('');
   const [signingSecrets, setSigningSecrets] = useState<{ label: string; secret: string }[]>([]);
   const [newSecretLabel, setNewSecretLabel] = useState('');
   const [newSecretValue, setNewSecretValue] = useState('');
