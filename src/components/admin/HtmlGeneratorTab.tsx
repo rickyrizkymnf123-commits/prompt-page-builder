@@ -33,6 +33,10 @@ interface CustomizationConfig {
   primaryColor: string;
   accentColor: string;
   backgroundColor: string;
+  textColor: string;
+  subtitleColor: string;
+  cardColor: string;
+  borderColor: string;
   footerText: string;
   pageTitle: string;
   metaDescription: string;
