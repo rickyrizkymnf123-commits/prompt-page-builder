@@ -43,12 +43,17 @@ async function verifyScalevSignature(
   }
 }
 
-async function getAllSigningSecrets(): Promise<string[]> {
-  const secrets: string[] = [];
+interface SecretEntry {
+  secret: string;
+  label: string;
+}
+
+async function getAllSigningSecrets(): Promise<SecretEntry[]> {
+  const secrets: SecretEntry[] = [];
   
   // Primary secret from env
   const primary = Deno.env.get("PROVISION_SECRET");
-  if (primary) secrets.push(primary);
+  if (primary) secrets.push({ secret: primary, label: "Primary" });
   
   // Additional secrets from app_settings (webhook_signing_secrets)
   try {
@@ -65,7 +70,8 @@ async function getAllSigningSecrets(): Promise<string[]> {
         if (Array.isArray(parsed)) {
           for (const entry of parsed) {
             const s = typeof entry === "string" ? entry : entry?.secret;
-            if (s && !secrets.includes(s)) secrets.push(s);
+            const l = typeof entry === "string" ? "Partner" : (entry?.label || "Partner");
+            if (s && !secrets.some(e => e.secret === s)) secrets.push({ secret: s, label: l });
           }
         }
       }
