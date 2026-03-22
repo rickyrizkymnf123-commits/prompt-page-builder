@@ -17,13 +17,15 @@ import { TemplateGallery } from "@/components/templates/TemplateGallery";
 import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, BonusItem } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, ExternalLink, Lock } from "lucide-react";
+import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TypewriterText } from "@/components/TypewriterText";
 import { CostBreakdownModal } from "@/components/CostBreakdownModal";
 import { TutorialPanel } from "@/components/TutorialPanel";
+import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
+import UserWebhookSettings from "@/components/user/UserWebhookSettings";
 
 function Stepper({ current }: { current: number }) {
   return (
