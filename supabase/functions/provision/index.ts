@@ -291,6 +291,7 @@ Deno.serve(async (req) => {
           email,
           status: "failed",
           message: `Failed to create entitlement: ${entitlementError.message}`,
+          source_label: sourceLabel,
         });
         return new Response(
           JSON.stringify({ ok: false, error: entitlementError.message }),
