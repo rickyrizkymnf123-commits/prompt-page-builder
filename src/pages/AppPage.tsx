@@ -408,7 +408,6 @@ export default function AppPage() {
 
       {currentStep === 1 && mode === 'template' && (
         <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pb-12 space-y-4">
-          <TutorialPanel />
           <TemplateGallery onSelectTemplate={handleSelectTemplate} isPaid={isPaid} orderUrl={orderUrl} />
         </div>
       )}
