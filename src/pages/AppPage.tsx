@@ -414,10 +414,6 @@ export default function AppPage() {
 
       {currentStep === 1 && mode === 'manual' && (
         <div className="max-w-[1440px] mx-auto px-3 sm:p-6">
-          {/* Tutorial panel at top of manual mode */}
-          <div className="mb-4">
-            <TutorialPanel />
-          </div>
           <section className="text-center py-8 sm:py-12 px-4 sm:px-6 mb-4 sm:mb-6 rounded-lg border border-border bg-card">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-4 sm:mb-6">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />V11 — New Release 🚀
