@@ -452,7 +452,8 @@ export default function Admin() {
   const filteredUsers = users.filter(u => {
     const matchSearch = !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.name?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "all" || u.status === filterStatus;
-    return matchSearch && matchStatus;
+    const matchTier = filterTier === "all" || (filterTier === "paid" ? u.product_code === "LPE" : u.product_code !== "LPE");
+    return matchSearch && matchStatus && matchTier;
   });
   const pendingCount = users.filter(u => u.status === "pending").length;
   const activeCount = users.filter(u => u.status === "active").length;
