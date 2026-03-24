@@ -562,7 +562,7 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
             <CardContent className="p-4 space-y-4">
               <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Tema Warna</h3>
               <p className="text-xs text-muted-foreground">Pilih tema warna untuk landing page. Semua warna termasuk font otomatis menyesuaikan.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-[320px] overflow-y-auto pr-1">
                 {THEME_PRESETS.map((preset) => {
                   const isActive = config.primaryColor === preset.primary && config.accentColor === preset.accent;
                   return (
