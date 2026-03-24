@@ -614,15 +614,18 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
-                        value={hslToHex(config[key])}
+                        value={hslToHex(config[key] || (key === "ctaButtonColor" ? config.primaryColor : "0 0% 100%"))}
                         onChange={(e) => updateConfig(key, hexToHsl(e.target.value))}
                         className="w-8 h-8 rounded-lg cursor-pointer border border-border p-0.5 shrink-0"
                       />
                       <div
                         className="flex-1 h-8 rounded border border-border"
-                        style={{ backgroundColor: hslToHex(config[key]) }}
+                        style={{ backgroundColor: hslToHex(config[key] || (key === "ctaButtonColor" ? config.primaryColor : "0 0% 100%")) }}
                       />
                     </div>
+                    {key === "ctaButtonColor" && !config.ctaButtonColor && (
+                      <p className="text-[9px] text-muted-foreground">Default: mengikuti warna Primary</p>
+                    )}
                   </div>
                 ))}
               </div>
