@@ -287,6 +287,32 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
     html = html.replace(/(<a id="cta-secondary-link"[^>]*href=")[^"]*(")/, `$1${escapeHtmlAttr(config.ctaSecondaryUrl)}$2`);
     html = html.replace(/(<a id="cta-final-link"[^>]*href=")[^"]*(")/, `$1${escapeHtmlAttr(config.ctaFinalUrl)}$2`);
 
+    // CTA Button Color — override .btn-primary background + inline styles
+    if (config.ctaButtonColor) {
+      const ctaBg = config.ctaButtonColor;
+      const ctaText = config.ctaButtonTextColor || "0 0% 100%";
+      // Override .btn-primary CSS rule
+      html = html.replace(
+        /\.btn-primary\s*\{[^}]*background:\s*hsl\([^)]*\)[^}]*/,
+        (match) => match.replace(/background:\s*hsl\([^)]*\)/, `background: hsl(${ctaBg})`)
+      );
+      // Override inline style color on all CTA <a> tags
+      html = html.replace(
+        /(<a[^>]*class="[^"]*btn-primary[^"]*"[^>]*style="[^"]*)(color:\s*white)/g,
+        `$1color: hsl(${ctaText})`
+      );
+      // Also override glow-primary to match new CTA color
+      html = html.replace(
+        /\.glow-primary\s*\{[^}]*\}/,
+        `.glow-primary { box-shadow: 0 0 40px -10px hsl(${ctaBg} / 0.4), 0 0 80px -20px hsl(${ctaBg} / 0.2); }`
+      );
+      // Override pulse-glow keyframe
+      html = html.replace(
+        /@keyframes pulse-glow\s*\{[^}]*\{[^}]*\}[^}]*\{[^}]*\}\s*\}/,
+        `@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px -5px hsl(${ctaBg} / 0.3); } 50% { box-shadow: 0 0 40px -5px hsl(${ctaBg} / 0.6); } }`
+      );
+    }
+
     const demoPayload = demos.map((demo) => ({
       id: demo.id,
       type: demo.type || "Landing Page",
