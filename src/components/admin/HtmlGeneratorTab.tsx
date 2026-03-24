@@ -37,6 +37,8 @@ interface CustomizationConfig {
   subtitleColor: string;
   cardColor: string;
   borderColor: string;
+  ctaButtonColor: string;
+  ctaButtonTextColor: string;
   footerText: string;
   pageTitle: string;
   metaDescription: string;
@@ -81,6 +83,8 @@ const defaultConfig: CustomizationConfig = {
   subtitleColor: "250 10% 55%",
   cardColor: "250 25% 14%",
   borderColor: "250 20% 18%",
+  ctaButtonColor: "",
+  ctaButtonTextColor: "0 0% 100%",
   footerText: "© 2026 Landing Page Builder by Digital Strategi. All rights reserved.",
   pageTitle: "Landing Page Builder — Bikin LP Profesional Tanpa Coding",
   metaDescription: "Bikin landing page profesional dalam hitungan menit. Tanpa coding, tanpa bayar developer mahal.",
@@ -282,6 +286,32 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
 
     html = html.replace(/(<a id="cta-secondary-link"[^>]*href=")[^"]*(")/, `$1${escapeHtmlAttr(config.ctaSecondaryUrl)}$2`);
     html = html.replace(/(<a id="cta-final-link"[^>]*href=")[^"]*(")/, `$1${escapeHtmlAttr(config.ctaFinalUrl)}$2`);
+
+    // CTA Button Color — override .btn-primary background + inline styles
+    if (config.ctaButtonColor) {
+      const ctaBg = config.ctaButtonColor;
+      const ctaText = config.ctaButtonTextColor || "0 0% 100%";
+      // Override .btn-primary CSS rule
+      html = html.replace(
+        /\.btn-primary\s*\{[^}]*background:\s*hsl\([^)]*\)[^}]*/,
+        (match) => match.replace(/background:\s*hsl\([^)]*\)/, `background: hsl(${ctaBg})`)
+      );
+      // Override inline style color on all CTA <a> tags
+      html = html.replace(
+        /(<a[^>]*class="[^"]*btn-primary[^"]*"[^>]*style="[^"]*)(color:\s*white)/g,
+        `$1color: hsl(${ctaText})`
+      );
+      // Also override glow-primary to match new CTA color
+      html = html.replace(
+        /\.glow-primary\s*\{[^}]*\}/,
+        `.glow-primary { box-shadow: 0 0 40px -10px hsl(${ctaBg} / 0.4), 0 0 80px -20px hsl(${ctaBg} / 0.2); }`
+      );
+      // Override pulse-glow keyframe
+      html = html.replace(
+        /@keyframes pulse-glow\s*\{[^}]*\{[^}]*\}[^}]*\{[^}]*\}\s*\}/,
+        `@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px -5px hsl(${ctaBg} / 0.3); } 50% { box-shadow: 0 0 40px -5px hsl(${ctaBg} / 0.6); } }`
+      );
+    }
 
     const demoPayload = demos.map((demo) => ({
       id: demo.id,
@@ -517,7 +547,7 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
               </div>
               {/* Mini preview */}
               <div className="rounded-lg p-3 flex items-center gap-3 border border-border" style={{ backgroundColor: hslToHex(config.backgroundColor) }}>
-                <div className="rounded-md px-3 py-1.5 text-xs font-bold" style={{ backgroundColor: hslToHex(config.primaryColor), color: '#fff' }}>CTA</div>
+                <div className="rounded-md px-3 py-1.5 text-xs font-bold" style={{ backgroundColor: hslToHex(config.ctaButtonColor || config.primaryColor), color: hslToHex(config.ctaButtonTextColor || '0 0% 100%') }}>CTA</div>
                 <div className="flex-1 space-y-1">
                   <div className="text-xs font-semibold" style={{ color: hslToHex(config.textColor) }}>Judul Landing Page</div>
                   <div className="text-[10px]" style={{ color: hslToHex(config.subtitleColor) }}>Deskripsi subtitle teks</div>
@@ -532,7 +562,7 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
             <CardContent className="p-4 space-y-4">
               <h3 className="font-semibold text-sm flex items-center gap-2">🎨 Tema Warna</h3>
               <p className="text-xs text-muted-foreground">Pilih tema warna untuk landing page. Semua warna termasuk font otomatis menyesuaikan.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-[320px] overflow-y-auto pr-1">
                 {THEME_PRESETS.map((preset) => {
                   const isActive = config.primaryColor === preset.primary && config.accentColor === preset.accent;
                   return (
@@ -576,21 +606,26 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
                   { label: "Font Subtitle", key: "subtitleColor" as const },
                   { label: "Card", key: "cardColor" as const },
                   { label: "Border", key: "borderColor" as const },
+                  { label: "Tombol CTA", key: "ctaButtonColor" as const },
+                  { label: "Teks CTA", key: "ctaButtonTextColor" as const },
                 ].map(({ label, key }) => (
                   <div key={key} className="space-y-1.5">
                     <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
-                        value={hslToHex(config[key])}
+                        value={hslToHex(config[key] || (key === "ctaButtonColor" ? config.primaryColor : "0 0% 100%"))}
                         onChange={(e) => updateConfig(key, hexToHsl(e.target.value))}
                         className="w-8 h-8 rounded-lg cursor-pointer border border-border p-0.5 shrink-0"
                       />
                       <div
                         className="flex-1 h-8 rounded border border-border"
-                        style={{ backgroundColor: hslToHex(config[key]) }}
+                        style={{ backgroundColor: hslToHex(config[key] || (key === "ctaButtonColor" ? config.primaryColor : "0 0% 100%")) }}
                       />
                     </div>
+                    {key === "ctaButtonColor" && !config.ctaButtonColor && (
+                      <p className="text-[9px] text-muted-foreground">Default: mengikuti warna Primary</p>
+                    )}
                   </div>
                 ))}
               </div>

@@ -18,7 +18,30 @@ export interface ThemePreset {
   preview: string;
 }
 
+/** Helper to build a full preset from just hue, saturation, and preview hex */
+function makePreset(
+  name: string, h: number, s: number, ah: number, as: number, preview: string
+): ThemePreset {
+  return {
+    name,
+    primary: `${h} ${s}% 60%`,
+    accent: `${ah} ${as}% 65%`,
+    preview,
+    darkBackground: `${h} 30% 5%`,
+    darkText: "0 0% 95%",
+    darkSubtitle: `${h} 10% 55%`,
+    darkCard: `${h} 25% 14%`,
+    darkBorder: `${h} 20% 18%`,
+    lightBackground: `${h} 20% 97%`,
+    lightText: `${h} 30% 10%`,
+    lightSubtitle: `${h} 10% 40%`,
+    lightCard: "0 0% 100%",
+    lightBorder: `${h} 15% 88%`,
+  };
+}
+
 export const THEME_PRESETS: ThemePreset[] = [
+  // ── Original 14 ──
   {
     name: "Purple", primary: "265 85% 60%", accent: "280 80% 65%", preview: "#7C3AED",
     darkBackground: "250 30% 5%", darkText: "0 0% 95%", darkSubtitle: "250 10% 55%", darkCard: "250 25% 14%", darkBorder: "250 20% 18%",
@@ -89,6 +112,58 @@ export const THEME_PRESETS: ThemePreset[] = [
     darkBackground: "350 20% 6%", darkText: "0 0% 95%", darkSubtitle: "350 10% 55%", darkCard: "350 20% 14%", darkBorder: "350 15% 18%",
     lightBackground: "350 30% 97%", lightText: "350 20% 10%", lightSubtitle: "350 10% 40%", lightCard: "0 0% 100%", lightBorder: "350 15% 88%",
   },
+
+  // ── 50 New Beautiful Presets ──
+  makePreset("Coral", 16, 85, 6, 80, "#FF6B6B"),
+  makePreset("Peach", 20, 90, 30, 85, "#FFAB76"),
+  makePreset("Tangerine", 30, 92, 20, 88, "#FF8C42"),
+  makePreset("Mango", 38, 88, 48, 82, "#FFB347"),
+  makePreset("Honey", 42, 95, 52, 88, "#FFD700"),
+  makePreset("Lemon", 55, 90, 45, 85, "#F0E130"),
+  makePreset("Lime", 80, 80, 90, 75, "#A8D948"),
+  makePreset("Chartreuse", 90, 85, 100, 80, "#7FFF00"),
+  makePreset("Sage", 130, 35, 140, 30, "#87AE73"),
+  makePreset("Mint", 160, 70, 170, 65, "#3EB489"),
+  makePreset("Turquoise", 170, 82, 180, 78, "#40E0D0"),
+  makePreset("Aqua", 180, 85, 190, 80, "#00CED1"),
+  makePreset("Sky", 195, 88, 205, 82, "#0EA5E9"),
+  makePreset("Azure", 205, 90, 215, 85, "#007FFF"),
+  makePreset("Cobalt", 220, 88, 230, 82, "#0047AB"),
+  makePreset("Royal Blue", 230, 85, 240, 80, "#4169E1"),
+  makePreset("Sapphire", 235, 80, 245, 75, "#0F52BA"),
+  makePreset("Periwinkle", 240, 65, 250, 60, "#CCCCFF"),
+  makePreset("Lavender", 255, 70, 265, 65, "#B57EDC"),
+  makePreset("Orchid", 280, 75, 290, 70, "#DA70D6"),
+  makePreset("Plum", 290, 60, 300, 55, "#8E4585"),
+  makePreset("Magenta", 300, 85, 310, 80, "#FF00FF"),
+  makePreset("Fuchsia", 310, 88, 320, 82, "#FF77FF"),
+  makePreset("Hot Pink", 330, 90, 340, 85, "#FF69B4"),
+  makePreset("Blush", 340, 55, 350, 50, "#DE5D83"),
+  makePreset("Crimson", 348, 85, 358, 80, "#DC143C"),
+  makePreset("Ruby", 350, 78, 0, 72, "#E0115F"),
+  makePreset("Burgundy", 345, 65, 355, 60, "#800020"),
+  makePreset("Wine", 340, 50, 350, 45, "#722F37"),
+  makePreset("Mauve", 310, 30, 320, 25, "#E0B0FF"),
+  makePreset("Lilac", 280, 50, 290, 45, "#C8A2C8"),
+  makePreset("Wisteria", 270, 55, 280, 50, "#C9A0DC"),
+  makePreset("Amethyst", 275, 70, 285, 65, "#9966CC"),
+  makePreset("Violet", 270, 80, 280, 75, "#8B00FF"),
+  makePreset("Electric Blue", 215, 92, 225, 88, "#0080FF"),
+  makePreset("Neon Green", 120, 90, 130, 85, "#39FF14"),
+  makePreset("Neon Pink", 320, 95, 330, 90, "#FF6EC7"),
+  makePreset("Neon Orange", 20, 95, 30, 90, "#FF5F1F"),
+  makePreset("Neon Cyan", 180, 95, 190, 90, "#00FFEF"),
+  makePreset("Sunset Red", 5, 80, 15, 75, "#FF4500"),
+  makePreset("Copper", 25, 70, 35, 65, "#B87333"),
+  makePreset("Bronze", 30, 55, 40, 50, "#CD7F32"),
+  makePreset("Champagne", 40, 40, 50, 35, "#F7E7CE"),
+  makePreset("Ivory", 50, 30, 60, 25, "#FFFFF0"),
+  makePreset("Cream", 45, 45, 55, 40, "#FFFDD0"),
+  makePreset("Sand", 35, 50, 45, 45, "#C2B280"),
+  makePreset("Terracotta", 15, 60, 25, 55, "#E2725B"),
+  makePreset("Rust", 15, 75, 5, 70, "#B7410E"),
+  makePreset("Maroon", 0, 70, 350, 65, "#800000"),
+  makePreset("Forest Green", 140, 60, 150, 55, "#228B22"),
 ];
 
 /** Convert HSL string like "265 85% 60%" to hex color for preview */
