@@ -547,7 +547,7 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
               </div>
               {/* Mini preview */}
               <div className="rounded-lg p-3 flex items-center gap-3 border border-border" style={{ backgroundColor: hslToHex(config.backgroundColor) }}>
-                <div className="rounded-md px-3 py-1.5 text-xs font-bold" style={{ backgroundColor: hslToHex(config.primaryColor), color: '#fff' }}>CTA</div>
+                <div className="rounded-md px-3 py-1.5 text-xs font-bold" style={{ backgroundColor: hslToHex(config.ctaButtonColor || config.primaryColor), color: hslToHex(config.ctaButtonTextColor || '0 0% 100%') }}>CTA</div>
                 <div className="flex-1 space-y-1">
                   <div className="text-xs font-semibold" style={{ color: hslToHex(config.textColor) }}>Judul Landing Page</div>
                   <div className="text-[10px]" style={{ color: hslToHex(config.subtitleColor) }}>Deskripsi subtitle teks</div>
