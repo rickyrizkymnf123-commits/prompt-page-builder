@@ -37,6 +37,8 @@ interface CustomizationConfig {
   subtitleColor: string;
   cardColor: string;
   borderColor: string;
+  ctaButtonColor: string;
+  ctaButtonTextColor: string;
   footerText: string;
   pageTitle: string;
   metaDescription: string;
