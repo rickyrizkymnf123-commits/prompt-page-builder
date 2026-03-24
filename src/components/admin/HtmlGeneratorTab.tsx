@@ -207,18 +207,56 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
       `<meta name="description" content="${escapeHtmlAttr(config.metaDescription)}" />`
     );
 
-    // Replace all theme colors
-    if (config.primaryColor !== defaultConfig.primaryColor) html = html.replace(/265 85% 60%/g, config.primaryColor);
-    if (config.accentColor !== defaultConfig.accentColor) html = html.replace(/280 80% 65%/g, config.accentColor);
-    if (config.backgroundColor !== defaultConfig.backgroundColor) html = html.replace(/250 30% 5%/g, config.backgroundColor);
-    if (config.textColor !== defaultConfig.textColor) html = html.replace(/0 0% 95%/g, config.textColor);
-    if (config.subtitleColor !== defaultConfig.subtitleColor) html = html.replace(/250 10% 55%/g, config.subtitleColor);
-    if (config.cardColor !== defaultConfig.cardColor) html = html.replace(/250 25% 14%/g, config.cardColor);
-    if (config.borderColor !== defaultConfig.borderColor) html = html.replace(/250 20% 18%/g, config.borderColor);
-    // Also replace muted background (close to card)
-    if (config.cardColor !== defaultConfig.cardColor) html = html.replace(/250 20% 15%/g, config.cardColor);
-    // Replace secondary foreground (0 0% 90%) with a value derived from text color
-    if (config.textColor !== defaultConfig.textColor) html = html.replace(/0 0% 90%/g, config.textColor);
+    // ── Dynamic hue/saturation replacement ──
+    // When user picks a new primary/accent, replace ALL lightness variants of the old hue+sat
+    const replaceHueSat = (html: string, oldH: string, oldS: string, newH: string, newS: string) => {
+      // Match patterns like "265 85% 60%" or "265 85% 30%" (with optional / alpha)
+      const regex = new RegExp(`${oldH} ${oldS}% (\\d+)%`, 'g');
+      return html.replace(regex, (_match, lightness) => `${newH} ${newS}% ${lightness}%`);
+    };
+
+    const parseHS = (hsl: string) => {
+      const parts = hsl.match(/^(\d+)\s+(\d+)%\s+(\d+)%$/);
+      return parts ? { h: parts[1], s: parts[2], l: parts[3] } : null;
+    };
+
+    const oldPrimary = parseHS(defaultConfig.primaryColor); // 265 85% 60%
+    const newPrimary = parseHS(config.primaryColor);
+    const oldAccent = parseHS(defaultConfig.accentColor);   // 280 80% 65%
+    const newAccent = parseHS(config.accentColor);
+
+    // Replace all primary hue+sat derivatives (265 85% XX%)
+    if (oldPrimary && newPrimary && config.primaryColor !== defaultConfig.primaryColor) {
+      html = replaceHueSat(html, oldPrimary.h, oldPrimary.s, newPrimary.h, newPrimary.s);
+    }
+    // Replace all accent hue+sat derivatives (280 80% XX%)
+    if (oldAccent && newAccent && config.accentColor !== defaultConfig.accentColor) {
+      html = replaceHueSat(html, oldAccent.h, oldAccent.s, newAccent.h, newAccent.s);
+    }
+
+    // Replace background-family colors (250 XX% YY%) — covers bg, card, border, muted
+    const oldBgH = "250";
+    const newBg = parseHS(config.backgroundColor);
+    if (newBg && config.backgroundColor !== defaultConfig.backgroundColor) {
+      // Replace all "250 NN% MM%" patterns with new hue, keeping sat & lightness
+      html = html.replace(/250 (\d+)% (\d+)%/g, (_match, sat, light) => `${newBg.h} ${sat}% ${light}%`);
+    } else {
+      // Still replace exact known values
+      if (config.backgroundColor !== defaultConfig.backgroundColor) html = html.replace(/250 30% 5%/g, config.backgroundColor);
+      if (config.cardColor !== defaultConfig.cardColor) {
+        html = html.replace(/250 25% 14%/g, config.cardColor);
+        html = html.replace(/250 25% 12%/g, config.cardColor);
+        html = html.replace(/250 20% 15%/g, config.cardColor);
+      }
+      if (config.borderColor !== defaultConfig.borderColor) html = html.replace(/250 20% 18%/g, config.borderColor);
+      if (config.subtitleColor !== defaultConfig.subtitleColor) html = html.replace(/250 10% 55%/g, config.subtitleColor);
+    }
+
+    // Replace text colors
+    if (config.textColor !== defaultConfig.textColor) {
+      html = html.replace(/0 0% 95%/g, config.textColor);
+      html = html.replace(/0 0% 90%/g, config.textColor);
+    }
 
     html = html.replace(/Bikin Landing Page <span id="typing-text".*?<\/span>\s*<br>\s*Cuma Modal Klik, Langsung Jadi ⚡/s, config.heroTitle);
     html = html.replace(/Gak perlu bayar developer jutaan\..*?Siap dipasang iklan, siap closing\./s, config.heroSubtitle);
