@@ -606,6 +606,8 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
                   { label: "Font Subtitle", key: "subtitleColor" as const },
                   { label: "Card", key: "cardColor" as const },
                   { label: "Border", key: "borderColor" as const },
+                  { label: "Tombol CTA", key: "ctaButtonColor" as const },
+                  { label: "Teks CTA", key: "ctaButtonTextColor" as const },
                 ].map(({ label, key }) => (
                   <div key={key} className="space-y-1.5">
                     <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</label>
