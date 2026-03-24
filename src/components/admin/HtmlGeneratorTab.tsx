@@ -83,6 +83,8 @@ const defaultConfig: CustomizationConfig = {
   subtitleColor: "250 10% 55%",
   cardColor: "250 25% 14%",
   borderColor: "250 20% 18%",
+  ctaButtonColor: "",
+  ctaButtonTextColor: "0 0% 100%",
   footerText: "© 2026 Landing Page Builder by Digital Strategi. All rights reserved.",
   pageTitle: "Landing Page Builder — Bikin LP Profesional Tanpa Coding",
   metaDescription: "Bikin landing page profesional dalam hitungan menit. Tanpa coding, tanpa bayar developer mahal.",
