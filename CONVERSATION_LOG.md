@@ -35,26 +35,19 @@
      - Generator prompt di [`src/utils/generatePrompt.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/generatePrompt.ts) menyertakan snippet HTML/CSS/JS widget scarcity.
   8. **🔍 AI Landing Page Auditor**:
      - Dibuat tool tab baru [`src/components/audit/LandingPageAuditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/audit/LandingPageAuditor.tsx) untuk menganalisis 5 pilar konversi landing page (Hook, CTA, Social Proof, Mobile Flow, dan Kepatuhan Kebijakan Iklan Meta/Google Ads Anti-Banned).
-## Session: 2026-08-18 (Penyempurnaan V13: True Apple Liquid Glass Popups, i18n Switcher, Reorder & CTA in Live Edit, Mobile Fit 100%)
+## Session: 2026-08-18 (Rilis V14: AI API Configuration, Hamburger Sidebar Drawer & Apple Glass Blur)
 
 - **User Request**:
-  1. Latar pop-up dibuat transparan liquid glass nyata ala Apple (backdrop-blur-2xl, border-white/20, sudut rounded-3xl / rounded-32px, tidak kotak kaku).
-  2. Gambar 3: Nama produk label `Nama Produk *` dan placeholder `Isi nama produk...`.
-  3. Mode aksi CTA dapat diedit langsung di mode edit (Live HTML Editor).
-  4. Pemindahan drag & drop / reorder section ke mode edit HTML, sedangkan Step 6 di wizard dibuat simpel dan bersih.
-  5. Meta CAPI diberi keterangan/badge `🚀 Next Feature (Segera Hadir)`.
-  6. Hapus Step 8 (Media & Link Referensi) dari wizard.
-  7. Multi-language (ID/EN) aktif di seluruh antarmuka.
-  8. Semua AI tools (Competitor Spy, Creative Sync, Tes 5 Detik, Prompt Cepat, Audit LP, Affiliate) terintegrasi langsung di menu navigasi.
-  9. Optimalisasi mobile-first agar tidak ada teks atau tombol yang terpotong di mode template dan mode edit.
+  1. Tambahkan menu penambahan API seperti di gambar 1 (KoboiLLM API Configuration v8.0 Engine & Uji Interaktif AI Live Chat Test).
+  2. Perbaiki desain Apple AI agar latarnya benar-benar transparan kabur (backdrop-blur) saat pop-up dibuka.
+  3. Pindahkan tombol Bahasa Indonesia / Bahasa Inggris ke samping mode terang/gelap (khusus untuk menerjemahkan antarmuka tools).
+  4. Semua fitur AI harus memiliki menu mandiri/terpisah (jangan disatukan).
+  5. Menu navigasi tidak disimpan di atas secara menumpuk, melainkan di pinggir dengan tombol Garis Tiga ☰ (Sidebar Drawer) agar tampilan lebih bersih dan lega (*clear*).
 
 - **Solusi & Implementasi**:
-  - Dibuat kamus i18n [`src/utils/i18n.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/i18n.ts) yang mengikat seluruh teks UI dan step form.
-  - Didisain ulang [`LiquidGlassModal.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/ui/LiquidGlassModal.tsx) dengan styling Apple Liquid Glass transparan, rounded 32px, glass chip cards, dan manual input smooth.
-  - Step 1, 2, 3 diintegrasikan dengan `LiquidGlassModal`.
-  - Di [`Step4Detail.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/steps/Step4Detail.tsx), label dan placeholder nama produk diperbarui.
-  - Di [`Step6Elements.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/steps/Step6Elements.tsx), grid toggle dibuat bersih dan Meta CAPI diberi badge `🚀 Next Feature`.
-  - Di [`HtmlPreviewEditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/editor/HtmlPreviewEditor.tsx), ditambahkan panel Quick CTA & WhatsApp Inspector serta Section Reordering responsif dengan viewport switch HP (375px) vs Desktop.
-  - Di [`TemplateGallery.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/templates/TemplateGallery.tsx), modal preview menggunakan `h-[100dvh]` agar pas 100% di layar smartphone tanpa terpotong.
-  - Di [`AppPage.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/AppPage.tsx), Step 8 dihapus dan seluruh tool AI dibuat sticky di navigasi atas.
-  - Sukses build `npm run build` dan rilis live di Vercel: `https://prompt-page-builder-app.vercel.app`.
+  - Dibuat komponen [`src/components/settings/AiApiSettings.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/settings/AiApiSettings.tsx) dan utilitas [`src/utils/aiClient.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/aiClient.ts) dengan konfigurasi API Key, Endpoint URL presets (KoboiLLM, OpenAI, OpenRouter, Groq), Model selector, tombol uji jalur API, dan modul Live Chat Test interaktif.
+  - Di [`src/components/ui/dialog.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/ui/dialog.tsx), `DialogOverlay` diperbarui dengan `bg-slate-950/45 backdrop-blur-xl` sehingga seluruh latar belakang menjadi frosted glass blur saat modal dibuka.
+  - Dibuat komponen [`src/components/navigation/SidebarDrawer.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/navigation/SidebarDrawer.tsx) yang meluncur mulus dari samping saat tombol Garis Tiga ☰ di Header ditekan.
+  - Di [`src/components/Header.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/Header.tsx), tombol bahasa (ID/EN) diposisikan persis di samping ikon dark mode.
+  - Di [`src/pages/AppPage.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/AppPage.tsx), tab bar horizontal atas dihapus dan digantikan oleh navigasi drawer yang bersih.
+  - Diverifikasi build `npm run build` (0 error), dicommit ke GitHub, dan live di Vercel: `https://prompt-page-builder-app.vercel.app`.
