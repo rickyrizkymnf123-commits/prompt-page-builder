@@ -35,13 +35,14 @@
      - Generator prompt di [`src/utils/generatePrompt.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/generatePrompt.ts) menyertakan snippet HTML/CSS/JS widget scarcity.
   8. **🔍 AI Landing Page Auditor**:
      - Dibuat tool tab baru [`src/components/audit/LandingPageAuditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/audit/LandingPageAuditor.tsx) untuk menganalisis 5 pilar konversi landing page (Hook, CTA, Social Proof, Mobile Flow, dan Kepatuhan Kebijakan Iklan Meta/Google Ads Anti-Banned).
-## Session: 2026-08-18 (Rilis V15: Restorasi Penuh Mode Edit Visual Interaktif - Teks, Warna, Gambar, Video & CTA)
+## Session: 2026-08-18 (Rilis V16: Sidebar Drawer Garis Tiga ☰ Terpadu di Seluruh Dashboard Admin & Member)
 
 - **User Request**:
-  - Pulihkan fitur edit teks, ubah warna CTA, gambar, video, dan background langsung di preview live HTML editor (tidak hanya edit CTA massal).
+  - Hapus semua baris menu horizontal yang masih berada di tengah (terutama di dashboard Admin).
+  - Pindahkan semua menu (Generator, AI API Config, AI Tools, Templates, Affiliate, Users, Logs, Settings) agar hanya muncul saat menekan tombol Garis Tiga ☰ (Sidebar Drawer) sehingga halaman benar-benar bersih (*clear*).
 
 - **Solusi & Implementasi**:
-  - Di [`HtmlPreviewEditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/editor/HtmlPreviewEditor.tsx), ditambahkan tombol **`[✏️ Mode Edit Visual]`** di toolbar.
-  - Mengaktifkan bridge postMessage interaktif di dalam iframe: setiap elemen (judul, paragraf, gambar, tombol, video) diberi highlight interaktif.
-  - Saat elemen diklik, terbuka [`EditModal.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/editor/EditModal.tsx) untuk mengubah teks, color picker teks & latar belakang, ganti gambar/video YouTube, edit link/WA/Pixel, serta tombol hapus elemen.
+  - Di [`Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/Admin.tsx), dihapus seluruh `<TabsList>` horizontal yang sebelumnya berada di tengah layar.
+  - Ditambahkan tombol **Garis Tiga ☰** di Header kiri Admin dan dihubungkan ke [`SidebarDrawer.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/navigation/SidebarDrawer.tsx).
+  - Seluruh menu AI (Konfigurasi API AI, Prompt Cepat, Competitor Spy, Creative Sync, Tes 5 Detik, Audit LP, Templates, Affiliate) serta menu Admin (Users, Logs, Settings, LP Builder) dapat diakses melalui Sidebar Drawer.
   - Diverifikasi build `npm run build` (0 error), dicommit ke GitHub, dan live di Vercel: `https://prompt-page-builder-app.vercel.app`.
