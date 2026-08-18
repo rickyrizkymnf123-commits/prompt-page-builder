@@ -1,9 +1,11 @@
 # Memory
 
-## Project Details
-- **Project**: Remix of Prompt Page Builder (`vite_react_shadcn_ts`)
-- **Path**: `C:\Users\UC\.gemini\antigravity-ide\scratch\remix-of-prompt-page-builder`
+## Production Infrastructure
+- **Live Production URL**: [https://prompt-page-builder-app.vercel.app](https://prompt-page-builder-app.vercel.app)
+- **Vercel Alias URL**: [https://remix-of-prompt-page-builder.vercel.app](https://remix-of-prompt-page-builder.vercel.app)
+- **GitHub Repository**: [https://github.com/rickyrizkymnf123-commits/prompt-page-builder](https://github.com/rickyrizkymnf123-commits/prompt-page-builder)
+- **Supabase Project**: `prompt-page-builder` (`uxerfoonlifdpgiiwvdi`)
+  - **URL**: `https://uxerfoonlifdpgiiwvdi.supabase.co`
+  - **Anon Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4ZXJmb29ubGlmZHBnaWl3dmRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNDc4NjgsImV4cCI6MjEwMjYyMzg2OH0.DsPZ92jnjHjQ3E7xgw5c5xzljr0ZRWr5OcFZjkx_eZY`
 - **Main Admin**: `fauzymnf29@gmail.com`
-- **Admin UID**: `806e2b7d-24b8-4896-abd0-7741ac55236e`
-- **Dev Port**: `http://localhost:8080`
-- **Admin Settings Tab**: Dibuat khusus dan eksklusif untuk **Pengaturan Video Tutorial** (Tambah, Edit, Hapus, preview link, dan urutan video).
+- **Admin Password**: `Eci12345!`

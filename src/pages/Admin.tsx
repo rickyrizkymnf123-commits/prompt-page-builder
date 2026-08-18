@@ -218,10 +218,111 @@ export default function Admin() {
   useEffect(() => { document.documentElement.classList.toggle("dark", darkMode); }, [darkMode]);
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "list" } });
-    if (error || !data?.users) return;
-    setUsers(data.users);
+    try {
+      // 1. Query Edge Function if available
+      let edgeUsers: any[] = [];
+      try {
+        const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "list" } });
+        if (!error && data?.users && Array.isArray(data.users)) {
+          edgeUsers = data.users;
+        }
+      } catch {}
+
+      // 2. Query Direct Database Tables
+      const [profilesRes, entRes, rolesRes, usageRes] = await Promise.all([
+        supabase.from("profiles").select("*"),
+        supabase.from("entitlements").select("*"),
+        supabase.from("user_roles").select("*"),
+        supabase.from("prompt_usage").select("*"),
+      ]);
+
+      const profiles = profilesRes.data || [];
+      const entitlements = entRes.data || [];
+      const roles = rolesRes.data || [];
+      const usages = usageRes.data || [];
+
+      // Create a map of all known user_ids
+      const userMap = new Map<string, any>();
+
+      // Populate from Edge users first if any
+      for (const eu of edgeUsers) {
+        userMap.set(eu.id, { ...eu });
+      }
+
+      // Populate / merge from Profiles
+      for (const p of profiles) {
+        const existing = userMap.get(p.user_id) || { id: p.user_id };
+        userMap.set(p.user_id, {
+          ...existing,
+          id: p.user_id,
+          name: p.name || existing.name || "User",
+          phone: p.phone || existing.phone || "",
+          email: existing.email || (p.name ? `${p.name.toLowerCase().replace(/\s+/g, '')}@user.local` : `user-${p.user_id.slice(0, 8)}`),
+          created_at: p.created_at || existing.created_at || new Date().toISOString(),
+        });
+      }
+
+      // Populate / merge from Entitlements
+      for (const e of entitlements) {
+        const existing = userMap.get(e.user_id) || { id: e.user_id };
+        userMap.set(e.user_id, {
+          ...existing,
+          id: e.user_id,
+          entitlement_id: e.id,
+          product_code: e.product_code || existing.product_code || "LPE",
+          status: e.status || existing.status || "pending",
+          created_at: existing.created_at || e.created_at,
+        });
+      }
+
+      // Populate / merge from Roles
+      for (const r of roles) {
+        const existing = userMap.get(r.user_id) || { id: r.user_id };
+        userMap.set(r.user_id, {
+          ...existing,
+          id: r.user_id,
+          role: r.role || existing.role || "user",
+        });
+      }
+
+      // Populate / merge from Usages
+      for (const u of usages) {
+        const existing = userMap.get(u.user_id) || { id: u.user_id };
+        userMap.set(u.user_id, {
+          ...existing,
+          id: u.user_id,
+          prompt_used: u.used_count || 0,
+        });
+      }
+
+      // Format clean list
+      const unifiedUsers = Array.from(userMap.values()).map(u => ({
+        id: u.id,
+        email: u.email || `user-${u.id.slice(0, 8)}`,
+        name: u.name || "-",
+        phone: u.phone || "",
+        role: u.role || (u.email === "fauzymnf29@gmail.com" ? "admin" : "user"),
+        product_code: u.product_code || "LPE",
+        status: u.status || "pending",
+        entitlement_id: u.entitlement_id || null,
+        prompt_used: u.prompt_used || 0,
+        created_at: u.created_at || new Date().toISOString(),
+        last_sign_in: u.last_sign_in || null,
+      }));
+
+      // Sort with pending first, then newest
+      unifiedUsers.sort((a, b) => {
+        if (a.status === 'pending' && b.status !== 'pending') return -1;
+        if (a.status !== 'pending' && b.status === 'pending') return 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
+      setUsers(unifiedUsers);
+    } catch (err) {
+      console.error("fetchUsers error:", err);
+    }
   };
+
   const fetchLogs = async () => {
     const { data } = await supabase.from("provision_logs").select("*").order("created_at", { ascending: false }).limit(100);
     setLogs((data as ProvisionLog[]) || []);
@@ -283,26 +384,72 @@ export default function Admin() {
     check();
   }, [navigate]);
 
-  const handleApprove = async (entitlementId: string) => {
-    setActionLoading(entitlementId);
-    await supabase.from("entitlements").update({ status: "active" }).eq("id", entitlementId);
-    showToast({ title: "Berhasil", description: "User di-approve." });
-    await fetchUsers(); setActionLoading(null);
-  };
-  const handleReject = async (entitlementId: string) => {
-    setActionLoading(entitlementId);
-    await supabase.from("entitlements").update({ status: "rejected" }).eq("id", entitlementId);
-    showToast({ title: "Berhasil", description: "User ditolak." });
-    await fetchUsers(); setActionLoading(null);
-  };
-  const handleDelete = async (userId: string) => {
-    if (!confirm('Yakin hapus user ini?')) return;
+  const handleApprove = async (userId: string, entitlementId?: string | null) => {
     setActionLoading(userId);
-    const { error } = await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: userId } });
-    if (error) showToast({ title: "Error", description: "Gagal menghapus user.", variant: "destructive" });
-    else showToast({ title: "Berhasil", description: "User dihapus." });
-    await fetchUsers(); setActionLoading(null);
+    try {
+      if (entitlementId) {
+        await supabase.from("entitlements").update({ status: "active", product_code: "LPE" }).eq("id", entitlementId);
+      } else {
+        await supabase.from("entitlements").upsert({
+          user_id: userId,
+          order_id: "acc-" + Date.now(),
+          product_code: "LPE",
+          status: "active",
+        }, { onConflict: "user_id" });
+      }
+      // Ensure user role exists
+      await supabase.from("user_roles").upsert({ user_id: userId, role: "user" }, { onConflict: "user_id" });
+      showToast({ title: "✅ Berhasil di-ACC", description: "Pengguna sekarang aktif dan dapat login." });
+    } catch (e: any) {
+      showToast({ title: "Error", description: e.message, variant: "destructive" });
+    }
+    await fetchUsers();
+    setActionLoading(null);
   };
+
+  const handleReject = async (userId: string, entitlementId?: string | null) => {
+    setActionLoading(userId);
+    try {
+      if (entitlementId) {
+        await supabase.from("entitlements").update({ status: "rejected" }).eq("id", entitlementId);
+      } else {
+        await supabase.from("entitlements").upsert({
+          user_id: userId,
+          order_id: "rej-" + Date.now(),
+          product_code: "LPE",
+          status: "rejected",
+        }, { onConflict: "user_id" });
+      }
+      showToast({ title: "❌ User Ditolak", description: "Status pendaftaran pengguna diset ke Ditolak." });
+    } catch (e: any) {
+      showToast({ title: "Error", description: e.message, variant: "destructive" });
+    }
+    await fetchUsers();
+    setActionLoading(null);
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!confirm('Yakin ingin menghapus user ini secara permanen?')) return;
+    setActionLoading(userId);
+    try {
+      await Promise.all([
+        supabase.from("profiles").delete().eq("user_id", userId),
+        supabase.from("entitlements").delete().eq("user_id", userId),
+        supabase.from("user_roles").delete().eq("user_id", userId),
+        supabase.from("prompt_usage").delete().eq("user_id", userId),
+        supabase.from("user_signing_secrets").delete().eq("user_id", userId),
+      ]);
+      try {
+        await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: userId } });
+      } catch {}
+      showToast({ title: "🗑 User Dihapus", description: "Data user berhasil dihapus dari sistem." });
+    } catch (e: any) {
+      showToast({ title: "Error", description: e.message, variant: "destructive" });
+    }
+    await fetchUsers();
+    setActionLoading(null);
+  };
+
   const handleResetPassword = async () => {
     if (!newPassword || newPassword.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); return; }
     setActionLoading(resetDialog.userId);
@@ -311,12 +458,16 @@ export default function Admin() {
     else showToast({ title: "Berhasil", description: `Password direset untuk ${resetDialog.email}` });
     setResetDialog({ open: false, userId: "", email: "" }); setNewPassword(""); setShowNewPassword(false); setActionLoading(null);
   };
+
   const handleChangeTier = async (userId: string, newTier: 'free' | 'paid') => {
     setActionLoading(userId);
-    await supabase.functions.invoke("admin-users", { body: { action: "change_tier", user_id: userId, role: newTier } });
+    const prod = newTier === 'paid' ? 'LPE' : 'LPE_FREE';
+    await supabase.from("entitlements").update({ product_code: prod }).eq("user_id", userId);
     showToast({ title: `Tier diubah ke ${newTier === 'paid' ? 'Berbayar' : 'Gratis'}` });
-    await fetchUsers(); setActionLoading(null);
+    await fetchUsers();
+    setActionLoading(null);
   };
+
   const handleAddMember = async () => {
     if (!addMemberForm.email || !addMemberForm.password) { showToast({ title: "Error", description: "Email dan password wajib.", variant: "destructive" }); return; }
     if (addMemberForm.password.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); return; }
@@ -345,6 +496,7 @@ export default function Admin() {
       return next;
     });
   };
+
   const toggleSelectAll = () => {
     if (selectedUsers.size === filteredUsers.filter(u => u.role !== 'admin').length) {
       setSelectedUsers(new Set());
@@ -352,6 +504,7 @@ export default function Admin() {
       setSelectedUsers(new Set(filteredUsers.filter(u => u.role !== 'admin').map(u => u.id)));
     }
   };
+
   const handleBulkAddMembers = async () => {
     const members = bulkAddRows.filter(r => r.email.trim());
     if (members.length === 0) { showToast({ title: "Error", description: "Tidak ada data member yang valid.", variant: "destructive" }); return; }
@@ -366,28 +519,58 @@ export default function Admin() {
     }
     setBulkAddLoading(false);
   };
+
   const handleBulkAction = async () => {
     if (selectedUsers.size === 0) return;
     setBulkLoading(true);
     const ids = Array.from(selectedUsers);
 
-    if (bulkDialog.action === 'tier_paid' || bulkDialog.action === 'tier_free') {
-      const tier = bulkDialog.action === 'tier_paid' ? 'paid' : 'free';
-      for (const uid of ids) {
-        await supabase.functions.invoke("admin-users", { body: { action: "change_tier", user_id: uid, role: tier } });
+    try {
+      if (bulkDialog.action === 'approve') {
+        for (const uid of ids) {
+          await supabase.from("entitlements").update({ status: "active", product_code: "LPE" }).eq("user_id", uid);
+        }
+        showToast({ title: `✅ ${ids.length} User Berhasil di-ACC!` });
+      } else if (bulkDialog.action === 'reject') {
+        for (const uid of ids) {
+          await supabase.from("entitlements").update({ status: "rejected" }).eq("user_id", uid);
+        }
+        showToast({ title: `❌ ${ids.length} User Ditolak.` });
+      } else if (bulkDialog.action === 'delete') {
+        for (const uid of ids) {
+          await Promise.all([
+            supabase.from("profiles").delete().eq("user_id", uid),
+            supabase.from("entitlements").delete().eq("user_id", uid),
+            supabase.from("user_roles").delete().eq("user_id", uid),
+            supabase.from("prompt_usage").delete().eq("user_id", uid),
+            supabase.from("user_signing_secrets").delete().eq("user_id", uid),
+          ]);
+          try {
+            await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: uid } });
+          } catch {}
+        }
+        showToast({ title: `🗑 ${ids.length} User Berhasil Dihapus!` });
+      } else if (bulkDialog.action === 'tier_paid' || bulkDialog.action === 'tier_free') {
+        const prod = bulkDialog.action === 'tier_paid' ? 'LPE' : 'LPE_FREE';
+        for (const uid of ids) {
+          await supabase.from("entitlements").update({ product_code: prod }).eq("user_id", uid);
+        }
+        showToast({ title: `✅ ${ids.length} User diubah ke ${bulkDialog.action === 'tier_paid' ? 'Berbayar' : 'Gratis'}` });
+      } else if (bulkDialog.action === 'reset_password') {
+        if (!bulkPassword || bulkPassword.length < 6) {
+          showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" });
+          setBulkLoading(false);
+          return;
+        }
+        for (const uid of ids) {
+          try {
+            await supabase.functions.invoke("admin-users", { body: { action: "reset_password", user_id: uid, password: bulkPassword } });
+          } catch {}
+        }
+        showToast({ title: `✅ Password ${ids.length} user direset` });
       }
-      showToast({ title: `✅ ${ids.length} user diubah ke ${tier === 'paid' ? 'Berbayar' : 'Gratis'}` });
-    } else if (bulkDialog.action === 'reset_password') {
-      if (!bulkPassword || bulkPassword.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); setBulkLoading(false); return; }
-      for (const uid of ids) {
-        await supabase.functions.invoke("admin-users", { body: { action: "reset_password", user_id: uid, password: bulkPassword } });
-      }
-      showToast({ title: `✅ Password ${ids.length} user direset` });
-    } else if (bulkDialog.action === 'delete') {
-      for (const uid of ids) {
-        await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: uid } });
-      }
-      showToast({ title: `✅ ${ids.length} user dihapus` });
+    } catch (err: any) {
+      showToast({ title: "Gagal memproses aksi massal", description: err.message, variant: "destructive" });
     }
 
     setBulkLoading(false);
@@ -692,12 +875,26 @@ export default function Admin() {
                     <Button key={t.k} size="sm" variant={filterTier===t.k?"default":"outline"} onClick={() => setFilterTier(t.k)} className="text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3">{t.l}</Button>
                   ))}
                   {selectedUsers.size > 0 && (
-                    <div className="flex gap-1 flex-wrap w-full sm:w-auto sm:ml-auto mt-1 sm:mt-0">
-                      <span className="text-[10px] sm:text-xs text-muted-foreground self-center mr-1">{selectedUsers.size} dipilih</span>
-                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_paid' })} className="text-[10px] sm:text-xs gap-1 h-7">⬆ Bayar</Button>
-                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_free' })} className="text-[10px] sm:text-xs gap-1 h-7">⬇ Gratis</Button>
-                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'reset_password' })} className="text-[10px] sm:text-xs gap-1 h-7"><KeyRound className="h-3 w-3" /> Reset</Button>
-                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'delete' })} className="text-[10px] sm:text-xs gap-1 h-7 text-destructive"><Trash2 className="h-3 w-3" /> Hapus</Button>
+                    <div className="flex gap-1.5 flex-wrap w-full sm:w-auto sm:ml-auto mt-1 sm:mt-0 items-center bg-secondary/80 p-1.5 rounded-lg border border-border">
+                      <span className="text-xs font-semibold text-primary px-1">{selectedUsers.size} dipilih:</span>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'approve' })} className="text-xs gap-1 h-7 border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10">
+                        <CheckCircle className="h-3.5 w-3.5" /> ACC
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'reject' })} className="text-xs gap-1 h-7 border-amber-500/40 text-amber-500 hover:bg-amber-500/10">
+                        <XCircle className="h-3.5 w-3.5" /> Tolak
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_paid' })} className="text-xs gap-1 h-7">
+                        ⭐ Berbayar
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_free' })} className="text-xs gap-1 h-7">
+                        🆓 Gratis
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'reset_password' })} className="text-xs gap-1 h-7">
+                        <KeyRound className="h-3.5 w-3.5" /> Reset Pass
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => setBulkDialog({ open: true, action: 'delete' })} className="text-xs gap-1 h-7">
+                        <Trash2 className="h-3.5 w-3.5" /> Hapus Terpilih
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -726,7 +923,12 @@ export default function Admin() {
                           <TableCell>
                             {u.role !== 'admin' && <Checkbox checked={selectedUsers.has(u.id)} onCheckedChange={() => toggleSelectUser(u.id)} />}
                           </TableCell>
-                          <TableCell className="font-medium">{u.name||"-"}</TableCell>
+                          <TableCell className="font-medium">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{u.name||"-"}</p>
+                              {u.phone && <p className="text-[11px] text-muted-foreground font-mono">📱 {u.phone}</p>}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-sm">{u.email}</TableCell>
                           <TableCell>
                             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.product_code === 'LPE' ? 'text-primary bg-primary/10 border border-primary/30' : 'text-amber-500 bg-amber-500/10 border border-amber-500/30'}`}>
@@ -738,7 +940,7 @@ export default function Admin() {
                               <span className={`text-xs font-mono ${u.prompt_used >= 5 && u.product_code !== 'LPE' ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>{u.prompt_used}/5</span>
                               {u.role !== 'admin' && u.prompt_used > 0 && (
                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-primary" title="Reset usage" onClick={async () => {
-                                  await supabase.functions.invoke("admin-users", { body: { action: "reset_usage", user_id: u.id } });
+                                  await supabase.from("prompt_usage").update({ used_count: 0 }).eq("user_id", u.id);
                                   showToast({ title: '✅ Usage direset' });
                                   fetchUsers();
                                 }}><RotateCcw className="h-3 w-3" /></Button>
@@ -751,15 +953,39 @@ export default function Admin() {
                           <TableCell className="text-xs text-muted-foreground">{u.last_sign_in ? new Date(u.last_sign_in).toLocaleString("id-ID") : "-"}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1 flex-wrap">
-                              {u.status==="pending" && u.entitlement_id && (<><Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-300" onClick={() => handleApprove(u.entitlement_id!)} disabled={actionLoading===u.entitlement_id}><CheckCircle className="h-3 w-3" /> ACC</Button><Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30" onClick={() => handleReject(u.entitlement_id!)} disabled={actionLoading===u.entitlement_id}><XCircle className="h-3 w-3" /> Tolak</Button></>)}
-                              {u.status==="rejected" && u.entitlement_id && <Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-300" onClick={() => handleApprove(u.entitlement_id!)} disabled={actionLoading===u.entitlement_id}><CheckCircle className="h-3 w-3" /> ACC</Button>}
+                              {u.status === "pending" && (
+                                <>
+                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7" onClick={() => handleApprove(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
+                                    <CheckCircle className="h-3.5 w-3.5" /> ACC
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 h-7" onClick={() => handleReject(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
+                                    <XCircle className="h-3.5 w-3.5" /> Tolak
+                                  </Button>
+                                </>
+                              )}
+                              {u.status === "rejected" && (
+                                <Button size="sm" variant="outline" className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7" onClick={() => handleApprove(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
+                                  <CheckCircle className="h-3.5 w-3.5" /> ACC
+                                </Button>
+                              )}
+                              {u.status === "active" && u.role !== 'admin' && (
+                                <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-500 border-amber-300/40 hover:bg-amber-500/10 h-7" onClick={() => handleReject(u.id, u.entitlement_id)} disabled={actionLoading === u.id} title="Nonaktifkan / Tolak Akses">
+                                  <XCircle className="h-3.5 w-3.5" /> Nonaktifkan
+                                </Button>
+                              )}
                               {u.role !== 'admin' && (
-                                <Button size="sm" variant="outline" className="text-xs" onClick={() => handleChangeTier(u.id, u.product_code === 'LPE' ? 'free' : 'paid')} disabled={actionLoading===u.id}>
+                                <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => handleChangeTier(u.id, u.product_code === 'LPE' ? 'free' : 'paid')} disabled={actionLoading === u.id}>
                                   {u.product_code === 'LPE' ? '⬇ Gratis' : '⬆ Berbayar'}
                                 </Button>
                               )}
-                              <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setResetDialog({ open: true, userId: u.id, email: u.email })}><KeyRound className="h-3 w-3" /></Button>
-                              {u.role!=="admin" && <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDelete(u.id)} disabled={actionLoading===u.id}><Trash2 className="h-3 w-3" /></Button>}
+                              <Button size="sm" variant="ghost" className="text-muted-foreground h-7 w-7 p-0" onClick={() => setResetDialog({ open: true, userId: u.id, email: u.email })} title="Reset Password">
+                                <KeyRound className="h-3.5 w-3.5" />
+                              </Button>
+                              {u.role !== "admin" && (
+                                <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 h-7 w-7 p-0" onClick={() => handleDelete(u.id)} disabled={actionLoading === u.id} title="Hapus User">
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -985,28 +1211,58 @@ export default function Admin() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {bulkDialog.action === 'tier_paid' && '⬆ Ubah ke Berbayar'}
-              {bulkDialog.action === 'tier_free' && '⬇ Ubah ke Gratis'}
+              {bulkDialog.action === 'approve' && '✅ ACC / Setujui User Terpilih'}
+              {bulkDialog.action === 'reject' && '❌ Tolak User Terpilih'}
+              {bulkDialog.action === 'tier_paid' && '⭐ Ubah ke Berbayar Massal'}
+              {bulkDialog.action === 'tier_free' && '🆓 Ubah ke Gratis Massal'}
               {bulkDialog.action === 'reset_password' && '🔑 Reset Password Massal'}
-              {bulkDialog.action === 'delete' && '🗑 Hapus User Massal'}
+              {bulkDialog.action === 'delete' && '🗑 Hapus Beberapa User Sekaligus'}
             </DialogTitle>
-            <DialogDescription>Tindakan ini akan diterapkan ke {selectedUsers.size} user yang dipilih.</DialogDescription>
+            <DialogDescription>
+              Tindakan ini akan diterapkan ke <strong>{selectedUsers.size} user</strong> yang Anda pilih.
+            </DialogDescription>
           </DialogHeader>
+          {bulkDialog.action === 'approve' && (
+            <p className="text-sm text-foreground">
+              Semua user yang dipilih akan langsung di-ACC dan berstatus <strong>Aktif</strong> dengan akses penuh ke builder.
+            </p>
+          )}
+          {bulkDialog.action === 'reject' && (
+            <p className="text-sm text-muted-foreground">
+              Pendaftaran user yang dipilih akan diset ke <strong>Ditolak</strong> dan mereka tidak dapat masuk ke aplikasi.
+            </p>
+          )}
+          {bulkDialog.action === 'tier_paid' && (
+            <p className="text-sm text-foreground">
+              User yang dipilih akan diubah tier-nya menjadi <strong>⭐ Berbayar (Unlimited)</strong>.
+            </p>
+          )}
+          {bulkDialog.action === 'tier_free' && (
+            <p className="text-sm text-foreground">
+              User yang dipilih akan diubah tier-nya menjadi <strong>🆓 Gratis (Limit 5x)</strong>.
+            </p>
+          )}
           {bulkDialog.action === 'reset_password' && (
-            <div className="relative">
-              <Input type={showBulkPassword ? "text" : "password"} placeholder="Password baru untuk semua (min. 6)" value={bulkPassword} onChange={(e) => setBulkPassword(e.target.value)} className="pr-10" />
-              <button type="button" onClick={() => setShowBulkPassword(!showBulkPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" tabIndex={-1}>
-                {showBulkPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">Masukkan password baru yang akan diterapkan ke semua user terpilih:</p>
+              <div className="relative">
+                <Input type={showBulkPassword ? "text" : "password"} placeholder="Password baru untuk semua (min. 6)" value={bulkPassword} onChange={(e) => setBulkPassword(e.target.value)} className="pr-10" />
+                <button type="button" onClick={() => setShowBulkPassword(!showBulkPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" tabIndex={-1}>
+                  {showBulkPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           )}
           {bulkDialog.action === 'delete' && (
-            <p className="text-sm text-destructive font-medium">⚠️ Tindakan ini tidak bisa dibatalkan!</p>
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive space-y-1">
+              <p className="font-bold flex items-center gap-1.5"><Trash2 className="h-4 w-4" /> Peringatan Penghapusan:</p>
+              <p>User yang dipilih akan dihapus secara permanen dari sistem beserta seluruh entitlement dan riwayatnya. Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setBulkDialog({ open: false, action: '' })}>Batal</Button>
             <Button onClick={handleBulkAction} disabled={bulkLoading} variant={bulkDialog.action === 'delete' ? 'destructive' : 'default'}>
-              {bulkLoading ? "Memproses..." : "Konfirmasi"}
+              {bulkLoading ? "Memproses..." : "Konfirmasi & Jalankan"}
             </Button>
           </DialogFooter>
         </DialogContent>
