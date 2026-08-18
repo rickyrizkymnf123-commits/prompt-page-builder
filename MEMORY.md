@@ -9,20 +9,42 @@
 
 ## Core Capabilities & Features
 1. **💾 Saved Projects Database (`public.saved_projects`)**:
-   - Pengguna dapat menyimpan, membuka, mengedit kembali, dan mengupdate berbagai proyek landing page kustom ke database Supabase kapan saja.
+   - Simpan, buka, edit, dan update form custom ke database Supabase kapan saja.
    - Autosave draft otomatis ke `localStorage` (`lpb_form_draft`).
-2. **🛡️ Session Stability**:
-   - Pengecekan sesi query tersinkronisasi tanpa logout tiba-tiba saat berpindah menu.
-3. **📖 Framework Copywriting Guide**:
-   - Modal panduan interaktif bahasa Indonesia non-teknis lengkap dengan contoh & kasus penggunaan (PAS, AIDCA, BAB, 4P, SLAP, StoryBrand, Hero's Journey, HSO, QUEST, JTBD, FAB, dll.).
-4. **🚫 Mode Landing Page Tanpa Harga / Non-Komersial**:
-   - Toggle khusus untuk landing page non-komersial, pendaftaran agen pulsa/PPOB (seperti dBestReload), download aplikasi, maupun free lead magnet tanpa menampilkan nominal rupiah.
-5. **🎲 AI Randomizer Nama Pembeli**:
-   - Generator nama pembeli otomatis berdasarkan niche (Umum, Agen/PPOB, Bisnis Digital, Beauty) untuk popup Sales Notification.
-6. **⏳ Urgency & Scarcity Sisa Slot / Kuota**:
-   - Widget hitung mundur kuota tersisa dengan progress bar visual dinamis + opsi auto-decrease.
-7. **🔍 AI Landing Page Auditor**:
-   - Tool audit instan 5 pilar konversi landing page (Hook, CTA, Social Proof, Mobile Readability, Meta/Google Ads Anti-Banned Compliance).
-8. **Platforms & Devices**:
-   - Mendukung `OrderHero`, `WinMe`, `Scalev`, `Berdu`, `OrderOnline`, `LandingPress`, `WordPress`, `Lynk.id`, `Mayar`, `Shopify`, `Standalone`.
-   - Target device: `Mobile`, `Tablet`, `Desktop`, `Responsive (All Devices)`.
+2. **🛡️ Session Stability & Fix Reset Password**:
+   - Pengecekan sesi persisten stabil tanpa force logout.
+   - Password reset di Admin menggunakan RPC `admin_set_user_password` langsung ke database Supabase sehingga 100% andal tanpa error edge function.
+3. **📲 CTA Modes & Form Actions**:
+   - Direct WhatsApp (CTWA) dengan Auto-Text Generator.
+   - Direct Link / Microsite Checkout (Scalev, WinMe, OrderHero, Mayar, dll.).
+   - Lead Capture Form langsung di landing page.
+4. **📱 Mobile-First Native Feel & UI Polish**:
+   - Sticky Header & Navigation Bar dengan backdrop-blur.
+   - Perbaikan jarak tombol close `✕` dan refresh `🔄` di dialog (tidak tumpang tindih).
+   - Template gallery mobile friendly dengan device preview toggle (*Mobile 375px* vs *Desktop*).
+5. **🎨 Visual Warna Brand & Apple Liquid Glass Aesthetic**:
+   - Modal selector Apple Liquid Glass transparan dengan input manual smooth.
+   - Color Swatch Circles interaktif + custom HEX picker.
+   - Visual Theme preview cards & typography Google Fonts + animasi masuk section.
+6. **🤝 Program Kemitraan & Affiliate (`public.affiliate_referrals`)**:
+   - Referral link unik per member, statistik klik, lead, saldo komisi, dan payout request.
+7. **📑 Custom User Templates (`public.custom_user_templates`)**:
+   - Simpan hasil LP manual ke akun masing-masing dan muat ulang dari galeri template.
+8. **🖼️ Media Assets**:
+   - Foto Produk (multi-image), Video Hero Embed (YouTube/TikTok/Vimeo), dan Cover Banner Header.
+9. **🕵️‍♂️ AI Competitor Spy Tool**:
+   - Analisa URL kompetitor (Headline, Funnel, Offer, Kelemahan, Angle Emas).
+10. **🎬 AI Creative-to-Landing Page Sync**:
+    - Ekstrak Hook, Emosi, Target & Promise dari video iklan TikTok/FB Ads -> sinkronkan ke LP.
+11. **⏱️ Fitur "Tes 5 Detik"**:
+    - Evaluasi pemahaman audiens dalam 5 detik pertama lengkap dengan skor & formula quick fix.
+12. **⚡ Mode "Tulis Prompt Cepat"**:
+    - 1-click auto-fill form dari 1 kalimat instruksi bebas.
+13. **🏷️ Struktur Harga Bertingkat (Batch Pricing)** & **Mode Tanpa Harga**:
+    - Opsi Batch 1 Early Bird, Batch 2, Batch 3, serta mode non-komersial tanpa harga (pendaftaran agen/free app).
+14. **🖥️ Live Side-Display Blueprint**:
+    - Visual split screen di desktop yang menampilkan blueprint alur framework secara realtime.
+15. **📡 Funnel Meta Conversions API (CAPI) CTWA**:
+    - Generator script Pixel & CAPI tracking lead event saat klik WhatsApp.
+16. **🔀 Drag & Drop Section Reorder**:
+    - Pengaturan urutan section landing page secara adaptif.

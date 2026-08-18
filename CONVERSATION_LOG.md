@@ -35,5 +35,30 @@
      - Generator prompt di [`src/utils/generatePrompt.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/generatePrompt.ts) menyertakan snippet HTML/CSS/JS widget scarcity.
   8. **🔍 AI Landing Page Auditor**:
      - Dibuat tool tab baru [`src/components/audit/LandingPageAuditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/audit/LandingPageAuditor.tsx) untuk menganalisis 5 pilar konversi landing page (Hook, CTA, Social Proof, Mobile Flow, dan Kepatuhan Kebijakan Iklan Meta/Google Ads Anti-Banned).
-  9. **Deployment & Git Sync**:
-     - Seluruh kode berhasil dibuild (`npm run build`), dicommit, dipush ke GitHub repo, dan ter-deploy secara otomatis ke Vercel production: `https://prompt-page-builder-app.vercel.app`.
+## Session: 2026-08-18 (Overhaul 18 Poin Lengkap: Mobile-First UX, AI Tools, Affiliate, CTA Modes, Live Blueprint, Reset PW Fix)
+
+- **User Request**:
+  1. Opsi form selain klik button (Direct WhatsApp auto-text, Microsite link, Lead Capture Form).
+  2. Optimalisasi UI di smartphone (Native mobile app feel, sticky navigation bar, fix tombol X & Refresh mepet di dialog).
+  3. Fix bug gagal reset kata sandi di admin ("Failed to send a request to the Edge Function").
+  4. Tambahan fitur Affiliate Program untuk aplikasi ini.
+  5. Fitur Save as Template (simpan LP manual ke template kustom akun).
+  6. Fitur media Foto Produk, Video Hero, dan Cover Header LP.
+  7. Multi-language switcher (Bahasa Indonesia & Bahasa Inggris).
+  8. Visual warna brand berupa bulat warna (color swatch circles + custom HEX picker) & Apple Liquid Glass center popup.
+  9. AI Competitor Spy Tool (analisa URL kompetitor).
+  10. AI Creative-to-Landing Page Sync (sinkronisasi transkrip video iklan TikTok/FB ke LP).
+  11. Fitur "Tes 5 Detik" (5-Second clarity test).
+  12. Kustomisasi font, ukuran tombol CTA, dan animasi masuk.
+  13. Mode "Tulis Prompt Cepat" (1-click AI auto-fill form).
+  14. Preset kategori LP berdasarkan saluran traffic (Meta Ads, Google Ads, CTWA, dll.).
+  15. Struktur harga bertingkat (Tiered Batch 1, Batch 2, Normal).
+  16. Live Side-Display Progres Manual (Live Blueprint Display di desktop).
+  17. Fitur Funnel Meta CAPI untuk iklan CTWA.
+  18. Drag & drop / reordering urutan section landing page.
+
+- **Solusi & Implementasi**:
+  - Dibuat tabel Supabase `custom_user_templates`, `affiliate_referrals`, dan RPC `admin_set_user_password`.
+  - Dibuat komponen baru: `LiquidGlassModal.tsx`, `CompetitorSpy.tsx`, `CreativeSync.tsx`, `FiveSecondTest.tsx`, `QuickPromptMode.tsx`, `AffiliateProgram.tsx`, `LiveBlueprintDisplay.tsx`.
+  - Diperbaiki `SavedProjectsDialog.tsx` (jarak tombol X & Refresh), `TemplateGallery.tsx` (mobile device preview switcher), `Admin.tsx` (direct RPC reset password), `AppPage.tsx` (sticky navigation bar, multi-language switcher, live blueprint display), dan `generatePrompt.ts`.
+  - Seluruh perubahan diverifikasi dengan `npm run build` (0 error), dicommit ke GitHub, dan live di Vercel: `https://prompt-page-builder-app.vercel.app`.
