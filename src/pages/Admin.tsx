@@ -808,16 +808,11 @@ export default function Admin() {
         }}
       />
 
-      {/* Clean Sub-header Bar with Active Menu Title */}
-      <div className="border-b border-border/70 bg-card/60 px-3 sm:px-6 py-2.5">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setIsSidebarOpen(true)}
-            className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-foreground hover:text-primary transition-colors"
-          >
-            <Menu className="w-4 h-4 text-primary" />
-            <span>
+      {/* Clean Sub-header Bar with Active Menu Title (No duplicate hamburger icon) */}
+      <div className="border-b border-border/70 bg-card/60 px-3 sm:px-6 lg:px-8 py-2.5">
+        <div className="max-w-[1536px] mx-auto flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm font-black text-foreground">
               {activeTab === 'tools' || activeTab === 'generator'
                 ? '🚀 Landing Page Generator'
                 : activeTab === 'quick_prompt'
@@ -846,7 +841,7 @@ export default function Admin() {
                 ? '🚀 Live LP Builder Engine'
                 : 'Menu Administrator'}
             </span>
-          </button>
+          </div>
 
           <div className="flex items-center gap-2">
             {activeTab !== 'tools' && (
@@ -873,7 +868,7 @@ export default function Admin() {
         </div>
       </div>
 
-      <main className="flex-1 px-3 py-4 sm:p-6 max-w-[1400px] mx-auto w-full">
+      <main className="flex-1 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1536px] mx-auto w-full">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
           {/* KOBOILLM AI API CONFIGURATION TAB */}
           <TabsContent value="api_settings">

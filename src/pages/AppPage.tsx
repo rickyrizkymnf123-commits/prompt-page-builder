@@ -378,17 +378,12 @@ export default function AppPage() {
       />
 
       {/* Clean Sub-header Bar with Page Title & Quick Action */}
-      <div className="border-b border-border/70 bg-card/60 px-3 sm:px-6 py-2.5">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 flex-wrap">
+      <div className="border-b border-border/70 bg-card/60 px-3 sm:px-6 lg:px-8 py-2.5">
+        <div className="max-w-[1536px] mx-auto flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsSidebarOpen(true)}
-              className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-foreground hover:text-primary transition-colors"
-            >
-              <Menu className="w-4 h-4 text-primary" />
-              <span>{pageTitles[activePage] || 'Menu Aplikasi'}</span>
-            </button>
+            <span className="text-xs sm:text-sm font-black text-foreground">
+              {pageTitles[activePage] || 'Menu Aplikasi'}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -417,8 +412,8 @@ export default function AppPage() {
         </div>
       </div>
 
-      {/* Main Page Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
+      {/* Main Page Container - Optimized for PC, Tablet & Mobile */}
+      <main className="flex-1 max-w-[1536px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* TAB 1: GENERATOR & BLUEPRINT WIZARD */}
         {activePage === 'generator' && (
           <div>
