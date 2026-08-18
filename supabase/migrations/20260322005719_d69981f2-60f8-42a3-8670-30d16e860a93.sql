@@ -1,1 +1,0 @@
-ALTER TABLE public.provision_logs ADD COLUMN source_label text DEFAULT NULL;
