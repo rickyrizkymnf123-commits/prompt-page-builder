@@ -43,7 +43,13 @@ export default function Login() {
       });
 
       if (error || !data.user) {
-        setLoginError("Email atau password salah. Pastikan data yang dimasukkan benar.");
+        let msg = "Email atau password salah. Pastikan data yang dimasukkan benar.";
+        if (error?.message?.toLowerCase().includes("invalid login credentials")) {
+          msg = "Email atau password salah. Silakan periksa kembali kombinasi email & password Anda.";
+        } else if (error?.message) {
+          msg = error.message;
+        }
+        setLoginError(msg);
         setLoginLoading(false);
         return;
       }
@@ -63,19 +69,19 @@ export default function Login() {
       }
 
       // Check entitlement status
-      const { data: entitlements } = await supabase
+      const { data: entitlements, error: entError } = await supabase
         .from("entitlements")
         .select("id, product_code, status")
         .eq("user_id", data.user.id);
 
-      if (!entitlements || entitlements.length === 0) {
+      if (entError || !entitlements || entitlements.length === 0) {
         // If no entitlement record exists, create a pending one
-        await supabase.from("entitlements").insert({
+        await supabase.from("entitlements").upsert({
           user_id: data.user.id,
           order_id: "reg-" + Date.now(),
           product_code: "LPE",
           status: "pending",
-        });
+        }, { onConflict: "user_id" });
         setLoginError("⏳ Akun Anda sedang MENUNGGU PERSETUJUAN (ACC) dari Admin. Silakan hubungi admin.");
         await supabase.auth.signOut();
         setLoginLoading(false);
@@ -97,10 +103,11 @@ export default function Login() {
       }
 
       // If status is pending or anything else
-      setLoginError("⏳ Akun Anda masih MENUNGGU PERSETUJUAN (ACC) dari Admin. Silakan tunggu konfirmasi admin.");
+      setLoginError("⏳ Akun Anda masih MENUNGGU PERSETUJUAN (ACC) dari Admin. Silakan hubungi admin untuk aktivasi.");
       await supabase.auth.signOut();
-    } catch {
-      setLoginError("Terjadi kesalahan sistem. Silakan coba lagi.");
+    } catch (err: any) {
+      console.error("Login exception:", err);
+      setLoginError(err?.message || "Terjadi kesalahan saat masuk. Silakan coba lagi.");
     } finally {
       setLoginLoading(false);
     }

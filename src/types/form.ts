@@ -25,12 +25,21 @@ export interface CountdownConfig {
   accentColor: string;
 }
 
+export interface ScarcitySeatConfig {
+  enabled: boolean;
+  label: string;
+  totalSeat: number;
+  sisaSeat: number;
+  autoDecrease: boolean;
+}
+
 export interface BonusItem {
   nama: string;
   hargaAsli: string;
 }
 
 export interface PricingLayersConfig {
+  noPriceMode: boolean; // Mode tanpa harga untuk Lead Gen, Free Download, Pendaftaran Agen
   layerNormal: boolean;
   layerPromo: boolean;
   layerFinal: boolean;
@@ -63,6 +72,7 @@ export interface FormState {
   inspirasiDesain: string;
   salesNotif: SalesNotifConfig;
   countdown: CountdownConfig;
+  scarcitySeat: ScarcitySeatConfig;
 }
 
 export const initialFormState: FormState = {
@@ -79,6 +89,7 @@ export const initialFormState: FormState = {
   keteranganDiskon: '',
   pricingLayers: 4,
   pricingLayersConfig: {
+    noPriceMode: false,
     layerNormal: true,
     layerPromo: true,
     layerFinal: true,
@@ -132,7 +143,23 @@ export const initialFormState: FormState = {
     textColor: '#ffffff',
     accentColor: '#ff4757',
   },
+  scarcitySeat: {
+    enabled: false,
+    label: '⚠️ SISA SLOT TERBATAS!',
+    totalSeat: 50,
+    sisaSeat: 7,
+    autoDecrease: true,
+  },
 };
+
+export interface SavedProject {
+  id: string;
+  user_id: string;
+  project_name: string;
+  form_data: FormState;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface GroupedOption {
   group: string;

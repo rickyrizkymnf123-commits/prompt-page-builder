@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { StepCard } from '@/components/StepCard';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { SalesNotifConfig } from '@/types/form';
+import { Sparkles, Dices } from 'lucide-react';
 
 const positions = [
   { value: 'bottom-left', label: 'Kiri Bawah', icon: '↙' },
@@ -27,33 +30,61 @@ const colorPresets = [
   { bg: '#f5f3ff', border: '#7c3aed', text: '#2e1065', label: 'Purple' },
 ];
 
+const buyerPresets = {
+  umum: [
+    'Rizky (Bandung)', 'Siti Rahma (Surabaya)', 'Dimas P (Jakarta)', 'Anita Kusuma (Yogyakarta)',
+    'Fajar Sidik (Tangerang)', 'Budi Santoso (Bekasi)', 'Dewi Lestari (Denpasar)', 'Hendra (Semarang)',
+    'Maya Anggraini (Makassar)', 'Bayu Nugroho (Malang)', 'Eka Putri (Medan)', 'Wahyu (Solo)'
+  ],
+  digital: [
+    'Coach Fandi (Jakarta)', 'Reza Advertiser (Bandung)', 'Arif Media Buyer (Surabaya)', 'dr. Hendra (Semarang)',
+    'Dina Copywriter (Yogyakarta)', 'Gilang Startup (Tangerang)', 'Indra Agency (Medan)', 'Kevin Seller (Jakarta Barat)'
+  ],
+  agen: [
+    'Konter Berkah (Cirebon)', 'Agen Pulsa 88 (Surabaya)', 'Toko Celluler Jaya (Bandung)', 'Mitra dBest (Semarang)',
+    'Hendra Reload (Medan)', 'Rahmat PPOB (Makassar)', 'Siti Pulsa (Solo)', 'Wahyu Tronik (Malang)'
+  ],
+  skincare: [
+    'Rina M (Jakarta Selatan)', 'dr. Silvia (Surabaya)', 'Bella Clarissa (Bandung)', 'Nadia Permata (Yogyakarta)',
+    'Sarah Melati (Medan)', 'Vina Anggraeni (Semarang)', 'Clarisa (Denpasar)', 'Putri Wulandari (Bekasi)'
+  ]
+};
+
 interface Props {
   salesNotif: SalesNotifConfig;
   onChange: (config: SalesNotifConfig) => void;
 }
 
 export function StepSalesNotif({ salesNotif, onChange }: Props) {
+  const [selectedNiche, setSelectedNiche] = useState<keyof typeof buyerPresets>('umum');
+
   const update = (key: keyof SalesNotifConfig, value: unknown) =>
     onChange({ ...salesNotif, [key]: value });
+
+  const generateRandomBuyers = (niche: keyof typeof buyerPresets) => {
+    const list = [...buyerPresets[niche]].sort(() => 0.5 - Math.random());
+    update('namaPembeli', list.join(', '));
+  };
 
   return (
     <StepCard step={9} title="Sales Notification 🔔">
       {/* Enable toggle */}
-      <div className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border">
+      <div className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/80 border border-border">
         <div>
-          <p className="text-sm font-semibold text-foreground">Aktifkan Sales Notification</p>
+          <p className="text-sm font-semibold text-foreground">Aktifkan Sales Notification Popup</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Popup real-time "seseorang baru saja beli" untuk social proof
+            Popup real-time "Seseorang baru saja membeli / mendaftar" untuk menciptakan social proof & FOMO
           </p>
         </div>
         <Switch
           checked={salesNotif.enabled}
           onCheckedChange={(v) => update('enabled', v)}
+          className="data-[state=checked]:bg-primary"
         />
       </div>
 
       {salesNotif.enabled && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4 animate-fade-in pt-1">
           {/* Preview */}
           <NotifPreview config={salesNotif} />
 
@@ -62,19 +93,19 @@ export function StepSalesNotif({ salesNotif, onChange }: Props) {
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
               Posisi Notifikasi
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {positions.map(({ value, label, icon }) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => update('position', value)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border transition-all ${
+                  className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium border transition-all ${
                     salesNotif.position === value
-                      ? 'bg-primary/10 text-primary border-primary'
+                      ? 'bg-primary/10 text-primary border-primary shadow-sm shadow-primary/20 font-bold'
                       : 'bg-secondary text-muted-foreground border-border hover:border-primary/50'
                   }`}
                 >
-                  <span className="text-lg w-6 text-center">{icon}</span>
+                  <span className="text-base">{icon}</span>
                   <span>{label}</span>
                 </button>
               ))}
@@ -92,9 +123,9 @@ export function StepSalesNotif({ salesNotif, onChange }: Props) {
                   key={e}
                   type="button"
                   onClick={() => update('emoji', e)}
-                  className={`w-10 h-10 rounded-lg text-xl border transition-all ${
+                  className={`w-10 h-10 rounded-xl text-xl border transition-all flex items-center justify-center ${
                     salesNotif.emoji === e
-                      ? 'bg-primary/10 border-primary'
+                      ? 'bg-primary/15 border-primary scale-105 shadow-sm'
                       : 'bg-secondary border-border hover:border-primary/50'
                   }`}
                 >
@@ -105,47 +136,94 @@ export function StepSalesNotif({ salesNotif, onChange }: Props) {
                 value={!emojiOptions.includes(salesNotif.emoji as typeof emojiOptions[number]) ? salesNotif.emoji : ''}
                 onChange={(e) => update('emoji', e.target.value)}
                 placeholder="Custom"
-                className="w-20 bg-secondary border-border text-center text-lg"
+                className="w-20 bg-secondary border-border text-center text-lg h-10"
                 maxLength={2}
               />
             </div>
           </div>
 
-          {/* Teks konten */}
-          <div className="grid grid-cols-1 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-                Nama Pembeli (rotasi otomatis)
+          {/* AI Randomizer & Buyer Names */}
+          <div className="space-y-2.5 p-3.5 rounded-xl bg-secondary/50 border border-border">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Daftar Nama Pembeli / Pendaftar
               </label>
-              <Input
-                value={salesNotif.namaPembeli}
-                onChange={(e) => update('namaPembeli', e.target.value)}
-                placeholder="Seseorang dari Jakarta, Budi dari Surabaya, ..."
-                className="bg-secondary border-border text-sm"
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Pisah dengan koma untuk rotasi. Contoh: Budi, Siti, Andi dari Bandung
-              </p>
+
+              {/* AI Randomizer Buttons */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] text-muted-foreground font-mono uppercase">AI Randomizer:</span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setSelectedNiche('umum'); generateRandomBuyers('umum'); }}
+                  className="text-[11px] h-7 px-2 gap-1 border-primary/40 text-primary hover:bg-primary/10"
+                >
+                  <Dices className="w-3.5 h-3.5" /> Umum
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setSelectedNiche('agen'); generateRandomBuyers('agen'); }}
+                  className="text-[11px] h-7 px-2 gap-1 border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
+                >
+                  🏪 Agen/PPOB
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setSelectedNiche('digital'); generateRandomBuyers('digital'); }}
+                  className="text-[11px] h-7 px-2 gap-1 border-blue-500/40 text-blue-500 hover:bg-blue-500/10"
+                >
+                  💻 Digital
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setSelectedNiche('skincare'); generateRandomBuyers('skincare'); }}
+                  className="text-[11px] h-7 px-2 gap-1 border-pink-500/40 text-pink-500 hover:bg-pink-500/10"
+                >
+                  💄 Beauty
+                </Button>
+              </div>
             </div>
+
+            <Input
+              value={salesNotif.namaPembeli}
+              onChange={(e) => update('namaPembeli', e.target.value)}
+              placeholder="Rizky (Bandung), Siti (Surabaya), dr. Hendra (Semarang), ..."
+              className="bg-background border-border text-sm"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Nama akan bergantian muncul otomatis. Pisahkan dengan tanda koma <code>,</code> atau klik tombol AI di atas.
+            </p>
+          </div>
+
+          {/* Teks konten */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-                Pesan
+                Pesan Notifikasi
               </label>
               <Input
                 value={salesNotif.pesanNotif}
                 onChange={(e) => update('pesanNotif', e.target.value)}
-                placeholder="baru saja membeli"
+                placeholder="baru saja membeli / baru saja daftar agen"
                 className="bg-secondary border-border text-sm"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-                Nama Produk di Notif
+                Nama Produk di Notif (Opsional)
               </label>
               <Input
                 value={salesNotif.namaProdukNotif}
                 onChange={(e) => update('namaProdukNotif', e.target.value)}
-                placeholder="Kosong = pakai nama produk utama"
+                placeholder="Kosong = otomatis pakai nama produk utama"
                 className="bg-secondary border-border text-sm"
               />
             </div>
@@ -202,9 +280,9 @@ export function StepSalesNotif({ salesNotif, onChange }: Props) {
                   key={value}
                   type="button"
                   onClick={() => update('ukuran', value)}
-                  className={`flex flex-col items-center gap-1 px-3 py-2.5 rounded-lg text-sm font-medium border transition-all ${
+                  className={`flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
                     salesNotif.ukuran === value
-                      ? 'bg-primary/10 text-primary border-primary'
+                      ? 'bg-primary/10 text-primary border-primary font-bold'
                       : 'bg-secondary text-muted-foreground border-border hover:border-primary/50'
                   }`}
                 >
@@ -233,7 +311,7 @@ export function StepSalesNotif({ salesNotif, onChange }: Props) {
                     update('bgColor', preset.bg);
                     onChange({ ...salesNotif, bgColor: preset.bg, borderColor: preset.border, textColor: preset.text });
                   }}
-                  className="flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg border border-border hover:border-primary/50 transition-all bg-secondary"
+                  className="flex flex-col items-center gap-1 px-2.5 py-2 rounded-xl border border-border hover:border-primary/50 transition-all bg-secondary"
                   title={preset.label}
                 >
                   <div
@@ -294,27 +372,27 @@ function NotifPreview({ config }: { config: SalesNotifConfig }) {
   const namaProduk = config.namaProdukNotif || 'produk ini';
 
   return (
-    <div className="relative rounded-lg bg-secondary border border-border p-3 overflow-hidden h-24">
-      <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest">Preview</p>
+    <div className="relative rounded-xl bg-secondary/80 border border-border p-3 overflow-hidden h-28">
+      <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-semibold">Live Preview Popup</p>
       <div
-        className="absolute rounded-xl shadow-lg px-3 py-2.5 flex items-center gap-2.5"
+        className="absolute rounded-xl shadow-xl px-3.5 py-2.5 flex items-center gap-2.5"
         style={{
-          width: Math.min(w, 300),
+          width: Math.min(w, 320),
           background: config.bgColor,
           borderLeft: `4px solid ${config.borderColor}`,
           bottom: config.position.startsWith('bottom') ? 10 : undefined,
           top: config.position.startsWith('top') ? 10 : undefined,
           left: config.position.endsWith('left') ? 10 : undefined,
           right: config.position.endsWith('right') ? 10 : undefined,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
         }}
       >
-        <span className="text-xl flex-shrink-0">{config.emoji}</span>
+        <span className="text-2xl flex-shrink-0">{config.emoji}</span>
         <div className="min-w-0">
-          <p className="text-xs font-semibold truncate" style={{ color: config.textColor }}>
+          <p className="text-xs font-bold truncate" style={{ color: config.textColor }}>
             {namaPertama} {config.pesanNotif}
           </p>
-          <p className="text-[11px] truncate font-medium" style={{ color: config.borderColor }}>{namaProduk}</p>
+          <p className="text-[11px] truncate font-semibold" style={{ color: config.borderColor }}>{namaProduk}</p>
           <p className="text-[10px] text-muted-foreground">Baru saja · 2 menit lalu</p>
         </div>
       </div>

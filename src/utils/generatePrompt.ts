@@ -57,6 +57,8 @@ ${buildReferensiBlock(form)}
   
 ${buildCountdownBlock(form)}
 
+${buildScarcityBlock(form)}
+
 ---
   
 ## 🔔 SALES NOTIFICATION POPUP
@@ -262,22 +264,27 @@ Hindari: Klaim "pasti"/"jamin"/"100%", overclaim medis/finansial, janji tidak re
 
 // Product block builder
 function buildProductBlock(form: FormState, fmt: (v: string) => string): string {
-  const cfg = form.pricingLayersConfig || { layerNormal: true, layerPromo: true, layerFinal: true };
+  const cfg = form.pricingLayersConfig || { noPriceMode: false, layerNormal: true, layerPromo: true, layerFinal: true };
   const lines: string[] = [];
 
-  if (cfg.layerNormal && form.hargaNormal) {
-    lines.push(`- Harga Normal: **${fmt(form.hargaNormal)}** (dicoret)`);
-  }
-  if (cfg.layerPromo && form.hargaPromo) {
-    lines.push(`- Harga Promo: **${fmt(form.hargaPromo)}** (dicoret)`);
-  }
-  if (cfg.layerFinal && form.hargaFinal) {
-    lines.push(`- 🔥 Harga Final / Diskon (untuk kamu yang beli sekarang): **${fmt(form.hargaFinal)}**`);
-  } else if (!cfg.layerNormal && !cfg.layerPromo && !cfg.layerFinal) {
-    lines.push(`- Harga: Penawaran Khusus / Hubungi Kami`);
-  }
-  if (form.keteranganDiskon) {
-    lines.push(`- Keterangan Diskon: ${form.keteranganDiskon}`);
+  if (cfg.noPriceMode) {
+    lines.push(`- Model Penawaran: **Pendaftaran / Akses Gratis / Lead Generation (Tanpa Biaya / Non-Komersial)**`);
+    lines.push(`- Biaya / Harga: **100% Gratis / Tanpa Biaya Pendaftaran**`);
+  } else {
+    if (cfg.layerNormal && form.hargaNormal) {
+      lines.push(`- Harga Normal: **${fmt(form.hargaNormal)}** (dicoret)`);
+    }
+    if (cfg.layerPromo && form.hargaPromo) {
+      lines.push(`- Harga Promo: **${fmt(form.hargaPromo)}** (dicoret)`);
+    }
+    if (cfg.layerFinal && form.hargaFinal) {
+      lines.push(`- 🔥 Harga Final / Diskon (untuk kamu yang beli sekarang): **${fmt(form.hargaFinal)}**`);
+    } else if (!cfg.layerNormal && !cfg.layerPromo && !cfg.layerFinal) {
+      lines.push(`- Harga: Penawaran Khusus / Hubungi Kami`);
+    }
+    if (form.keteranganDiskon) {
+      lines.push(`- Keterangan Diskon: ${form.keteranganDiskon}`);
+    }
   }
 
   const pricingInfo = lines.join('\n');
@@ -285,28 +292,38 @@ function buildProductBlock(form: FormState, fmt: (v: string) => string): string 
   let bonusInfo = '';
   if (form.bonusList.length > 0) {
     const bonusItems = form.bonusList.filter(b => b.nama).map(b =>
-      `  - ✅ ${b.nama}${b.hargaAsli ? ` → Harga normal: ~~${fmt(b.hargaAsli)}~~` : ''}`
+      `  - ✅ ${b.nama}${b.hargaAsli ? ` → Senilai: ~~${fmt(b.hargaAsli)}~~ (Gratis)` : ''}`
     ).join('\n');
     if (bonusItems) {
       const totalBonus = form.bonusList.reduce((s, b) => s + (Number(b.hargaAsli) || 0), 0);
-      bonusInfo = `\n- **Bonus yang disertakan:**\n${bonusItems}\n- Total nilai bonus: **${fmt(String(totalBonus))}**`;
+      bonusInfo = `\n- **Fasilitas / Bonus yang disertakan:**\n${bonusItems}\n- Total nilai fasilitas gratis: **${fmt(String(totalBonus))}**`;
     }
   }
 
-  return `# 📦 PROFIL PRODUK
+  return `# 📦 PROFIL PRODUK / LAYANAN
 
-- Nama Produk: **${form.namaProduk || '[Nama Produk]'}**
+- Nama Produk/Brand: **${form.namaProduk || '[Nama Produk]'}**
 - Tipe: ${form.tipeProduk || '-'}
 - Tujuan: ${form.tujuanUtama || '-'}
 ${pricingInfo}
-- CTA Utama: **${form.ctaUtama || 'Beli Sekarang'}**
+- CTA Utama: **${form.ctaUtama || 'Daftar Sekarang'}**
 - Target Audience: **${form.targetAudience || '-'}**
-${form.deskripsiBenefit ? `- Deskripsi/Benefit: ${form.deskripsiBenefit}` : ''}${bonusInfo}`;
+${form.deskripsiBenefit ? `- Keunggulan / Benefit: ${form.deskripsiBenefit}` : ''}${bonusInfo}`;
 }
 
 // Pricing rules builder
 function buildPricingRules(form: FormState, fmt: (v: string) => string): string {
-  const cfg = form.pricingLayersConfig || { layerNormal: true, layerPromo: true, layerFinal: true };
+  const cfg = form.pricingLayersConfig || { noPriceMode: false, layerNormal: true, layerPromo: true, layerFinal: true };
+  
+  if (cfg.noPriceMode) {
+    return `- **MODE NON-KOMERSIAL / TANPA HARGA (Lead Generation / Pendaftaran Agen / Free App):**
+- JANGAN tampilkan tabel harga rupiah atau nominal biaya.
+- Fokuskan copy pada: **Kemudahan Pendaftaran / Akses**, **Keunggulan Layanan**, **Keuntungan Jadi Mitra/Agen**, **Fasilitas Bimbingan**, dan **CTA langsung**.
+- CTA harus:
+  - Teks: **"${form.ctaUtama || 'Daftar Sekarang'}"**
+  - Micro-copy trust di bawah tombol: "Gratis Pendaftaran · Proses Instan · CS Siap Bantu 24/7"`;
+  }
+
   const activeCount = [cfg.layerNormal, cfg.layerPromo, cfg.layerFinal].filter(Boolean).length;
   
   const rulesList: string[] = [];
@@ -428,6 +445,50 @@ function buildSalesNotifBlock(form: FormState): string {
 <script>
 (function(){var names=${JSON.stringify(names)};var msg="${n.pesanNotif}";var interval=${n.interval * 1000};var durasi=${n.durasi * 1000};var idx=0;var popup=document.getElementById('sn-popup');function showNotif(){var name=names[idx%names.length];idx++;document.getElementById('sn-name').textContent=name+' '+msg;popup.style.display='flex';popup.style.opacity='0';popup.style.transform='translateY(10px)';popup.style.transition='opacity 0.4s,transform 0.4s';setTimeout(function(){popup.style.opacity='1';popup.style.transform='translateY(0)';},50);setTimeout(function(){popup.style.opacity='0';popup.style.transform='translateY(10px)';setTimeout(function(){popup.style.display='none';},400);},durasi);}setTimeout(function(){showNotif();setInterval(showNotif,interval+durasi);},2000);})();
 </script>
+\`\`\``;
+}
+
+// Scarcity seat block builder
+function buildScarcityBlock(form: FormState): string {
+  const s = form.scarcitySeat;
+  if (!s || !s.enabled) return '';
+  const percent = Math.min(100, Math.round(((s.totalSeat - s.sisaSeat) / (s.totalSeat || 1)) * 100));
+
+  return `## 🔥 SCARCITY & SISA KUOTA WIDGET (WAJIB ADA)
+
+Label: **"${s.label}"**
+Total Kuota: **${s.totalSeat}**, Sisa Kuota: **${s.sisaSeat}** (${percent}% terisi)
+
+Struktur HTML & CSS Progress Bar Wajib:
+\`\`\`html
+<div id="scarcity-bar" style="background:#1e1b2e;border:1px solid #f59e0b;border-radius:12px;padding:14px 18px;margin:20px auto;max-width:580px;text-align:center;">
+  <p style="margin:0 0 8px;font-size:13px;font-weight:800;color:#f59e0b;letter-spacing:0.5px;">
+    🔥 ${s.label} HANYA TERSISA <span id="seat-count" style="color:#ef4444;font-size:16px;">${s.sisaSeat}</span> DARI ${s.totalSeat} SLOT!
+  </p>
+  <div style="background:#0a0a12;border-radius:999px;height:12px;width:100%;overflow:hidden;padding:2px;border:1px solid #374151;">
+    <div id="seat-progress" style="background:linear-gradient(90deg,#f59e0b,#ef4444);height:100%;border-radius:999px;width:${percent}%;transition:width 1s ease;"></div>
+  </div>
+  <p style="margin:6px 0 0;font-size:11px;color:#9ca3af;">⚡ Kuota terisi cepat · Amankan akses Anda sebelum ditutup</p>
+</div>
+${s.autoDecrease ? `
+<script>
+(function(){
+  var current = ${s.sisaSeat};
+  var min = Math.max(1, current - 3);
+  function reduce(){
+    if (current > min && Math.random() > 0.4) {
+      current--;
+      var el = document.getElementById('seat-count');
+      if (el) el.textContent = current;
+      var prog = document.getElementById('seat-progress');
+      if (prog) prog.style.width = Math.min(98, Math.round(((${s.totalSeat} - current) / ${s.totalSeat}) * 100)) + '%';
+    }
+    setTimeout(reduce, Math.floor(Math.random() * 8000) + 7000);
+  }
+  setTimeout(reduce, 4000);
+})();
+</script>
+` : ''}
 \`\`\``;
 }
 

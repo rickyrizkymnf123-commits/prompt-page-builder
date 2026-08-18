@@ -3,6 +3,7 @@
 ## Production Infrastructure
 - **Live Production URL**: [https://prompt-page-builder-app.vercel.app](https://prompt-page-builder-app.vercel.app)
 - **GitHub Repository**: [https://github.com/rickyrizkymnf123-commits/prompt-page-builder](https://github.com/rickyrizkymnf123-commits/prompt-page-builder)
+- **Pricing System**: Mendukung 3 Layer Dinamis dengan saklar On/Off mandiri untuk tiap layer (Normal, Promo, Final) + tombol preset cepat (3 Layer, 2 Layer, 1 Layer).
 - **Platforms Supported**: `OrderHero`, `WinMe`, `Scalev`, `Berdu`, `OrderOnline`, `LandingPress`, `WordPress`, `Lynk.id`, `Mayar`, `Shopify`, `Standalone`.
 - **Devices Supported**: `Mobile`, `Tablet`, `Desktop`, `Responsive (All Devices)`.
 - **Main Admin**: `fauzymnf29@gmail.com`

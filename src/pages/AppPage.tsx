@@ -14,10 +14,10 @@ import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
 import { StepCountdown } from "@/components/steps/StepCountdown";
 import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { TemplateGallery } from "@/components/templates/TemplateGallery";
-import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, BonusItem } from "@/types/form";
+import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, ScarcitySeatConfig, BonusItem } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound, PlayCircle } from "lucide-react";
+import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound, PlayCircle, ShieldCheck, FolderOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,6 +27,8 @@ import { TutorialPanel } from "@/components/TutorialPanel";
 import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 import UserWebhookSettings from "@/components/user/UserWebhookSettings";
 import { TutorialFullPage } from "@/components/TutorialFullPage";
+import { SavedProjectsDialog } from "@/components/projects/SavedProjectsDialog";
+import { LandingPageAuditor } from "@/components/audit/LandingPageAuditor";
 
 function Stepper({ current }: { current: number }) {
   return (
@@ -168,9 +170,9 @@ export default function AppPage() {
   const [usageLimitReached, setUsageLimitReached] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialPage = (searchParams.get("tab") as any) || localStorage.getItem("app_active_page") || "generator";
-  const [activePage, setActivePage] = useState<'generator' | 'lpbuilder' | 'webhook' | 'tutorial'>(initialPage);
+  const [activePage, setActivePage] = useState<'generator' | 'lpbuilder' | 'audit' | 'webhook' | 'tutorial'>(initialPage);
 
-  const handlePageChange = (p: 'generator' | 'lpbuilder' | 'webhook' | 'tutorial') => {
+  const handlePageChange = (p: 'generator' | 'lpbuilder' | 'audit' | 'webhook' | 'tutorial') => {
     setActivePage(p);
     setSearchParams({ tab: p }, { replace: true });
     try {
@@ -185,19 +187,52 @@ export default function AppPage() {
 
   const isPaid = userTier === 'paid';
 
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem('lpb_form_draft');
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed && typeof parsed === 'object') {
+          setForm(prev => ({ ...prev, ...parsed }));
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Autosave form draft to localStorage
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('lpb_form_draft', JSON.stringify(form));
+      } catch {}
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [form]);
+
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
       setUserId(session.user.id);
       setUserEmail(session.user.email || '');
-      const { data: entitlements } = await supabase
+
+      const isAdmin = session.user.email === 'fauzymnf29@gmail.com';
+
+      const { data: entitlements, error: entError } = await supabase
         .from("entitlements")
-        .select("id, product_code")
-        .in("product_code", ["LPE", "LPE_FREE"])
-        .eq("status", "active");
-      if (!entitlements || entitlements.length === 0) { await supabase.auth.signOut(); navigate("/login"); return; }
-      const hasPaid = entitlements.some((e: any) => e.product_code === 'LPE');
+        .select("id, product_code, status")
+        .eq("user_id", session.user.id);
+
+      if (!isAdmin && entitlements && entitlements.length > 0) {
+        const activeEnt = entitlements.find((e: any) => e.status === 'active');
+        if (!activeEnt) {
+          navigate("/login");
+          return;
+        }
+      }
+
+      const hasPaid = isAdmin || entitlements?.some((e: any) => e.status === 'active' && e.product_code === 'LPE');
       setUserTier(hasPaid ? 'paid' : 'free');
       
       try {
@@ -215,6 +250,7 @@ export default function AppPage() {
       
       setLoading(false);
     };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") navigate("/login");
     });
@@ -224,7 +260,7 @@ export default function AppPage() {
 
   useEffect(() => { document.documentElement.classList.toggle("dark", darkMode); }, [darkMode]);
 
-  const handleChange = useCallback((field: string, value: string) => {
+  const handleChange = useCallback((field: string, value: any) => {
     setForm(prev => ({ ...prev, [field]: value }));
     if (currentStep > 1) setIsDirty(true);
   }, [currentStep]);
@@ -236,6 +272,11 @@ export default function AppPage() {
 
   const handleCountdownChange = useCallback((config: CountdownConfig) => {
     setForm(prev => ({ ...prev, countdown: config }));
+    if (currentStep > 1) setIsDirty(true);
+  }, [currentStep]);
+
+  const handleScarcityChange = useCallback((config: ScarcitySeatConfig) => {
+    setForm(prev => ({ ...prev, scarcitySeat: config }));
     if (currentStep > 1) setIsDirty(true);
   }, [currentStep]);
 
@@ -312,35 +353,61 @@ export default function AppPage() {
 
       {/* Top-level page navigation */}
       <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4">
-        <div className="flex gap-1 border-b border-border pb-0 mb-0">
-          <button type="button" onClick={() => handlePageChange('generator')}
-            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'generator' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            <Zap className="w-3.5 h-3.5" /> Prompt Generator
-          </button>
-          {isPaid && (
-            <>
-              <button type="button" onClick={() => handlePageChange('lpbuilder')}
-                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'lpbuilder' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-                <FileCode className="w-3.5 h-3.5" /> LP Builder
-              </button>
-              <button type="button" onClick={() => handlePageChange('webhook')}
-                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'webhook' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-                <KeyRound className="w-3.5 h-3.5" /> Webhook
-              </button>
-              <button type="button" onClick={() => handlePageChange('tutorial')}
-                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'tutorial' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-                <PlayCircle className="w-3.5 h-3.5" /> Tutorial
-              </button>
-            </>
-          )}
-          {!isPaid && (
-            <button type="button" onClick={handleUpgrade}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-all border-b-2 -mb-px border-transparent">
-              <Lock className="w-3.5 h-3.5" /> LP Builder & Webhook <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-0 mb-0">
+          <div className="flex gap-1 overflow-x-auto pb-0">
+            <button type="button" onClick={() => handlePageChange('generator')}
+              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'generator' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+              <Zap className="w-3.5 h-3.5" /> Prompt Generator
             </button>
-          )}
+            <button type="button" onClick={() => handlePageChange('audit')}
+              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'audit' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+              <ShieldCheck className="w-3.5 h-3.5" /> 🔍 Audit LP
+            </button>
+            {isPaid && (
+              <>
+                <button type="button" onClick={() => handlePageChange('lpbuilder')}
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'lpbuilder' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                  <FileCode className="w-3.5 h-3.5" /> LP Builder
+                </button>
+                <button type="button" onClick={() => handlePageChange('webhook')}
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'webhook' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                  <KeyRound className="w-3.5 h-3.5" /> Webhook
+                </button>
+                <button type="button" onClick={() => handlePageChange('tutorial')}
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'tutorial' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                  <PlayCircle className="w-3.5 h-3.5" /> Tutorial
+                </button>
+              </>
+            )}
+            {!isPaid && (
+              <button type="button" onClick={handleUpgrade}
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-all border-b-2 -mb-px border-transparent whitespace-nowrap">
+                <Lock className="w-3.5 h-3.5" /> LP Builder & Webhook <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+              </button>
+            )}
+          </div>
+
+          {/* Saved Projects Button */}
+          <div className="pb-1.5 flex items-center gap-2">
+            <SavedProjectsDialog
+              currentForm={form}
+              userId={userId}
+              onLoadProject={(formData) => {
+                setForm(formData);
+                setPromptText("");
+                setCurrentStep(1);
+              }}
+            />
+          </div>
         </div>
       </div>
+
+      {/* AI Landing Page Auditor Page */}
+      {activePage === 'audit' && (
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
+          <LandingPageAuditor />
+        </div>
+      )}
 
       {/* LP Builder Page */}
       {activePage === 'lpbuilder' && isPaid && (
@@ -454,23 +521,33 @@ export default function AppPage() {
             <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
             <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
             
-            {/* Sales Notif & Countdown - visible for all, locked for free users */}
+            {/* Sales Notif & Countdown/Scarcity */}
             {isPaid ? (
               <>
                 <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
-                <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
+                <StepCountdown
+                  countdown={form.countdown}
+                  scarcitySeat={form.scarcitySeat}
+                  onChange={handleCountdownChange}
+                  onChangeScarcity={handleScarcityChange}
+                />
               </>
             ) : (
               <div className="relative space-y-4">
                 <div className="pointer-events-none opacity-40 select-none">
                   <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
-                  <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
+                  <StepCountdown
+                    countdown={form.countdown}
+                    scarcitySeat={form.scarcitySeat}
+                    onChange={handleCountdownChange}
+                    onChangeScarcity={handleScarcityChange}
+                  />
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center z-10">
                   <div className="bg-card/95 backdrop-blur border border-border rounded-xl p-5 text-center shadow-xl">
                     <div className="flex items-center gap-2 justify-center mb-2">
                       <Lock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-semibold text-muted-foreground">Sales Notification & Countdown Timer</span>
+                      <span className="text-sm font-semibold text-muted-foreground">Sales Notification & Scarcity Widget</span>
                       <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">PREMIUM</span>
                     </div>
                     <p className="text-xs text-muted-foreground mb-3">Fitur ini hanya tersedia untuk pengguna berbayar.</p>

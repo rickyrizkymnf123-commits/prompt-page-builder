@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   LogOut, Shield, CheckCircle, XCircle, Trash2, Clock, Users, FileText,
-  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink, UserPlus, Layout, Settings, Lock, Eye, EyeOff, Video, Plus,
+  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink, UserPlus, Layout, Settings, Lock, Eye, EyeOff, Video, Plus, ShieldCheck, FolderOpen,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "@/hooks/use-toast";
@@ -24,7 +24,7 @@ import { Step5Design } from "@/components/steps/Step5Design";
 import { Step6Elements } from "@/components/steps/Step6Elements";
 import { Step7Platform } from "@/components/steps/Step7Platform";
 import { Step8Reference } from "@/components/steps/Step8Reference";
-import { FormState, initialFormState, BonusItem } from "@/types/form";
+import { FormState, initialFormState, BonusItem, ScarcitySeatConfig } from "@/types/form";
 import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
 import { StepCountdown } from "@/components/steps/StepCountdown";
 import { generatePrompt } from "@/utils/generatePrompt";
@@ -34,6 +34,8 @@ import { motion } from "framer-motion";
 import { TypewriterText } from "@/components/TypewriterText";
 import DemoManagementTab from "@/components/admin/DemoManagementTab";
 import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
+import { SavedProjectsDialog } from "@/components/projects/SavedProjectsDialog";
+import { LandingPageAuditor } from "@/components/audit/LandingPageAuditor";
 
 interface AdminUser {
   id: string; email: string; name: string | null; phone: string | null;
@@ -650,6 +652,10 @@ export default function Admin() {
     setForm(prev => ({ ...prev, countdown: config }));
     if (toolStep > 1) setIsDirty(true);
   }, [toolStep]);
+  const handleScarcityChange = useCallback((config: ScarcitySeatConfig) => {
+    setForm(prev => ({ ...prev, scarcitySeat: config }));
+    if (toolStep > 1) setIsDirty(true);
+  }, [toolStep]);
   const handleToggleElement = useCallback((element: string) => {
     setForm(prev => ({ ...prev, elemenTambahan: { ...prev.elemenTambahan, [element]: !prev.elemenTambahan[element] } }));
     if (toolStep > 1) setIsDirty(true);
@@ -707,6 +713,7 @@ export default function Admin() {
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
           <TabsList className="sticky top-[49px] sm:top-[57px] z-40 mb-4 sm:mb-6 bg-card/95 backdrop-blur w-full overflow-x-auto flex justify-start">
             <TabsTrigger value="tools" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden xs:inline">Tools</span><span className="xs:hidden">⚡</span></TabsTrigger>
+            <TabsTrigger value="audit" className="gap-1 sm:gap-2 text-xs sm:text-sm"><ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Audit LP</span><span className="sm:hidden">Audit</span></TabsTrigger>
             <TabsTrigger value="users" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Users</span>
               {pendingCount > 0 && <span className="ml-0.5 bg-amber-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">{pendingCount}</span>}
@@ -717,8 +724,25 @@ export default function Admin() {
             <TabsTrigger value="lpbuilder" className="gap-1 sm:gap-2 text-xs sm:text-sm"><ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">LP Builder</span><span className="sm:hidden">LP</span></TabsTrigger>
           </TabsList>
 
+          {/* AUDIT LP TAB */}
+          <TabsContent value="audit">
+            <LandingPageAuditor />
+          </TabsContent>
+
           {/* TOOLS TAB */}
           <TabsContent value="tools">
+            <div className="flex items-center justify-between gap-2 max-w-3xl pb-2">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Prompt Generator Wizard</span>
+              <SavedProjectsDialog
+                currentForm={form}
+                onLoadProject={(formData) => {
+                  setForm(formData);
+                  setPromptText("");
+                  setToolStep(1);
+                }}
+              />
+            </div>
+
             {toolStep > 1 && (
               <div className="flex items-center justify-center py-4 mb-4">
                 {[1,2,3].map(s => {
@@ -758,7 +782,12 @@ export default function Admin() {
                 <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
                 <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
                 <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
-                <StepCountdown countdown={form.countdown} onChange={handleCountdownChange} />
+                <StepCountdown
+                  countdown={form.countdown}
+                  scarcitySeat={form.scarcitySeat}
+                  onChange={handleCountdownChange}
+                  onChangeScarcity={handleScarcityChange}
+                />
                 <div className="flex gap-3 pt-2">
                   <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
                   <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
