@@ -35,30 +35,26 @@
      - Generator prompt di [`src/utils/generatePrompt.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/generatePrompt.ts) menyertakan snippet HTML/CSS/JS widget scarcity.
   8. **🔍 AI Landing Page Auditor**:
      - Dibuat tool tab baru [`src/components/audit/LandingPageAuditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/audit/LandingPageAuditor.tsx) untuk menganalisis 5 pilar konversi landing page (Hook, CTA, Social Proof, Mobile Flow, dan Kepatuhan Kebijakan Iklan Meta/Google Ads Anti-Banned).
-## Session: 2026-08-18 (Overhaul 18 Poin Lengkap: Mobile-First UX, AI Tools, Affiliate, CTA Modes, Live Blueprint, Reset PW Fix)
+## Session: 2026-08-18 (Penyempurnaan V13: True Apple Liquid Glass Popups, i18n Switcher, Reorder & CTA in Live Edit, Mobile Fit 100%)
 
 - **User Request**:
-  1. Opsi form selain klik button (Direct WhatsApp auto-text, Microsite link, Lead Capture Form).
-  2. Optimalisasi UI di smartphone (Native mobile app feel, sticky navigation bar, fix tombol X & Refresh mepet di dialog).
-  3. Fix bug gagal reset kata sandi di admin ("Failed to send a request to the Edge Function").
-  4. Tambahan fitur Affiliate Program untuk aplikasi ini.
-  5. Fitur Save as Template (simpan LP manual ke template kustom akun).
-  6. Fitur media Foto Produk, Video Hero, dan Cover Header LP.
-  7. Multi-language switcher (Bahasa Indonesia & Bahasa Inggris).
-  8. Visual warna brand berupa bulat warna (color swatch circles + custom HEX picker) & Apple Liquid Glass center popup.
-  9. AI Competitor Spy Tool (analisa URL kompetitor).
-  10. AI Creative-to-Landing Page Sync (sinkronisasi transkrip video iklan TikTok/FB ke LP).
-  11. Fitur "Tes 5 Detik" (5-Second clarity test).
-  12. Kustomisasi font, ukuran tombol CTA, dan animasi masuk.
-  13. Mode "Tulis Prompt Cepat" (1-click AI auto-fill form).
-  14. Preset kategori LP berdasarkan saluran traffic (Meta Ads, Google Ads, CTWA, dll.).
-  15. Struktur harga bertingkat (Tiered Batch 1, Batch 2, Normal).
-  16. Live Side-Display Progres Manual (Live Blueprint Display di desktop).
-  17. Fitur Funnel Meta CAPI untuk iklan CTWA.
-  18. Drag & drop / reordering urutan section landing page.
+  1. Latar pop-up dibuat transparan liquid glass nyata ala Apple (backdrop-blur-2xl, border-white/20, sudut rounded-3xl / rounded-32px, tidak kotak kaku).
+  2. Gambar 3: Nama produk label `Nama Produk *` dan placeholder `Isi nama produk...`.
+  3. Mode aksi CTA dapat diedit langsung di mode edit (Live HTML Editor).
+  4. Pemindahan drag & drop / reorder section ke mode edit HTML, sedangkan Step 6 di wizard dibuat simpel dan bersih.
+  5. Meta CAPI diberi keterangan/badge `🚀 Next Feature (Segera Hadir)`.
+  6. Hapus Step 8 (Media & Link Referensi) dari wizard.
+  7. Multi-language (ID/EN) aktif di seluruh antarmuka.
+  8. Semua AI tools (Competitor Spy, Creative Sync, Tes 5 Detik, Prompt Cepat, Audit LP, Affiliate) terintegrasi langsung di menu navigasi.
+  9. Optimalisasi mobile-first agar tidak ada teks atau tombol yang terpotong di mode template dan mode edit.
 
 - **Solusi & Implementasi**:
-  - Dibuat tabel Supabase `custom_user_templates`, `affiliate_referrals`, dan RPC `admin_set_user_password`.
-  - Dibuat komponen baru: `LiquidGlassModal.tsx`, `CompetitorSpy.tsx`, `CreativeSync.tsx`, `FiveSecondTest.tsx`, `QuickPromptMode.tsx`, `AffiliateProgram.tsx`, `LiveBlueprintDisplay.tsx`.
-  - Diperbaiki `SavedProjectsDialog.tsx` (jarak tombol X & Refresh), `TemplateGallery.tsx` (mobile device preview switcher), `Admin.tsx` (direct RPC reset password), `AppPage.tsx` (sticky navigation bar, multi-language switcher, live blueprint display), dan `generatePrompt.ts`.
-  - Seluruh perubahan diverifikasi dengan `npm run build` (0 error), dicommit ke GitHub, dan live di Vercel: `https://prompt-page-builder-app.vercel.app`.
+  - Dibuat kamus i18n [`src/utils/i18n.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/i18n.ts) yang mengikat seluruh teks UI dan step form.
+  - Didisain ulang [`LiquidGlassModal.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/ui/LiquidGlassModal.tsx) dengan styling Apple Liquid Glass transparan, rounded 32px, glass chip cards, dan manual input smooth.
+  - Step 1, 2, 3 diintegrasikan dengan `LiquidGlassModal`.
+  - Di [`Step4Detail.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/steps/Step4Detail.tsx), label dan placeholder nama produk diperbarui.
+  - Di [`Step6Elements.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/steps/Step6Elements.tsx), grid toggle dibuat bersih dan Meta CAPI diberi badge `🚀 Next Feature`.
+  - Di [`HtmlPreviewEditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/editor/HtmlPreviewEditor.tsx), ditambahkan panel Quick CTA & WhatsApp Inspector serta Section Reordering responsif dengan viewport switch HP (375px) vs Desktop.
+  - Di [`TemplateGallery.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/templates/TemplateGallery.tsx), modal preview menggunakan `h-[100dvh]` agar pas 100% di layar smartphone tanpa terpotong.
+  - Di [`AppPage.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/AppPage.tsx), Step 8 dihapus dan seluruh tool AI dibuat sticky di navigasi atas.
+  - Sukses build `npm run build` dan rilis live di Vercel: `https://prompt-page-builder-app.vercel.app`.
