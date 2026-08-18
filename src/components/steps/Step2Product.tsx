@@ -1,7 +1,7 @@
 import { StepCard } from '@/components/StepCard';
 import { tipeProdukOptions, tujuanUtamaOptions, trafficCategoryOptions } from '@/data/formOptions';
 import { LiquidGlassModal } from '@/components/ui/LiquidGlassModal';
-import { Input } from '@/components/ui/input';
+import { Package, Target, Radio } from 'lucide-react';
 
 interface Props {
   tipeProduk: string;
@@ -30,6 +30,7 @@ export function Step2Product({
             value={tipeProduk}
             options={tipeProdukOptions}
             onSelect={(val) => onChange('tipeProduk', val)}
+            icon={<Package className="w-4 h-4" />}
           />
         </div>
 
@@ -44,6 +45,7 @@ export function Step2Product({
             value={tujuanUtama}
             options={tujuanUtamaOptions}
             onSelect={(val) => onChange('tujuanUtama', val)}
+            icon={<Target className="w-4 h-4" />}
           />
         </div>
 
@@ -59,6 +61,7 @@ export function Step2Product({
             options={trafficCategoryOptions}
             onSelect={(val) => onChange('trafficCategory', val)}
             allowManual={false}
+            icon={<Radio className="w-4 h-4" />}
           />
         </div>
       </div>

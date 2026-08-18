@@ -23,7 +23,6 @@ import { Step4Detail } from "@/components/steps/Step4Detail";
 import { Step5Design } from "@/components/steps/Step5Design";
 import { Step6Elements } from "@/components/steps/Step6Elements";
 import { Step7Platform } from "@/components/steps/Step7Platform";
-import { Step8Reference } from "@/components/steps/Step8Reference";
 import { FormState, initialFormState, BonusItem, ScarcitySeatConfig } from "@/types/form";
 import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
 import { StepCountdown } from "@/components/steps/StepCountdown";
@@ -811,7 +810,6 @@ export default function Admin() {
                 <Step5Design warnaBrand={form.warnaBrand} tema={form.tema} gayaDesain={form.gayaDesain} onChange={handleChange} />
                 <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
                 <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
-                <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
                 <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
                 <StepCountdown
                   countdown={form.countdown}

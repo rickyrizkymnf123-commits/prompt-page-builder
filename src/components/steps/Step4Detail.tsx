@@ -160,12 +160,12 @@ export function Step4Detail({
   return (
     <StepCard step={4} title="Detail Produk, Penawaran & Aksi CTA">
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Nama Produk / Layanan / Brand <span className="text-destructive">*</span></label>
+        <label className="text-sm font-bold text-foreground">Nama Produk <span className="text-destructive">*</span></label>
         <Input
-          placeholder="Contoh: dBest Reload - Server Pulsa & PPOB Terpercaya..."
+          placeholder="Isi nama produk..."
           value={namaProduk}
           onChange={(e) => onChange('namaProduk', e.target.value)}
-          className="bg-secondary border-border"
+          className="bg-secondary border-border h-11 text-sm font-medium"
         />
       </div>
 

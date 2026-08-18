@@ -214,7 +214,7 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl, use
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200"
           onClick={(e) => { if (e.target === e.currentTarget) closePreview(); }}
         >
-          <div className="bg-card w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-5xl rounded-none sm:rounded-2xl border border-border overflow-hidden flex flex-col shadow-2xl">
+          <div className="bg-card w-full h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:max-w-5xl rounded-none sm:rounded-2xl border border-border overflow-hidden flex flex-col shadow-2xl">
             {/* Modal Header Toolbar */}
             <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between gap-2 bg-secondary/40 flex-shrink-0">
               <div className="min-w-0">

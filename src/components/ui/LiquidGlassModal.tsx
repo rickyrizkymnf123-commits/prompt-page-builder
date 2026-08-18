@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { GroupedOption } from '@/types/form';
-import { Search, Sparkles, Check, Edit3, ChevronRight, X } from 'lucide-react';
+import { Search, Sparkles, Check, Edit3, ChevronRight, X, Layers } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -18,6 +18,7 @@ interface Props {
   options: GroupedOption[];
   onSelect: (value: string) => void;
   allowManual?: boolean;
+  icon?: React.ReactNode;
 }
 
 export function LiquidGlassModal({
@@ -27,6 +28,7 @@ export function LiquidGlassModal({
   options,
   onSelect,
   allowManual = true,
+  icon,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -62,41 +64,50 @@ export function LiquidGlassModal({
       <DialogTrigger asChild>
         <button
           type="button"
-          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-secondary/70 hover:bg-secondary border border-border/80 text-left transition-all text-xs sm:text-sm shadow-inner group"
+          className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-secondary/80 hover:bg-secondary border border-border/80 text-left transition-all text-xs sm:text-sm shadow-inner group hover:border-primary/50"
         >
-          <span className={`truncate font-medium ${value ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
-            {value || placeholder}
-          </span>
+          <div className="flex items-center gap-2 min-w-0 pr-2">
+            {icon && <span className="text-primary flex-shrink-0">{icon}</span>}
+            <span className={`truncate font-medium ${value ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
+              {value || placeholder}
+            </span>
+          </div>
           <div className="flex items-center gap-1.5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0">
             {value && isCustomValue && (
-              <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-mono">Custom</span>
+              <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-mono font-bold">Custom</span>
             )}
             <ChevronRight className="w-4 h-4" />
           </div>
         </button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-xl max-h-[85vh] flex flex-col p-4 sm:p-6 bg-card/95 backdrop-blur-2xl border-border/80 shadow-2xl rounded-2xl">
-        <DialogHeader className="border-b border-border/60 pb-3">
+      <DialogContent className="max-w-xl max-h-[85vh] flex flex-col p-4 sm:p-6 bg-slate-950/70 backdrop-blur-3xl border border-white/20 shadow-[0_25px_60px_rgba(0,0,0,0.75)] rounded-3xl sm:rounded-[32px] overflow-hidden">
+        {/* Apple Glass Glow Accent at top */}
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-36 bg-gradient-to-b from-primary/30 via-indigo-500/20 to-transparent blur-3xl pointer-events-none" />
+
+        {/* Modal Header */}
+        <DialogHeader className="border-b border-white/10 pb-3.5 pr-8 flex-shrink-0 relative z-10">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-base sm:text-lg font-bold flex items-center gap-2 text-foreground">
-              <Sparkles className="w-4 h-4 text-primary" />
+            <DialogTitle className="text-base sm:text-lg font-black flex items-center gap-2.5 text-white">
+              <span className="w-7 h-7 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center text-primary text-sm">
+                ✨
+              </span>
               {title}
             </DialogTitle>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Pilih dari daftar kategori atau masukkan deskripsi kustom Anda.
+          <p className="text-xs text-slate-300 mt-1">
+            Pilih opsi siap pakai atau klik tombol isi manual untuk menentukan sendiri.
           </p>
         </DialogHeader>
 
         {isManualMode ? (
-          <form onSubmit={handleManualSubmit} className="space-y-4 py-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/25 space-y-1">
+          <form onSubmit={handleManualSubmit} className="space-y-4 py-4 relative z-10 animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-4 rounded-2xl bg-white/[0.07] border border-white/15 backdrop-blur-xl space-y-1">
               <p className="text-xs font-bold text-primary flex items-center gap-1.5">
-                <Edit3 className="w-3.5 h-3.5" /> Tulis Manual Kustom
+                <Edit3 className="w-4 h-4" /> Tulis Manual Kustom
               </p>
-              <p className="text-xs text-muted-foreground">
-                Ketikkan nama {title.toLowerCase()} spesifik sesuai produk Anda.
+              <p className="text-xs text-slate-300">
+                Ketikkan deskripsi spesifik sesuai bisnis atau penawaran produk Anda.
               </p>
             </div>
 
@@ -104,38 +115,53 @@ export function LiquidGlassModal({
               placeholder={`Contoh: Server Pulsa & PPOB Terpercaya...`}
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
-              className="bg-secondary text-sm h-11"
+              className="bg-white/[0.08] border-white/20 text-white text-sm h-12 rounded-2xl placeholder:text-slate-400 focus:border-primary"
               autoFocus
             />
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setIsManualMode(false)}>
-                Kembali ke Daftar
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsManualMode(false)}
+                className="rounded-xl bg-white/5 border-white/15 text-white hover:bg-white/10 text-xs h-9"
+              >
+                ← Kembali ke Daftar
               </Button>
-              <Button type="submit" size="sm" disabled={!manualInput.trim()} className="bg-primary text-primary-foreground font-semibold">
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!manualInput.trim()}
+                className="bg-primary hover:bg-primary/90 text-white font-bold text-xs h-9 px-5 rounded-xl shadow-lg shadow-primary/30"
+              >
                 Gunakan Ini
               </Button>
             </div>
           </form>
         ) : (
-          <div className="flex-1 flex flex-col min-h-0 space-y-3 pt-2">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="flex-1 flex flex-col min-h-0 space-y-3 pt-2 relative z-10">
+            {/* Liquid Glass Search Bar */}
+            <div className="relative flex-shrink-0">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <Input
-                placeholder="Cari opsi..."
+                placeholder="Ketik untuk mencari opsi..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-9 text-xs sm:text-sm bg-secondary"
+                className="pl-10 h-10 text-xs sm:text-sm bg-white/[0.07] border-white/15 text-white placeholder:text-slate-400 rounded-2xl focus:border-primary"
               />
               {search && (
-                <button type="button" onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  <X className="w-3.5 h-3.5" />
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {/* Quick manual entry button */}
+            {/* Quick Manual Entry Glass Button */}
             {allowManual && (
               <button
                 type="button"
@@ -143,17 +169,17 @@ export function LiquidGlassModal({
                   setManualInput(value && isCustomValue ? value : '');
                   setIsManualMode(true);
                 }}
-                className="flex items-center justify-between p-2.5 rounded-xl border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-semibold transition-all"
+                className="flex items-center justify-between p-3 rounded-2xl border border-dashed border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-all"
               >
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-2">
                   <Edit3 className="w-3.5 h-3.5" /> Tidak ada di daftar? Klik untuk isi manual...
                 </span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             )}
 
-            {/* Grouped Options List */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-1 max-h-[380px]">
+            {/* Grouped Glass Options List */}
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1.5 max-h-[380px] scrollbar-thin">
               {options.map((group) => {
                 const filtered = group.options.filter(o =>
                   !search || o.toLowerCase().includes(search.toLowerCase())
@@ -161,11 +187,11 @@ export function LiquidGlassModal({
                 if (filtered.length === 0) return null;
 
                 return (
-                  <div key={group.group} className="space-y-1.5">
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-1">
+                  <div key={group.group} className="space-y-2">
+                    <p className="text-[11px] font-black text-primary uppercase tracking-wider px-1">
                       {group.group}
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {filtered.map((opt) => {
                         const isSelected = value === opt;
                         const isManualChoice = opt.includes('Lainnya (Isi Manual)');
@@ -174,16 +200,16 @@ export function LiquidGlassModal({
                             key={opt}
                             type="button"
                             onClick={() => handleChoose(opt)}
-                            className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-medium text-left transition-all border ${
+                            className={`flex items-center justify-between p-3 rounded-2xl text-xs font-semibold text-left transition-all border ${
                               isSelected
-                                ? 'bg-primary text-primary-foreground border-primary font-bold shadow-sm'
+                                ? 'bg-gradient-to-r from-primary to-indigo-600 text-white border-primary shadow-lg shadow-primary/30 font-bold'
                                 : isManualChoice
-                                ? 'bg-primary/5 border-primary/30 text-primary hover:bg-primary/10'
-                                : 'bg-secondary/50 hover:bg-secondary border-border text-foreground hover:border-primary/40'
+                                ? 'bg-primary/15 border-primary/40 text-primary hover:bg-primary/25'
+                                : 'bg-white/[0.06] hover:bg-white/[0.14] border-white/10 hover:border-primary/50 text-slate-100'
                             }`}
                           >
-                            <span className="truncate">{opt}</span>
-                            {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                            <span className="truncate pr-1">{opt}</span>
+                            {isSelected && <Check className="w-4 h-4 flex-shrink-0 text-white" />}
                           </button>
                         );
                       })}

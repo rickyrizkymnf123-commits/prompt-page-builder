@@ -9,21 +9,18 @@ import { Step4Detail } from "@/components/steps/Step4Detail";
 import { Step5Design } from "@/components/steps/Step5Design";
 import { Step6Elements } from "@/components/steps/Step6Elements";
 import { Step7Platform } from "@/components/steps/Step7Platform";
-import { Step8Reference } from "@/components/steps/Step8Reference";
 import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
 import { StepCountdown } from "@/components/steps/StepCountdown";
 import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { TemplateGallery } from "@/components/templates/TemplateGallery";
-import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, ScarcitySeatConfig, BonusItem, TieredPricingConfig, CtaModeConfig, MediaConfig, DesignTypographyConfig, MetaCapiConfig } from "@/types/form";
+import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, ScarcitySeatConfig, BonusItem, TieredPricingConfig, CtaModeConfig, DesignTypographyConfig, MetaCapiConfig } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
 import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound, PlayCircle, ShieldCheck, FolderOpen, Target, Video, Timer, DollarSign, BookmarkPlus, Globe, Sparkles, Wand2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TypewriterText } from "@/components/TypewriterText";
 import { CostBreakdownModal } from "@/components/CostBreakdownModal";
-import { TutorialPanel } from "@/components/TutorialPanel";
 import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 import UserWebhookSettings from "@/components/user/UserWebhookSettings";
 import { TutorialFullPage } from "@/components/TutorialFullPage";
@@ -35,19 +32,20 @@ import { FiveSecondTest } from "@/components/tools/FiveSecondTest";
 import { QuickPromptMode } from "@/components/tools/QuickPromptMode";
 import { AffiliateProgram } from "@/components/affiliate/AffiliateProgram";
 import { LiveBlueprintDisplay } from "@/components/preview/LiveBlueprintDisplay";
+import { translations, Language } from "@/utils/i18n";
 
 function Stepper({ current }: { current: number }) {
   return (
-    <div className="flex items-center justify-center py-4">
+    <div className="flex items-center justify-center py-3">
       {[1, 2, 3].map((s) => {
         const done = s < current;
         const active = s === current;
         return (
           <div key={s} className="flex items-center">
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${active ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30' : done ? 'bg-transparent text-emerald-400 border-emerald-500' : 'bg-transparent text-muted-foreground border-muted-foreground/30'}`}>
+            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${active ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30' : done ? 'bg-transparent text-emerald-400 border-emerald-500' : 'bg-transparent text-muted-foreground border-muted-foreground/30'}`}>
               {done ? <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> : s}
             </div>
-            {s < 3 && <div className={`w-10 sm:w-16 h-0.5 transition-all ${done ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />}
+            {s < 3 && <div className={`w-8 sm:w-16 h-0.5 transition-all ${done ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />}
           </div>
         );
       })}
@@ -60,7 +58,7 @@ function GeneratingLoader() {
     { icon: '🔍', text: 'Menganalisis profil produk & target audience...' },
     { icon: '✍️', text: 'Menyusun framework copywriting persuasif...' },
     { icon: '🎨', text: 'Menerapkan warna brand & tipografi...' },
-    { icon: '🧱', text: 'Membangun struktur section & media embed...' },
+    { icon: '🧱', text: 'Membangun struktur section...' },
     { icon: '⚡', text: 'Finalisasi master prompt high-converting...' },
   ];
   const [activeStep, setActiveStep] = useState(0);
@@ -116,11 +114,11 @@ function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 p-3 sm:p-4">
+    <div className="max-w-4xl mx-auto space-y-4 p-2 sm:p-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
-          <h2 className="text-lg sm:text-xl font-black text-foreground">✨ Master Prompt Siap Digunakan</h2>
-          <p className="text-xs text-muted-foreground">Salin prompt ini ke AI pilihan Anda atau langsung lanjutkan ke Live HTML Editor.</p>
+          <h2 className="text-base sm:text-xl font-black text-foreground">✨ Master Prompt Siap Digunakan</h2>
+          <p className="text-xs text-muted-foreground">Salin prompt ini ke AI pilihan Anda atau langsung buka di Live HTML Editor.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={handleCopy} className="gap-1.5 text-xs h-9 bg-primary text-primary-foreground font-bold">
@@ -132,8 +130,8 @@ function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack
         </div>
       </div>
 
-      <div className="relative rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xl">
-        <ScrollArea className="h-[450px] sm:h-[520px] pr-3">
+      <div className="relative rounded-2xl border border-border bg-card p-3 sm:p-5 shadow-xl">
+        <ScrollArea className="h-[420px] sm:h-[500px] pr-2">
           <pre className="text-xs sm:text-sm font-mono text-foreground whitespace-pre-wrap leading-relaxed">
             {promptText}
           </pre>
@@ -159,7 +157,6 @@ export default function AppPage() {
   const [promptText, setPromptText] = useState("");
   const [templateHtml, setTemplateHtml] = useState("");
   const [mode, setMode] = useState<'prompt' | 'template'>('prompt');
-  const [isDirty, setIsDirty] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [userTier, setUserTier] = useState<'free' | 'paid'>('free');
@@ -173,6 +170,9 @@ export default function AppPage() {
   const activePage = searchParams.get('tab') || 'generator';
   const isPaid = userTier === 'paid';
   const FREE_LIMIT = 5;
+
+  const currentLang: Language = form.language || 'id';
+  const t = translations[currentLang] || translations.id;
 
   const handlePageChange = (tabName: string) => {
     setSearchParams({ tab: tabName });
@@ -293,7 +293,7 @@ export default function AppPage() {
       const prompt = generatePrompt(form);
       setPromptText(prompt);
       setIsGenerating(false);
-    }, 2400);
+    }, 2200);
   };
 
   const handleSelectTemplate = (html: string) => {
@@ -346,97 +346,97 @@ export default function AppPage() {
         <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} />
 
         {/* Sticky Tab Navigation Bar */}
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6">
-          <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-none py-1">
+        <div className="max-w-[1440px] mx-auto px-2 sm:px-6">
+          <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-none py-1.5">
             <div className="flex gap-1 items-center flex-shrink-0">
               <button
                 type="button"
                 onClick={() => handlePageChange('generator')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
                   activePage === 'generator' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <Zap className="w-3.5 h-3.5" />
-                <span>Generator</span>
+                <span>{t.generator}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePageChange('quick_prompt')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
                   activePage === 'quick_prompt' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <Wand2 className="w-3.5 h-3.5 text-amber-400" />
-                <span>Prompt Cepat</span>
+                <span>{t.quickPrompt}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePageChange('competitor_spy')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
                   activePage === 'competitor_spy' ? 'bg-red-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <Target className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Competitor Spy</span>
+                <span className="hidden sm:inline">{t.competitorSpy}</span>
                 <span className="sm:hidden">Spy</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePageChange('creative_sync')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
                   activePage === 'creative_sync' ? 'bg-purple-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <Video className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Creative Sync</span>
+                <span className="hidden sm:inline">{t.creativeSync}</span>
                 <span className="sm:hidden">Sync</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePageChange('five_second')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
                   activePage === 'five_second' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <Timer className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Tes 5 Detik</span>
-                <span className="sm:hidden">Tes 5s</span>
+                <span className="hidden sm:inline">{t.fiveSecond}</span>
+                <span className="sm:hidden">5s</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePageChange('audit')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
                   activePage === 'audit' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Audit LP</span>
+                <span>{t.auditLp}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePageChange('templates')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
                   activePage === 'templates' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
               >
-                <span>📋 Template</span>
+                <span>{t.templates}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePageChange('affiliate')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
                   activePage === 'affiliate' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <DollarSign className="w-3.5 h-3.5" />
-                <span>Affiliate</span>
+                <span>{t.affiliate}</span>
               </button>
             </div>
 
@@ -446,7 +446,7 @@ export default function AppPage() {
               <button
                 type="button"
                 onClick={() => handleChange('language', form.language === 'id' ? 'en' : 'id')}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-secondary border border-border text-xs font-bold text-foreground hover:border-primary transition-all"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-secondary border border-border text-xs font-bold text-foreground hover:border-primary transition-all shadow-sm"
                 title="Ganti Bahasa (Language Switcher)"
               >
                 <Globe className="w-3.5 h-3.5 text-primary" />
@@ -468,7 +468,7 @@ export default function AppPage() {
       </div>
 
       {/* Main Page Container */}
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-4 sm:py-6">
+      <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 py-4 sm:py-6">
         {/* TAB 1: GENERATOR & BLUEPRINT WIZARD */}
         {activePage === 'generator' && (
           <div>
@@ -527,10 +527,8 @@ export default function AppPage() {
 
                   <Step6Elements
                     elemenTambahan={form.elemenTambahan}
-                    sectionOrder={form.sectionOrder}
                     metaCapi={form.metaCapi}
                     onToggle={handleToggleElement}
-                    onReorder={(order) => handleChange('sectionOrder', order)}
                     onChangeMetaCapi={(c) => handleChange('metaCapi', c)}
                   />
 
@@ -540,13 +538,7 @@ export default function AppPage() {
                     onChange={handleChange}
                   />
 
-                  <Step8Reference
-                    linkReferensi={form.linkReferensi}
-                    inspirasiDesain={form.inspirasiDesain}
-                    media={form.media}
-                    onChange={handleChange}
-                    onChangeMedia={(m) => handleChange('media', m)}
-                  />
+                  {/* (Step 8 Media Foto/Video & Link Referensi removed as requested) */}
 
                   <StepSalesNotif
                     salesNotif={form.salesNotif}
@@ -560,17 +552,17 @@ export default function AppPage() {
                     onChangeScarcity={handleScarcityChange}
                   />
 
-                  {/* Submit Generate Action Button */}
-                  <div className="pt-4 flex items-center justify-between gap-3 sticky bottom-4 p-4 rounded-2xl bg-card/95 backdrop-blur-md border border-border shadow-2xl z-30">
+                  {/* Submit Generate Action Bar */}
+                  <div className="pt-4 flex items-center justify-between gap-3 sticky bottom-4 p-3.5 sm:p-4 rounded-2xl bg-card/95 backdrop-blur-md border border-border shadow-2xl z-30">
                     <Button variant="ghost" onClick={() => setForm(initialFormState)} className="text-xs text-muted-foreground">
-                      <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset Form
+                      <RotateCcw className="w-3.5 h-3.5 mr-1" /> {t.resetForm}
                     </Button>
 
                     <Button
                       onClick={handleGenerate}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm px-6 h-11 gap-2 shadow-lg shadow-primary/30"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs sm:text-sm px-5 sm:px-7 h-11 gap-2 shadow-lg shadow-primary/30"
                     >
-                      <Zap className="w-4 h-4" /> Generate Master Prompt →
+                      <Zap className="w-4 h-4" /> {t.generateMasterPrompt}
                     </Button>
                   </div>
                 </div>
@@ -594,22 +586,22 @@ export default function AppPage() {
 
             {currentStep === 3 && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between gap-2 p-3 bg-secondary/50 rounded-xl border border-border">
+                <div className="flex items-center justify-between gap-2 p-3 bg-secondary/50 rounded-2xl border border-border flex-wrap">
                   <Button variant="ghost" size="sm" onClick={() => setCurrentStep(2)} className="text-xs">
-                    ← Kembali ke Prompt
+                    {t.backToPrompt}
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => handleSaveAsCustomTemplate(templateHtml || promptText)}
                     className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
                   >
-                    <BookmarkPlus className="w-3.5 h-3.5" /> Simpan Sebagai Template Kustom
+                    <BookmarkPlus className="w-3.5 h-3.5" /> {t.saveAsTemplate}
                   </Button>
                 </div>
 
                 <HtmlPreviewEditor
+                  onBack={() => setCurrentStep(2)}
                   initialHtml={templateHtml || ''}
-                  onChange={(html) => setTemplateHtml(html)}
                 />
               </div>
             )}

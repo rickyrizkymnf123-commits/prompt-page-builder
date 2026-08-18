@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { StepCard } from '@/components/StepCard';
 import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
+import { elemenTambahanOptions } from '@/data/formOptions';
 import { MetaCapiConfig } from '@/types/form';
-import { ArrowUp, ArrowDown, Radio, Sparkles, Check, GripVertical } from 'lucide-react';
+import { Radio, Sparkles, Check, Info } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const sectionIcons: Record<string, string> = {
   'Hero Section': '🏆',
@@ -22,160 +22,116 @@ const sectionIcons: Record<string, string> = {
 
 interface Props {
   elemenTambahan: Record<string, boolean>;
-  sectionOrder?: string[];
   metaCapi?: MetaCapiConfig;
   onToggle: (element: string) => void;
-  onReorder?: (order: string[]) => void;
   onChangeMetaCapi?: (metaCapi: MetaCapiConfig) => void;
 }
 
 export function Step6Elements({
   elemenTambahan,
-  sectionOrder = Object.keys(sectionIcons),
   metaCapi = { enabled: false, pixelId: '', capiToken: '', eventName: 'Lead' },
   onToggle,
-  onReorder,
   onChangeMetaCapi,
 }: Props) {
   const activeCount = Object.values(elemenTambahan).filter(Boolean).length;
 
-  const moveSection = (index: number, direction: 'up' | 'down') => {
-    if (!onReorder) return;
-    const newOrder = [...sectionOrder];
-    const targetIdx = direction === 'up' ? index - 1 : index + 1;
-    if (targetIdx < 0 || targetIdx >= newOrder.length) return;
-    const temp = newOrder[index];
-    newOrder[index] = newOrder[targetIdx];
-    newOrder[targetIdx] = temp;
-    onReorder(newOrder);
-  };
-
   return (
-    <StepCard step={6} title="Struktur Section & Meta CAPI CTWA">
-      {/* 1. SECTION TOGGLE & REORDERING */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-              Susunan & Urutan Section Landing Page
+    <StepCard step={6} title="Pilihan Section Landing Page">
+      <div className="space-y-4">
+        {/* Section Grid */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              Pilih Section yang Ingin Ditampilkan
             </p>
-            <p className="text-[11px] text-muted-foreground">
-              Aktifkan section yang diinginkan dan gunakan panah naik/turun untuk mengatur alur membaca pengunjung.
-            </p>
+            <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+              {activeCount} Section Aktif
+            </span>
           </div>
-          <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-            {activeCount} Aktif
-          </span>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {elemenTambahanOptions.map((el) => {
+              const active = elemenTambahan[el] ?? false;
+              const icon = sectionIcons[el] || '📌';
+              return (
+                <button
+                  key={el}
+                  type="button"
+                  onClick={() => onToggle(el)}
+                  className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
+                    active
+                      ? 'bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary/30'
+                      : 'bg-secondary/50 border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0 pr-1">
+                    <span className="text-base flex-shrink-0">{icon}</span>
+                    <span className="font-bold text-xs truncate text-foreground">{el}</span>
+                  </div>
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 transition-all ${
+                      active ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30'
+                    }`}
+                  >
+                    {active && <Check className="w-3 h-3 stroke-[3]" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-muted-foreground italic pt-1">
+            💡 Urutan susunan section dapat diatur dan digeser secara fleksibel nanti di <strong>Mode Edit HTML</strong>.
+          </p>
         </div>
 
-        {/* Section Grid & Reorder List */}
-        <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
-          {sectionOrder.map((el, index) => {
-            const active = elemenTambahan[el] ?? false;
-            const icon = sectionIcons[el] || '📌';
-            return (
-              <div
-                key={el}
-                className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
-                  active
-                    ? 'bg-secondary/80 border-primary/40 shadow-sm'
-                    : 'bg-secondary/20 border-border/40 opacity-50'
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="text-sm">{icon}</span>
-                  <span className="font-bold text-xs text-foreground truncate">{el}</span>
+        {/* META CONVERSIONS API (CAPI) - NEXT FEATURE */}
+        <div className="pt-2 border-t border-border/60">
+          <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Radio className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs sm:text-sm font-bold text-blue-400">Meta CAPI CTWA Tracking</span>
+                    <span className="text-[9px] font-black uppercase tracking-wider bg-blue-500 text-white px-2 py-0.5 rounded-full">
+                      🚀 Next Feature (Segera Hadir)
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Modul tracking server-side Meta Conversions API khusus iklan WhatsApp agar event Lead terkirim presisi.
+                  </p>
                 </div>
+              </div>
+              <Switch
+                checked={metaCapi.enabled}
+                onCheckedChange={(checked) => onChangeMetaCapi && onChangeMetaCapi({ ...metaCapi, enabled: checked })}
+                className="data-[state=checked]:bg-blue-500 flex-shrink-0"
+              />
+            </div>
 
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <button
-                    type="button"
-                    disabled={index === 0}
-                    onClick={() => moveSection(index, 'up')}
-                    className="w-6 h-6 rounded flex items-center justify-center bg-background border border-border text-muted-foreground hover:text-foreground disabled:opacity-30"
-                    title="Geser Naik"
-                  >
-                    <ArrowUp className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={index === sectionOrder.length - 1}
-                    onClick={() => moveSection(index, 'down')}
-                    className="w-6 h-6 rounded flex items-center justify-center bg-background border border-border text-muted-foreground hover:text-foreground disabled:opacity-30"
-                    title="Geser Turun"
-                  >
-                    <ArrowDown className="w-3 h-3" />
-                  </button>
-                  <Switch
-                    checked={active}
-                    onCheckedChange={() => onToggle(el)}
-                    className="data-[state=checked]:bg-primary ml-1"
+            {metaCapi.enabled && (
+              <div className="p-3 rounded-xl bg-background/80 border border-border space-y-2 text-xs animate-in fade-in duration-200">
+                <div className="flex items-center gap-1.5 text-blue-400 font-semibold">
+                  <Info className="w-3.5 h-3.5" /> Parameter CAPI (Beta Testing)
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input
+                    placeholder="Meta Pixel ID (15 digit)"
+                    value={metaCapi.pixelId}
+                    onChange={(e) => onChangeMetaCapi && onChangeMetaCapi({ ...metaCapi, pixelId: e.target.value })}
+                    className="bg-secondary text-xs h-8"
+                  />
+                  <Input
+                    placeholder="Event: Lead / Contact"
+                    value={metaCapi.eventName}
+                    onChange={(e) => onChangeMetaCapi && onChangeMetaCapi({ ...metaCapi, eventName: e.target.value })}
+                    className="bg-secondary text-xs h-8"
                   />
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. META CONVERSIONS API (CAPI) CTWA TRACKING */}
-      <div className="space-y-3 pt-3 border-t border-border/60">
-        <div className="flex items-center justify-between p-3 rounded-xl bg-blue-500/10 border border-blue-500/30">
-          <div>
-            <p className="text-xs sm:text-sm font-bold text-blue-400 flex items-center gap-1.5">
-              <Radio className="w-4 h-4" />
-              Meta Conversions API (CAPI) untuk Iklan WhatsApp (CTWA)
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Otomatis inject tracking event <code>Lead</code>/<code>Contact</code> ke server Meta saat pengunjung klik tombol WA
-            </p>
+            )}
           </div>
-          <Switch
-            checked={metaCapi.enabled}
-            onCheckedChange={(checked) => onChangeMetaCapi && onChangeMetaCapi({ ...metaCapi, enabled: checked })}
-            className="data-[state=checked]:bg-blue-500"
-          />
         </div>
-
-        {metaCapi.enabled && (
-          <div className="p-3.5 rounded-xl bg-secondary/60 border border-border space-y-2.5 animate-in fade-in duration-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-foreground">Meta Pixel ID</label>
-                <Input
-                  placeholder="Contoh: 123456789012345"
-                  value={metaCapi.pixelId}
-                  onChange={(e) => onChangeMetaCapi && onChangeMetaCapi({ ...metaCapi, pixelId: e.target.value })}
-                  className="bg-background text-xs font-mono"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-foreground">Event Name</label>
-                <select
-                  value={metaCapi.eventName}
-                  onChange={(e) => onChangeMetaCapi && onChangeMetaCapi({ ...metaCapi, eventName: e.target.value })}
-                  className="w-full h-9 rounded-xl bg-background border border-border px-2 text-xs font-medium text-foreground"
-                >
-                  <option value="Lead">Lead (Rekomendasi CTWA)</option>
-                  <option value="Contact">Contact</option>
-                  <option value="InitiateCheckout">InitiateCheckout</option>
-                  <option value="Purchase">Purchase</option>
-                </select>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-foreground">Meta CAPI Access Token (Opsional)</label>
-              <Input
-                type="password"
-                placeholder="EAA..."
-                value={metaCapi.capiToken}
-                onChange={(e) => onChangeMetaCapi && onChangeMetaCapi({ ...metaCapi, capiToken: e.target.value })}
-                className="bg-background text-xs font-mono"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </StepCard>
   );
