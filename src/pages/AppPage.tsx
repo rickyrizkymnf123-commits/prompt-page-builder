@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
+import { SidebarDrawer } from "@/components/navigation/SidebarDrawer";
 import { Step1Framework } from "@/components/steps/Step1Framework";
 import { Step2Product } from "@/components/steps/Step2Product";
 import { Step3Target } from "@/components/steps/Step3Target";
@@ -13,14 +14,14 @@ import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
 import { StepCountdown } from "@/components/steps/StepCountdown";
 import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { TemplateGallery } from "@/components/templates/TemplateGallery";
-import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, ScarcitySeatConfig, BonusItem, TieredPricingConfig, CtaModeConfig, DesignTypographyConfig, MetaCapiConfig } from "@/types/form";
+import { AiApiSettings } from "@/components/settings/AiApiSettings";
+import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, ScarcitySeatConfig, BonusItem } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound, PlayCircle, ShieldCheck, FolderOpen, Target, Video, Timer, DollarSign, BookmarkPlus, Globe, Sparkles, Wand2 } from "lucide-react";
+import { Zap, RotateCcw, Copy, BookmarkPlus, FolderOpen, ChevronRight, Menu, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CostBreakdownModal } from "@/components/CostBreakdownModal";
 import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 import UserWebhookSettings from "@/components/user/UserWebhookSettings";
 import { TutorialFullPage } from "@/components/TutorialFullPage";
@@ -36,13 +37,13 @@ import { translations, Language } from "@/utils/i18n";
 
 function Stepper({ current }: { current: number }) {
   return (
-    <div className="flex items-center justify-center py-3">
+    <div className="flex items-center justify-center py-2.5">
       {[1, 2, 3].map((s) => {
         const done = s < current;
         const active = s === current;
         return (
           <div key={s} className="flex items-center">
-            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${active ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30' : done ? 'bg-transparent text-emerald-400 border-emerald-500' : 'bg-transparent text-muted-foreground border-muted-foreground/30'}`}>
+            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${active ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30' : done ? 'bg-transparent text-emerald-400 border-emerald-500' : 'bg-transparent text-muted-foreground border-muted-foreground/30'}`}>
               {done ? <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> : s}
             </div>
             {s < 3 && <div className={`w-8 sm:w-16 h-0.5 transition-all ${done ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />}
@@ -167,6 +168,9 @@ export default function AppPage() {
   const [userEmail, setUserEmail] = useState('');
   const [darkMode, setDarkMode] = useState(true);
 
+  // Sidebar Drawer state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const activePage = searchParams.get('tab') || 'generator';
   const isPaid = userTier === 'paid';
   const FREE_LIMIT = 5;
@@ -176,6 +180,7 @@ export default function AppPage() {
 
   const handlePageChange = (tabName: string) => {
     setSearchParams({ tab: tabName });
+    setIsSidebarOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -304,10 +309,6 @@ export default function AppPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleUpgrade = () => {
-    if (orderUrl) window.open(orderUrl, '_blank');
-  };
-
   const handleSaveAsCustomTemplate = async (htmlToSave: string) => {
     const name = prompt('Masukkan Nama Template Kustom Anda:', form.namaProduk || 'Template Kustom');
     if (!name) return;
@@ -335,140 +336,89 @@ export default function AppPage() {
     }
   };
 
+  const pageTitles: Record<string, string> = {
+    generator: '🚀 Landing Page Generator',
+    quick_prompt: '⚡ Prompt Cepat (AI Auto-Fill)',
+    api_settings: '⚙️ Konfigurasi API AI (KoboiLLM / OpenAI)',
+    competitor_spy: '🕵️‍♂️ AI Competitor Spy Tool',
+    creative_sync: '🎬 Creative-to-Landing Page Sync',
+    five_second: '⏱️ Tes 5 Detik (Clarity Test)',
+    audit: '🔍 AI Landing Page Auditor',
+    templates: '📋 Galeri Template',
+    affiliate: '🤝 Program Kemitraan (Affiliate)',
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground text-xs sm:text-sm">Memuat aplikasi...</p></div>;
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Sticky Top Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/80 shadow-sm">
-        <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} />
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      {/* Top Header with Hamburger ☰ and Language Switcher beside Dark Mode */}
+      <Header
+        darkMode={darkMode}
+        onToggleDark={() => setDarkMode(!darkMode)}
+        language={form.language || 'id'}
+        onToggleLang={() => handleChange('language', form.language === 'en' ? 'id' : 'en')}
+        onOpenMenu={() => setIsSidebarOpen(true)}
+      />
 
-        {/* Sticky Tab Navigation Bar */}
-        <div className="max-w-[1440px] mx-auto px-2 sm:px-6">
-          <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-none py-1.5">
-            <div className="flex gap-1 items-center flex-shrink-0">
-              <button
-                type="button"
+      {/* Slide-out Sidebar Drawer */}
+      <SidebarDrawer
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        activeTab={activePage}
+        onSelectTab={handlePageChange}
+        userEmail={userEmail}
+        isAdmin={userEmail === 'fauzymnf29@gmail.com'}
+        onLogout={async () => {
+          await supabase.auth.signOut();
+          navigate('/login');
+        }}
+      />
+
+      {/* Clean Sub-header Bar with Page Title & Quick Action */}
+      <div className="border-b border-border/70 bg-card/60 px-3 sm:px-6 py-2.5">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-foreground hover:text-primary transition-colors"
+            >
+              <Menu className="w-4 h-4 text-primary" />
+              <span>{pageTitles[activePage] || 'Menu Aplikasi'}</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {activePage !== 'generator' && (
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => handlePageChange('generator')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
-                  activePage === 'generator' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
+                className="text-xs h-8 gap-1 font-semibold"
               >
-                <Zap className="w-3.5 h-3.5" />
-                <span>{t.generator}</span>
-              </button>
+                <ArrowLeft className="w-3.5 h-3.5" /> Ke Generator
+              </Button>
+            )}
 
-              <button
-                type="button"
-                onClick={() => handlePageChange('quick_prompt')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
-                  activePage === 'quick_prompt' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <Wand2 className="w-3.5 h-3.5 text-amber-400" />
-                <span>{t.quickPrompt}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handlePageChange('competitor_spy')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
-                  activePage === 'competitor_spy' ? 'bg-red-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <Target className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{t.competitorSpy}</span>
-                <span className="sm:hidden">Spy</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handlePageChange('creative_sync')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
-                  activePage === 'creative_sync' ? 'bg-purple-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <Video className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{t.creativeSync}</span>
-                <span className="sm:hidden">Sync</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handlePageChange('five_second')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
-                  activePage === 'five_second' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <Timer className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{t.fiveSecond}</span>
-                <span className="sm:hidden">5s</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handlePageChange('audit')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
-                  activePage === 'audit' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{t.auditLp}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handlePageChange('templates')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
-                  activePage === 'templates' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <span>{t.templates}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handlePageChange('affiliate')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-bold transition-all rounded-xl ${
-                  activePage === 'affiliate' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <DollarSign className="w-3.5 h-3.5" />
-                <span>{t.affiliate}</span>
-              </button>
-            </div>
-
-            {/* Right Tools: Language & Saved Projects */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Language Switcher */}
-              <button
-                type="button"
-                onClick={() => handleChange('language', form.language === 'id' ? 'en' : 'id')}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-secondary border border-border text-xs font-bold text-foreground hover:border-primary transition-all shadow-sm"
-                title="Ganti Bahasa (Language Switcher)"
-              >
-                <Globe className="w-3.5 h-3.5 text-primary" />
-                <span>{form.language === 'en' ? '🇬🇧 EN' : '🇮🇩 ID'}</span>
-              </button>
-
-              <SavedProjectsDialog
-                currentForm={form}
-                userId={userId}
-                onLoadProject={(formData) => {
-                  setForm(formData);
-                  setPromptText("");
-                  setCurrentStep(1);
-                }}
-              />
-            </div>
+            <SavedProjectsDialog
+              currentForm={form}
+              userId={userId}
+              onLoadProject={(formData) => {
+                setForm(formData);
+                setPromptText("");
+                setCurrentStep(1);
+                handlePageChange('generator');
+              }}
+            />
           </div>
         </div>
       </div>
 
       {/* Main Page Container */}
-      <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 py-4 sm:py-6">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
         {/* TAB 1: GENERATOR & BLUEPRINT WIZARD */}
         {activePage === 'generator' && (
           <div>
@@ -537,8 +487,6 @@ export default function AppPage() {
                     deviceTarget={form.deviceTarget}
                     onChange={handleChange}
                   />
-
-                  {/* (Step 8 Media Foto/Video & Link Referensi removed as requested) */}
 
                   <StepSalesNotif
                     salesNotif={form.salesNotif}
@@ -618,19 +566,22 @@ export default function AppPage() {
           />
         )}
 
-        {/* TAB 3: COMPETITOR SPY */}
+        {/* TAB 3: KOBOILLM / OPENAI API CONFIGURATION */}
+        {activePage === 'api_settings' && <AiApiSettings />}
+
+        {/* TAB 4: COMPETITOR SPY */}
         {activePage === 'competitor_spy' && <CompetitorSpy />}
 
-        {/* TAB 4: CREATIVE SYNC */}
+        {/* TAB 5: CREATIVE SYNC */}
         {activePage === 'creative_sync' && <CreativeSync />}
 
-        {/* TAB 5: TES 5 DETIK */}
+        {/* TAB 6: TES 5 DETIK */}
         {activePage === 'five_second' && <FiveSecondTest />}
 
-        {/* TAB 6: AUDIT LP */}
+        {/* TAB 7: AUDIT LP */}
         {activePage === 'audit' && <LandingPageAuditor />}
 
-        {/* TAB 7: TEMPLATES GALLERY */}
+        {/* TAB 8: TEMPLATES GALLERY */}
         {activePage === 'templates' && (
           <TemplateGallery
             onSelectTemplate={handleSelectTemplate}
@@ -640,7 +591,7 @@ export default function AppPage() {
           />
         )}
 
-        {/* TAB 8: AFFILIATE PROGRAM */}
+        {/* TAB 9: AFFILIATE PROGRAM */}
         {activePage === 'affiliate' && (
           <AffiliateProgram
             userId={userId}
@@ -649,15 +600,15 @@ export default function AppPage() {
           />
         )}
 
-        {/* TAB 9: LP BUILDER */}
+        {/* TAB 10: LP BUILDER */}
         {activePage === 'lpbuilder' && isPaid && <HtmlGeneratorTab />}
 
-        {/* TAB 10: WEBHOOK */}
+        {/* TAB 11: WEBHOOK */}
         {activePage === 'webhook' && isPaid && <UserWebhookSettings userId={userId} />}
 
-        {/* TAB 11: TUTORIAL */}
+        {/* TAB 12: TUTORIAL */}
         {activePage === 'tutorial' && isPaid && <TutorialFullPage />}
-      </div>
+      </main>
     </div>
   );
 }
