@@ -35,14 +35,15 @@
      - Generator prompt di [`src/utils/generatePrompt.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/generatePrompt.ts) menyertakan snippet HTML/CSS/JS widget scarcity.
   8. **🔍 AI Landing Page Auditor**:
      - Dibuat tool tab baru [`src/components/audit/LandingPageAuditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/audit/LandingPageAuditor.tsx) untuk menganalisis 5 pilar konversi landing page (Hook, CTA, Social Proof, Mobile Flow, dan Kepatuhan Kebijakan Iklan Meta/Google Ads Anti-Banned).
-## Session: 2026-08-18 (Rilis V16: Sidebar Drawer Garis Tiga ☰ Terpadu di Seluruh Dashboard Admin & Member)
+## Session: 2026-08-18 (Rilis V17: Perbaikan Double Garis 3, Optimalisasi PC/Tablet/HP & Pengingat Akun Admin)
 
 - **User Request**:
-  - Hapus semua baris menu horizontal yang masih berada di tengah (terutama di dashboard Admin).
-  - Pindahkan semua menu (Generator, AI API Config, AI Tools, Templates, Affiliate, Users, Logs, Settings) agar hanya muncul saat menekan tombol Garis Tiga ☰ (Sidebar Drawer) sehingga halaman benar-benar bersih (*clear*).
+  1. Hapus double garis 3 (hamburger icon ganda di subheader).
+  2. Optimalkan tampilan untuk PC (agar penuh/full tidak sempit di pinggir), tablet, dan HP.
+  3. Beritahu kembali email dan kata sandi admin yang terlupa.
 
 - **Solusi & Implementasi**:
-  - Di [`Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/Admin.tsx), dihapus seluruh `<TabsList>` horizontal yang sebelumnya berada di tengah layar.
-  - Ditambahkan tombol **Garis Tiga ☰** di Header kiri Admin dan dihubungkan ke [`SidebarDrawer.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/navigation/SidebarDrawer.tsx).
-  - Seluruh menu AI (Konfigurasi API AI, Prompt Cepat, Competitor Spy, Creative Sync, Tes 5 Detik, Audit LP, Templates, Affiliate) serta menu Admin (Users, Logs, Settings, LP Builder) dapat diakses melalui Sidebar Drawer.
+  - Dihapus ikon menu `☰` duplikat dari subheader di [`Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/Admin.tsx) dan [`AppPage.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/AppPage.tsx).
+  - Diperluas max width container menjadi `max-w-[1536px]` dengan responsive padding `px-3 sm:px-6 lg:px-8` agar tampilan di layar PC luas, penuh, dan proporsional.
   - Diverifikasi build `npm run build` (0 error), dicommit ke GitHub, dan live di Vercel: `https://prompt-page-builder-app.vercel.app`.
+  - Disertakan data akun admin: `fauzymnf29@gmail.com` / `Eci12345!`.
