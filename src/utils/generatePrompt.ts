@@ -262,11 +262,25 @@ Hindari: Klaim "pasti"/"jamin"/"100%", overclaim medis/finansial, janji tidak re
 
 // Product block builder
 function buildProductBlock(form: FormState, fmt: (v: string) => string): string {
-  // Always 4-layer (3 prices: Normal, Promo, Final)
-  let pricingInfo = `- Harga Normal: **${fmt(form.hargaNormal)}** (dicoret)`;
-  pricingInfo += `\n- Harga Promo: **${fmt(form.hargaPromo)}** (dicoret)`;
-  pricingInfo += `\n- 🔥 Harga Diskon (untuk kamu yang beli sekarang): **${fmt(form.hargaFinal)}**`;
-  if (form.keteranganDiskon) pricingInfo += `\n- Keterangan: ${form.keteranganDiskon}`;
+  const cfg = form.pricingLayersConfig || { layerNormal: true, layerPromo: true, layerFinal: true };
+  const lines: string[] = [];
+
+  if (cfg.layerNormal && form.hargaNormal) {
+    lines.push(`- Harga Normal: **${fmt(form.hargaNormal)}** (dicoret)`);
+  }
+  if (cfg.layerPromo && form.hargaPromo) {
+    lines.push(`- Harga Promo: **${fmt(form.hargaPromo)}** (dicoret)`);
+  }
+  if (cfg.layerFinal && form.hargaFinal) {
+    lines.push(`- 🔥 Harga Final / Diskon (untuk kamu yang beli sekarang): **${fmt(form.hargaFinal)}**`);
+  } else if (!cfg.layerNormal && !cfg.layerPromo && !cfg.layerFinal) {
+    lines.push(`- Harga: Penawaran Khusus / Hubungi Kami`);
+  }
+  if (form.keteranganDiskon) {
+    lines.push(`- Keterangan Diskon: ${form.keteranganDiskon}`);
+  }
+
+  const pricingInfo = lines.join('\n');
 
   let bonusInfo = '';
   if (form.bonusList.length > 0) {
@@ -292,18 +306,43 @@ ${form.deskripsiBenefit ? `- Deskripsi/Benefit: ${form.deskripsiBenefit}` : ''}$
 
 // Pricing rules builder
 function buildPricingRules(form: FormState, fmt: (v: string) => string): string {
-  return `- Harga normal dicoret: **${fmt(form.hargaNormal)}**
-- Harga promo dicoret: **${fmt(form.hargaPromo)}**
-- ${form.keteranganDiskon || 'Dengan diskon tambahan'}
-- **🔥 HARGA DISKON untuk kamu yang beli sekarang (tidak dicoret, paling besar):** **${fmt(form.hargaFinal)}**
-- Tambahkan urgency wajar (tanpa overclaim)
-- Setiap CTA WAJIB ada micro-copy trust 1–2 baris di bawah tombol
+  const cfg = form.pricingLayersConfig || { layerNormal: true, layerPromo: true, layerFinal: true };
+  const activeCount = [cfg.layerNormal, cfg.layerPromo, cfg.layerFinal].filter(Boolean).length;
+  
+  const rulesList: string[] = [];
+  const visualLayers: string[] = [];
+  let layerIndex = 1;
 
-**PENTING:** Tampilkan 3 layer harga secara visual:
-1. Harga tertinggi (coret, merah)
-2. Harga promo (coret juga)
-3. Keterangan diskon tambahan
-4. 🔥 Harga diskon untuk kamu yang beli sekarang (besar, bold, warna aksen, TIDAK dicoret)`;
+  if (cfg.layerNormal && form.hargaNormal) {
+    rulesList.push(`- Harga normal dicoret: **${fmt(form.hargaNormal)}**`);
+    visualLayers.push(`${layerIndex}. Harga tertinggi / normal (coret, merah): **${fmt(form.hargaNormal)}**`);
+    layerIndex++;
+  }
+
+  if (cfg.layerPromo && form.hargaPromo) {
+    rulesList.push(`- Harga promo dicoret: **${fmt(form.hargaPromo)}**`);
+    visualLayers.push(`${layerIndex}. Harga promo (coret juga): **${fmt(form.hargaPromo)}**`);
+    layerIndex++;
+  }
+
+  if (form.keteranganDiskon) {
+    rulesList.push(`- ${form.keteranganDiskon}`);
+    visualLayers.push(`${layerIndex}. Keterangan diskon: "${form.keteranganDiskon}"`);
+    layerIndex++;
+  }
+
+  if (cfg.layerFinal && form.hargaFinal) {
+    rulesList.push(`- **🔥 HARGA DISKON untuk kamu yang beli sekarang (tidak dicoret, paling besar):** **${fmt(form.hargaFinal)}**`);
+    visualLayers.push(`${layerIndex}. 🔥 Harga penawaran aktif (besar, bold, warna aksen, TIDAK dicoret): **${fmt(form.hargaFinal)}**`);
+  }
+
+  rulesList.push(`- Tambahkan urgency wajar (tanpa overclaim)`);
+  rulesList.push(`- Setiap CTA WAJIB ada micro-copy trust 1–2 baris di bawah tombol`);
+
+  return `${rulesList.join('\n')}
+
+**PENTING:** Tampilkan struktur ${activeCount} layer harga secara visual yang kontras & jelas:
+${visualLayers.join('\n')}`;
 }
 
 // Referensi block builder

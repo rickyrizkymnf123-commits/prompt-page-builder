@@ -740,7 +740,19 @@ export default function Admin() {
                 <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
                 <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
                 <Step3Target levelAwareness={form.levelAwareness} targetAudience={form.targetAudience} onChange={handleChange} />
-                <Step4Detail namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo} hargaFinal={form.hargaFinal} keteranganDiskon={form.keteranganDiskon} bonusList={form.bonusList} deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama} onChange={handleChange} onChangeBonusList={handleChangeBonusList} />
+                <Step4Detail
+                  namaProduk={form.namaProduk}
+                  hargaNormal={form.hargaNormal}
+                  hargaPromo={form.hargaPromo}
+                  hargaFinal={form.hargaFinal}
+                  keteranganDiskon={form.keteranganDiskon}
+                  pricingLayersConfig={form.pricingLayersConfig}
+                  bonusList={form.bonusList}
+                  deskripsiBenefit={form.deskripsiBenefit}
+                  ctaUtama={form.ctaUtama}
+                  onChange={handleChange}
+                  onChangeBonusList={handleChangeBonusList}
+                />
                 <Step5Design warnaBrand={form.warnaBrand} tema={form.tema} gayaDesain={form.gayaDesain} onChange={handleChange} />
                 <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
                 <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />

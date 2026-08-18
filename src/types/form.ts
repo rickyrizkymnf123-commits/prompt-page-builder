@@ -30,6 +30,12 @@ export interface BonusItem {
   hargaAsli: string;
 }
 
+export interface PricingLayersConfig {
+  layerNormal: boolean;
+  layerPromo: boolean;
+  layerFinal: boolean;
+}
+
 export interface FormState {
   framework: string;
   gayaBahasa: string;
@@ -43,6 +49,7 @@ export interface FormState {
   hargaFinal: string;
   keteranganDiskon: string;
   pricingLayers: 4;
+  pricingLayersConfig: PricingLayersConfig;
   bonusList: BonusItem[];
   deskripsiBenefit: string;
   ctaUtama: string;
@@ -71,6 +78,11 @@ export const initialFormState: FormState = {
   hargaFinal: '',
   keteranganDiskon: '',
   pricingLayers: 4,
+  pricingLayersConfig: {
+    layerNormal: true,
+    layerPromo: true,
+    layerFinal: true,
+  },
   bonusList: [],
   deskripsiBenefit: '',
   ctaUtama: '',

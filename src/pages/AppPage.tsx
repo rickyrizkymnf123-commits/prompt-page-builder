@@ -444,6 +444,7 @@ export default function AppPage() {
             <Step4Detail
               namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo}
               hargaFinal={form.hargaFinal} keteranganDiskon={form.keteranganDiskon}
+              pricingLayersConfig={form.pricingLayersConfig}
               bonusList={form.bonusList}
               deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama}
               onChange={handleChange} onChangeBonusList={handleChangeBonusList}
