@@ -6,5 +6,5 @@
 - **Supabase Project**: `prompt-page-builder` (`uxerfoonlifdpgiiwvdi`)
 - **Main Admin**: `fauzymnf29@gmail.com`
 - **Admin Password**: `Eci12345!`
-- **Auth Config**: `mailer_autoconfirm: true` (mencegah email rate limit exceeded)
-- **DB Triggers**: `handle_new_user()` aktif menginisialisasi `profiles`, `user_roles`, dan `entitlements` (`pending`)
+- **User Mapping**: `profiles` menyimpan `name`, `email`, `phone` yang tersinkronisasi otomatis dengan `auth.users`.
+- **Tab Persistence**: URL query string (`?tab=...`) dan `localStorage` sinkron secara penuh saat browser di-refresh.

@@ -379,10 +379,15 @@ export const elemenTambahanOptions: string[] = [
 ];
 
 export const platformTargetOptions: string[] = [
+  'OrderHero',
+  'WinMe',
   'Scalev',
   'Berdu',
+  'OrderOnline',
+  'LandingPress',
   'WordPress',
   'Lynk.id',
+  'Mayar',
   'Shopify',
   'Standalone',
 ];

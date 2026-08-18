@@ -121,8 +121,48 @@ function buildPlatformBlock(platformName: string, deviceTarget: string): string 
 - Margin antar komponen: 16px
 - Layout: SINGLE COLUMN
 - Flex direction: column untuk semua layout`,
+    Responsive: `- Layout responsif otomatis: Mobile padding 24px, Tablet padding 48px, Desktop padding 96px
+- Lebar konten max 688px terpusat (margin auto)
+- Single column prioritas mobile first`,
   };
   const rules: Record<string, string> = {
+    'OrderHero': `# 📐 ATURAN STRUKTUR & LAYOUT — ORDERHERO (${deviceTarget})
+
+0) WAJIB ada wrapper root:
+   \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;">\`
+
+1) Layout WAJIB **single column** fokus konversi tinggi.
+2) Setiap SECTION WAJIB: \`max-width:680px\`, \`margin:0 auto\`, \`box-sizing:border-box\`, \`padding:28px 20px\` (mobile) / \`padding:40px 32px\` (desktop).
+3) Kompatibel dengan form checkout OrderHero & tracking pixel.
+4) Styling WAJIB inline CSS penuh pada elemen HTML.
+5) Gambar: \`<img>\` width:100%, responsive, format .webp.`,
+    'WinMe': `# 📐 ATURAN STRUKTUR & LAYOUT — WINME (${deviceTarget})
+
+0) WAJIB ada wrapper root:
+   \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;">\`
+
+1) Layout WAJIB **single column**, struktur ramping & loading ultra-cepat.
+2) Setiap SECTION WAJIB: \`max-width:700px\`, \`margin:0 auto\`, \`box-sizing:border-box\`, \`padding:30px 18px\`.
+3) Terintegrasi mulus dengan tombol CTA checkout WinMe & direct WA form.
+4) Inline CSS, tidak membutuhkan library JS eksternal yang memberatkan.
+5) Gambar: \`<img>\` width:100%, format .webp.`,
+    'OrderOnline': `# 📐 ATURAN — ORDERONLINE (${deviceTarget})
+
+0) Wrapper root: \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;...">\`
+1) Single column, max-width:720px, margin:0 auto, padding:25px.
+2) Terhubung mudah dengan embedded checkout embed OrderOnline.
+3) Inline CSS penuh, kompatibel mobile & desktop.`,
+    'LandingPress': `# 📐 ATURAN — LANDINGPRESS (${deviceTarget})
+
+1) File HTML/Section kompatibel Elementor & LandingPress Gutenberg.
+2) Single column, max-width:760px, responsive, clean typography.
+3) Inline styling & semantic HTML tags.`,
+    'Mayar': `# 📐 ATURAN — MAYAR (${deviceTarget})
+
+0) Wrapper root: \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;...">\`
+1) Single column, max-width:680px, margin:0 auto, padding:30px.
+2) CTA siap disambungkan ke link payment/checkout Mayar.
+3) Inline CSS, modern payment-ready aesthetic.`,
     'Scalev': `# 📐 ATURAN STRUKTUR & LAYOUT — SCALEV (${deviceTarget})
 
 0) WAJIB ada wrapper root:

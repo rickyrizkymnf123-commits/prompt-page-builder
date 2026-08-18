@@ -865,7 +865,7 @@ export default function Admin() {
 
           {/* USERS TAB */}
           <TabsContent value="users">
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
               {[
                 { label: "Total User", count: users.length, icon: <Users className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />, filter: "all", type: "status" },
                 { label: "Pending", count: pendingCount, icon: <Clock className="h-5 w-5 sm:h-7 sm:w-7 text-amber-500" />, filter: "pending", type: "status" },
@@ -886,11 +886,11 @@ export default function Admin() {
               <CardHeader className="flex flex-col gap-2 p-3 sm:p-6">
                 <CardTitle className="flex items-center gap-2 text-sm sm:text-base"><Users className="h-4 w-4 sm:h-5 sm:w-5" /> User ({filteredUsers.length})</CardTitle>
                 <div className="flex items-center gap-2 w-full">
-                  <div className="relative flex-1 min-w-0"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 text-sm" /></div>
+                  <div className="relative flex-1 min-w-0"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Cari nama / email / HP..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 text-sm h-9" /></div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <Button variant="outline" size="sm" className="gap-1" onClick={() => setAddMemberDialog(true)}><UserPlus className="h-4 w-4" /> <span className="hidden sm:inline">Add</span></Button>
-                    <Button variant="outline" size="sm" className="gap-1" onClick={() => { setBulkAddDialog(true); setBulkAddResults(null); setBulkAddRows([{ email: '', name: '', password: '' }]); }}><Users className="h-4 w-4" /> <span className="hidden sm:inline">Bulk</span></Button>
-                    <Button variant="outline" size="sm" className="px-2" onClick={() => { fetchUsers(); fetchLogs(); }}><RefreshCw className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="sm" className="gap-1 h-9" onClick={() => setAddMemberDialog(true)}><UserPlus className="h-4 w-4" /> <span className="hidden sm:inline">Add</span></Button>
+                    <Button variant="outline" size="sm" className="gap-1 h-9" onClick={() => { setBulkAddDialog(true); setBulkAddResults(null); setBulkAddRows([{ email: '', name: '', password: '' }]); }}><Users className="h-4 w-4" /> <span className="hidden sm:inline">Bulk</span></Button>
+                    <Button variant="outline" size="sm" className="px-2 h-9" onClick={() => { fetchUsers(); fetchLogs(); }}><RefreshCw className="h-4 w-4" /></Button>
                   </div>
                 </div>
               </CardHeader>
@@ -927,84 +927,82 @@ export default function Admin() {
                     </div>
                   )}
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-lg border border-border">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-10">
                           <Checkbox checked={selectedUsers.size > 0 && selectedUsers.size === filteredUsers.filter(u => u.role !== 'admin').length} onCheckedChange={toggleSelectAll} />
                         </TableHead>
-                        <TableHead>Nama</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Tier</TableHead>
-                        <TableHead>Usage</TableHead>
+                        <TableHead>User / Kontak</TableHead>
+                        <TableHead className="hidden sm:table-cell">Email</TableHead>
+                        <TableHead>Tier & Usage</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Terdaftar</TableHead>
-                        <TableHead>Login</TableHead>
+                        <TableHead className="hidden lg:table-cell">Role</TableHead>
+                        <TableHead className="hidden md:table-cell">Terdaftar</TableHead>
                         <TableHead className="text-right">Aksi</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredUsers.length === 0 ? <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Tidak ada data.</TableCell></TableRow>
+                      {filteredUsers.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Tidak ada data.</TableCell></TableRow>
                       : filteredUsers.map(u => (
                         <TableRow key={u.id} className={`${u.status==="pending"?"bg-amber-500/5":""} ${selectedUsers.has(u.id) ? "bg-primary/5" : ""}`}>
                           <TableCell>
                             {u.role !== 'admin' && <Checkbox checked={selectedUsers.has(u.id)} onCheckedChange={() => toggleSelectUser(u.id)} />}
                           </TableCell>
                           <TableCell className="font-medium">
-                            <div>
-                              <p className="text-sm font-semibold text-foreground">{u.name||"-"}</p>
-                              {u.phone && <p className="text-[11px] text-muted-foreground font-mono">📱 {u.phone}</p>}
+                            <div className="space-y-0.5">
+                              <p className="text-xs sm:text-sm font-semibold text-foreground">{u.name||"-"}</p>
+                              <p className="text-[11px] sm:hidden text-muted-foreground font-mono truncate max-w-[150px]">{u.email}</p>
+                              {u.phone && <p className="text-[11px] text-muted-foreground font-mono flex items-center gap-1">📱 {u.phone}</p>}
                             </div>
                           </TableCell>
-                          <TableCell className="text-sm">{u.email}</TableCell>
+                          <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{u.email}</TableCell>
                           <TableCell>
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.product_code === 'LPE' ? 'text-primary bg-primary/10 border border-primary/30' : 'text-amber-500 bg-amber-500/10 border border-amber-500/30'}`}>
-                              {u.product_code === 'LPE' ? '⭐ Berbayar' : '🆓 Gratis'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <span className={`text-xs font-mono ${u.prompt_used >= 5 && u.product_code !== 'LPE' ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>{u.prompt_used}/5</span>
-                              {u.role !== 'admin' && u.prompt_used > 0 && (
-                                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-primary" title="Reset usage" onClick={async () => {
-                                  await supabase.from("prompt_usage").update({ used_count: 0 }).eq("user_id", u.id);
-                                  showToast({ title: '✅ Usage direset' });
-                                  fetchUsers();
-                                }}><RotateCcw className="h-3 w-3" /></Button>
-                              )}
+                            <div className="flex flex-col gap-1">
+                              <span className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full w-fit ${u.product_code === 'LPE' ? 'text-primary bg-primary/10 border border-primary/30' : 'text-amber-500 bg-amber-500/10 border border-amber-500/30'}`}>
+                                {u.product_code === 'LPE' ? '⭐ Berbayar' : '🆓 Gratis'}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className={`text-[10px] sm:text-xs font-mono ${u.prompt_used >= 5 && u.product_code !== 'LPE' ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>{u.prompt_used}/5</span>
+                                {u.role !== 'admin' && u.prompt_used > 0 && (
+                                  <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-muted-foreground hover:text-primary" title="Reset usage" onClick={async () => {
+                                    await supabase.from("prompt_usage").update({ used_count: 0 }).eq("user_id", u.id);
+                                    showToast({ title: '✅ Usage direset' });
+                                    fetchUsers();
+                                  }}><RotateCcw className="h-3 w-3" /></Button>
+                                )}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell><StatusBadge status={u.status} /></TableCell>
-                          <TableCell><span className={`text-xs font-medium ${u.role==="admin"?"text-primary":"text-muted-foreground"}`}>{u.role}</span></TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString("id-ID")}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{u.last_sign_in ? new Date(u.last_sign_in).toLocaleString("id-ID") : "-"}</TableCell>
+                          <TableCell className="hidden lg:table-cell"><span className={`text-xs font-medium ${u.role==="admin"?"text-primary":"text-muted-foreground"}`}>{u.role}</span></TableCell>
+                          <TableCell className="text-xs text-muted-foreground hidden md:table-cell">{new Date(u.created_at).toLocaleDateString("id-ID")}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1 flex-wrap">
                               {u.status === "pending" && (
                                 <>
-                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7" onClick={() => handleApprove(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
+                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7 px-2" onClick={() => handleApprove(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
                                     <CheckCircle className="h-3.5 w-3.5" /> ACC
                                   </Button>
-                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 h-7" onClick={() => handleReject(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
+                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 h-7 px-2" onClick={() => handleReject(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
                                     <XCircle className="h-3.5 w-3.5" /> Tolak
                                   </Button>
                                 </>
                               )}
                               {u.status === "rejected" && (
-                                <Button size="sm" variant="outline" className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7" onClick={() => handleApprove(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
+                                <Button size="sm" variant="outline" className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7 px-2" onClick={() => handleApprove(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
                                   <CheckCircle className="h-3.5 w-3.5" /> ACC
                                 </Button>
                               )}
                               {u.status === "active" && u.role !== 'admin' && (
-                                <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-500 border-amber-300/40 hover:bg-amber-500/10 h-7" onClick={() => handleReject(u.id, u.entitlement_id)} disabled={actionLoading === u.id} title="Nonaktifkan / Tolak Akses">
-                                  <XCircle className="h-3.5 w-3.5" /> Nonaktifkan
+                                <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-500 border-amber-300/40 hover:bg-amber-500/10 h-7 px-2" onClick={() => handleReject(u.id, u.entitlement_id)} disabled={actionLoading === u.id} title="Nonaktifkan / Tolak Akses">
+                                  <XCircle className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Nonaktifkan</span>
                                 </Button>
                               )}
                               {u.role !== 'admin' && (
-                                <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => handleChangeTier(u.id, u.product_code === 'LPE' ? 'free' : 'paid')} disabled={actionLoading === u.id}>
-                                  {u.product_code === 'LPE' ? '⬇ Gratis' : '⬆ Berbayar'}
+                                <Button size="sm" variant="outline" className="text-xs h-7 px-2" onClick={() => handleChangeTier(u.id, u.product_code === 'LPE' ? 'free' : 'paid')} disabled={actionLoading === u.id}>
+                                  {u.product_code === 'LPE' ? '⬇ Gratis' : '⬆ Bayar'}
                                 </Button>
                               )}
                               <Button size="sm" variant="ghost" className="text-muted-foreground h-7 w-7 p-0" onClick={() => setResetDialog({ open: true, userId: u.id, email: u.email })} title="Reset Password">
