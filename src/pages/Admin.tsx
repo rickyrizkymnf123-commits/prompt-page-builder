@@ -217,6 +217,18 @@ export default function Admin() {
   const initialTab = searchParams.get("tab") || localStorage.getItem("admin_active_tab") || "tools";
   const [activeTab, setActiveTab] = useState<string>(initialTab);
 
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    const tabFromStorage = localStorage.getItem("admin_active_tab");
+    const targetTab = tabFromUrl || tabFromStorage || "tools";
+    if (activeTab !== targetTab) {
+      setActiveTab(targetTab);
+    }
+    if (!tabFromUrl) {
+      setSearchParams({ tab: targetTab }, { replace: true });
+    }
+  }, [searchParams]);
+
   const handleTabChange = (val: string) => {
     setActiveTab(val);
     setSearchParams({ tab: val }, { replace: true });
@@ -256,21 +268,26 @@ export default function Admin() {
       // Create a map of all known user_ids
       const userMap = new Map<string, any>();
 
-      // Populate from Edge users first if any
-      for (const eu of edgeUsers) {
-        userMap.set(eu.id, { ...eu });
+      // Populate from Profiles first (Direct DB truth for name, email, phone)
+      for (const p of profiles) {
+        userMap.set(p.user_id, {
+          id: p.user_id,
+          name: p.name || "-",
+          phone: p.phone || "",
+          email: p.email || (p.name ? `${p.name.toLowerCase().replace(/\s+/g, '')}@user.local` : `user-${p.user_id.slice(0, 8)}`),
+          created_at: p.created_at || new Date().toISOString(),
+        });
       }
 
-      // Populate / merge from Profiles
-      for (const p of profiles) {
-        const existing = userMap.get(p.user_id) || { id: p.user_id };
-        userMap.set(p.user_id, {
+      // Populate / merge from Edge users
+      for (const eu of edgeUsers) {
+        const existing = userMap.get(eu.id) || { id: eu.id };
+        userMap.set(eu.id, {
           ...existing,
-          id: p.user_id,
-          name: p.name || existing.name || "User",
-          phone: p.phone || existing.phone || "",
-          email: existing.email || (p.name ? `${p.name.toLowerCase().replace(/\s+/g, '')}@user.local` : `user-${p.user_id.slice(0, 8)}`),
-          created_at: p.created_at || existing.created_at || new Date().toISOString(),
+          ...eu,
+          name: existing.name && existing.name !== "-" ? existing.name : eu.name || "-",
+          phone: existing.phone || eu.phone || "",
+          email: existing.email || eu.email || `user-${eu.id.slice(0, 8)}`,
         });
       }
 

@@ -6,4 +6,5 @@
 - **Supabase Project**: `prompt-page-builder` (`uxerfoonlifdpgiiwvdi`)
 - **Main Admin**: `fauzymnf29@gmail.com`
 - **Admin Password**: `Eci12345!`
-- **Routing Configuration**: `vercel.json` SPA rewrites sudah terpasang aktif.
+- **Auth Config**: `mailer_autoconfirm: true` (mencegah email rate limit exceeded)
+- **DB Triggers**: `handle_new_user()` aktif menginisialisasi `profiles`, `user_roles`, dan `entitlements` (`pending`)
