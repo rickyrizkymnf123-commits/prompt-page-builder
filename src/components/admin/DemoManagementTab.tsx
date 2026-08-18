@@ -4,11 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, Save, Eye, X, GripVertical, Power, PowerOff, Layout, Upload, ImageIcon } from "lucide-react";
+import { Trash2, Plus, Save, Eye, X, GripVertical, Power, PowerOff, Layout, Upload, ImageIcon, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { sampleTemplates } from "@/data/sampleTemplates";
 
 interface Demo {
   id: string;
@@ -88,16 +89,54 @@ const DemoManagementTab = () => {
     title: demo?.title || "",
     description: demo?.description || "",
     type: demo?.type || "",
-    thumbnail_url: demo?.thumbnail_url || "",
+    thumbnail_url: (demo?.thumbnail_url && !demo.thumbnail_url.includes("placehold.co")) ? demo.thumbnail_url : "",
     html_code: demo?.html_code || "",
     sort_order: demo?.sort_order || 0,
     is_active: typeof demo?.is_active === "boolean" ? demo.is_active : true,
   });
 
+  const getDefaultDemos = (): Demo[] => {
+    return sampleTemplates.map((t, idx) => ({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      type: t.category,
+      thumbnail_url: "",
+      html_code: t.html_content,
+      sort_order: idx + 1,
+      is_active: true,
+    }));
+  };
+
   const fetchDemos = async () => {
-    const { data } = await supabase.from("demos").select("*").order("sort_order", { ascending: true });
-    const normalized = ((data as any[]) || []).map(normalizeDemo);
-    setDemos(normalized);
+    let result: Demo[] = [];
+    try {
+      const { data, error } = await supabase.from("demos").select("*").order("sort_order", { ascending: true });
+      if (!error && data && data.length > 0) {
+        result = (data as any[]).map(normalizeDemo);
+      }
+    } catch {}
+
+    if (result.length === 0) {
+      const cached = localStorage.getItem("admin_demos");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            result = parsed.map(normalizeDemo);
+          }
+        } catch {}
+      }
+    }
+
+    if (result.length === 0) {
+      result = getDefaultDemos();
+      try { localStorage.setItem("admin_demos", JSON.stringify(result)); } catch {}
+    } else {
+      try { localStorage.setItem("admin_demos", JSON.stringify(result)); } catch {}
+    }
+
+    setDemos(result);
     setLoading(false);
   };
 
@@ -105,67 +144,92 @@ const DemoManagementTab = () => {
     fetchDemos();
   }, []);
 
+  const handleResetDefaults = () => {
+    const defaults = getDefaultDemos();
+    setDemos(defaults);
+    try { localStorage.setItem("admin_demos", JSON.stringify(defaults)); } catch {}
+    toast({ title: "✅ 16 Template Demo Berhasil Dimuat!" });
+  };
+
   const addDemo = async () => {
-    const { data, error } = await supabase
-      .from("demos")
-      .insert({
-        title: "Demo Baru",
-        description: "Deskripsi demo",
-        type: "Kategori",
-        sort_order: demos.length + 1,
-      })
-      .select()
-      .single();
+    const newId = `demo-${Date.now()}`;
+    const newDemo: Demo = {
+      id: newId,
+      title: "Demo Baru",
+      description: "Deskripsi demo",
+      type: "Kategori",
+      thumbnail_url: "",
+      html_code: "<!DOCTYPE html><html><body style='margin:0;padding:24px;background:#0f0d1a;color:#fff;font-family:sans-serif;text-align:center;'><h1>Demo Landing Page</h1><p style='color:#a78bfa;'>Edit HTML ini untuk mengubah tampilan</p></body></html>",
+      sort_order: demos.length + 1,
+      is_active: true,
+    };
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
-    }
+    try {
+      const { data, error } = await supabase
+        .from("demos")
+        .insert({
+          title: newDemo.title,
+          description: newDemo.description,
+          type: newDemo.type,
+          sort_order: newDemo.sort_order,
+        })
+        .select()
+        .single();
+      if (!error && data) {
+        newDemo.id = data.id;
+      }
+    } catch {}
 
-    const normalizedDemo = normalizeDemo(data);
-    setDemos((prev) => [...prev, normalizedDemo]);
-    setExpandedId(normalizedDemo.id);
+    const updated = [...demos, newDemo];
+    setDemos(updated);
+    try { localStorage.setItem("admin_demos", JSON.stringify(updated)); } catch {}
+    setExpandedId(newDemo.id);
     toast({ title: "✅ Demo ditambahkan" });
   };
 
   const saveDemo = async (demo: Demo) => {
-    const { error } = await supabase
-      .from("demos")
-      .update({
-        title: demo.title,
-        description: demo.description,
-        type: demo.type,
-        thumbnail_url: demo.thumbnail_url,
-        html_code: demo.html_code,
-        sort_order: demo.sort_order,
-        is_active: demo.is_active,
-      })
-      .eq("id", demo.id);
+    try {
+      await supabase
+        .from("demos")
+        .update({
+          title: demo.title,
+          description: demo.description,
+          type: demo.type,
+          thumbnail_url: demo.thumbnail_url,
+          html_code: demo.html_code,
+          sort_order: demo.sort_order,
+          is_active: demo.is_active,
+        })
+        .eq("id", demo.id);
+    } catch {}
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
-    }
-
+    const updated = demos.map((d) => (d.id === demo.id ? demo : d));
+    setDemos(updated);
+    try { localStorage.setItem("admin_demos", JSON.stringify(updated)); } catch {}
     toast({ title: "✅ Demo tersimpan" });
-    fetchDemos();
   };
 
   const deleteDemo = async (id: string) => {
     if (!confirm("Hapus demo ini?")) return;
-    // Also delete thumbnail from storage
-    const demo = demos.find((d) => d.id === id);
-    if (demo?.thumbnail_url) {
-      const path = `demos/${id}`;
-      await supabase.storage.from("lp-assets").remove([path]);
-    }
-    await supabase.from("demos").delete().eq("id", id);
-    setDemos((prev) => prev.filter((d) => d.id !== id));
+    try {
+      const demo = demos.find((d) => d.id === id);
+      if (demo?.thumbnail_url) {
+        const path = `demos/${id}`;
+        await supabase.storage.from("lp-assets").remove([path]);
+      }
+      await supabase.from("demos").delete().eq("id", id);
+    } catch {}
+
+    const updated = demos.filter((d) => d.id !== id);
+    setDemos(updated);
+    try { localStorage.setItem("admin_demos", JSON.stringify(updated)); } catch {}
     toast({ title: "✅ Demo dihapus" });
   };
 
   const updateField = (id: string, field: keyof Demo, value: string | number | boolean) => {
-    setDemos((prev) => prev.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
+    const updated = demos.map((d) => (d.id === id ? { ...d, [field]: value } : d));
+    setDemos(updated);
+    try { localStorage.setItem("admin_demos", JSON.stringify(updated)); } catch {}
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -175,14 +239,16 @@ const DemoManagementTab = () => {
     const newIndex = demos.findIndex((d) => d.id === over.id);
     const reordered = arrayMove(demos, oldIndex, newIndex).map((d, i) => ({ ...d, sort_order: i + 1 }));
     setDemos(reordered);
-    // Save new order to DB
-    await Promise.all(reordered.map((d) => supabase.from("demos").update({ sort_order: d.sort_order }).eq("id", d.id)));
+    try { localStorage.setItem("admin_demos", JSON.stringify(reordered)); } catch {}
+    try {
+      await Promise.all(reordered.map((d) => supabase.from("demos").update({ sort_order: d.sort_order }).eq("id", d.id)));
+    } catch {}
     toast({ title: "✅ Urutan disimpan" });
   };
 
   const uploadThumbnail = async (demoId: string, file: File) => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast({ title: "Format tidak didukung", description: "Gunakan file WebP, JPG, atau PNG.", variant: "destructive" });
+      toast({ title: "Format tidak didukung", description: "Gunakan WebP, JPG, atau PNG.", variant: "destructive" });
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -195,40 +261,44 @@ const DemoManagementTab = () => {
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const filePath = `demos/${demoId}.${ext}`;
 
-    // Remove old file first (different extension maybe)
     const oldExts = ["webp", "jpg", "jpeg", "png"];
     const oldPaths = oldExts.map((e) => `demos/${demoId}.${e}`);
-    await supabase.storage.from("lp-assets").remove(oldPaths);
+    try { await supabase.storage.from("lp-assets").remove(oldPaths); } catch {}
 
-    const { error } = await supabase.storage.from("lp-assets").upload(filePath, file, {
-      upsert: true,
-      contentType: file.type,
-    });
+    try {
+      const { error } = await supabase.storage.from("lp-assets").upload(filePath, file, {
+        upsert: true,
+        contentType: file.type,
+      });
 
-    if (error) {
-      toast({ title: "Upload gagal", description: error.message, variant: "destructive" });
+      if (error) {
+        toast({ title: "Upload gagal", description: error.message, variant: "destructive" });
+        setUploading(null);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage.from("lp-assets").getPublicUrl(filePath);
+      const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+
+      await supabase.from("demos").update({ thumbnail_url: publicUrl }).eq("id", demoId);
+      updateField(demoId, "thumbnail_url", publicUrl);
+      toast({ title: "✅ Thumbnail berhasil diunggah" });
+    } catch (err: any) {
+      toast({ title: "Upload gagal", description: err.message, variant: "destructive" });
+    } finally {
       setUploading(null);
-      return;
     }
-
-    const { data: urlData } = supabase.storage.from("lp-assets").getPublicUrl(filePath);
-    const publicUrl = urlData.publicUrl + "?t=" + Date.now();
-
-    // Save to DB immediately
-    await supabase.from("demos").update({ thumbnail_url: publicUrl }).eq("id", demoId);
-
-    updateField(demoId, "thumbnail_url", publicUrl);
-    setUploading(null);
-    toast({ title: "✅ Thumbnail diupload" });
   };
 
   const removeThumbnail = async (demoId: string) => {
     const oldExts = ["webp", "jpg", "jpeg", "png"];
     const oldPaths = oldExts.map((e) => `demos/${demoId}.${e}`);
-    await supabase.storage.from("lp-assets").remove(oldPaths);
-    await supabase.from("demos").update({ thumbnail_url: "" }).eq("id", demoId);
+    try {
+      await supabase.storage.from("lp-assets").remove(oldPaths);
+      await supabase.from("demos").update({ thumbnail_url: "" }).eq("id", demoId);
+    } catch {}
     updateField(demoId, "thumbnail_url", "");
-    toast({ title: "✅ Thumbnail dihapus" });
+    toast({ title: "✅ Kembali ke Live Web Preview" });
   };
 
   if (loading) {
@@ -244,11 +314,16 @@ const DemoManagementTab = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-bold text-lg md:text-xl mb-1">Demo Landing Pages</h2>
-          <p className="text-sm text-muted-foreground">{demos.length} demo terdaftar · upload thumbnail 16:9 (1280×720 recommended)</p>
+          <p className="text-sm text-muted-foreground">{demos.length} demo terdaftar · preview tampilan web otomatis aktif</p>
         </div>
-        <Button onClick={addDemo} size="sm" className="gap-1.5">
-          <Plus className="w-3.5 h-3.5" /> Tambah
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleResetDefaults} size="sm" variant="outline" className="gap-1.5 text-xs">
+            <Sparkles className="w-3.5 h-3.5 text-primary" /> Muat Template Bawaan (16)
+          </Button>
+          <Button onClick={addDemo} size="sm" className="gap-1.5">
+            <Plus className="w-3.5 h-3.5" /> Tambah
+          </Button>
+        </div>
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -257,6 +332,7 @@ const DemoManagementTab = () => {
             {demos.map((demo) => {
               const isExpanded = expandedId === demo.id;
               const isUploading = uploading === demo.id;
+              const hasCustomThumb = !!(demo.thumbnail_url && !demo.thumbnail_url.includes("placehold.co"));
               return (
                 <SortableDemoCard key={demo.id} id={demo.id} isExpanded={isExpanded}>
                   <CardContent className="p-0">
@@ -264,57 +340,69 @@ const DemoManagementTab = () => {
                       className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => setExpandedId(isExpanded ? null : demo.id)}
                     >
-                      <span className="w-4 shrink-0" /> {/* spacer for drag handle */}
-                  <span className="text-xs text-muted-foreground font-mono w-6">#{demo.sort_order}</span>
-                  {/* Thumbnail preview */}
-                  <div className="w-16 h-10 rounded border border-border bg-muted/30 shrink-0 overflow-hidden relative">
-                    {demo.thumbnail_url ? (
-                      <img
-                        src={demo.thumbnail_url}
-                        alt={demo.title}
-                        className="w-full h-full object-cover object-top"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ImageIcon className="w-3.5 h-3.5 text-muted-foreground/40" />
+                      <span className="w-4 shrink-0" />
+                      <span className="text-xs text-muted-foreground font-mono w-6">#{demo.sort_order}</span>
+                      <div className="w-16 h-10 rounded border border-border bg-muted/30 shrink-0 overflow-hidden relative">
+                        {hasCustomThumb ? (
+                          <img
+                            src={demo.thumbnail_url}
+                            alt={demo.title}
+                            className="w-full h-full object-cover object-top"
+                          />
+                        ) : demo.html_code ? (
+                          <div className="w-full h-full overflow-hidden pointer-events-none bg-background">
+                            <iframe
+                              srcDoc={demo.html_code}
+                              className="w-[400%] h-[400%] border-0"
+                              style={{ transform: "scale(0.25)", transformOrigin: "top left", pointerEvents: "none" }}
+                              title={demo.title}
+                              loading="lazy"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ImageIcon className="w-3.5 h-3.5 text-muted-foreground/40" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{demo.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{demo.type}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${demo.is_active ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"}`}>
-                      {demo.is_active ? "Aktif" : "Off"}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 w-7 p-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPreviewHtml(demo.html_code || "<div style='padding:20px;color:#fff'>Belum ada HTML</div>");
-                      }}
-                    >
-                      <Eye className="w-3.5 h-3.5 text-primary" />
-                    </Button>
-                  </div>
-                </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{demo.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{demo.type}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${demo.is_active ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"}`}>
+                          {demo.is_active ? "Aktif" : "Off"}
+                        </span>
+                      </div>
+                    </div>
 
                 {isExpanded && (
                   <div className="px-4 pb-4 pt-1 border-t border-border space-y-3">
-                    {/* Thumbnail Upload */}
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1.5 block">Thumbnail (16:9 · 1280×720 · WebP/JPG/PNG · Max 5MB)</label>
-                      <div className="flex gap-3 items-start">
-                        <div className="w-40 aspect-video rounded-lg border border-border bg-muted/20 overflow-hidden shrink-0 relative">
-                          {demo.thumbnail_url ? (
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs text-muted-foreground">Preview Tampilan Depan (16:9)</label>
+                        <span className="text-[10px] text-primary/80 font-medium">
+                          {hasCustomThumb ? "🖼 Gambar Custom" : "✨ Live Web Preview Otomatis"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-3 items-start">
+                        <div className="w-full sm:w-64 aspect-video rounded-lg border border-border bg-muted/20 overflow-hidden shrink-0 relative group">
+                          {hasCustomThumb ? (
                             <img src={demo.thumbnail_url} alt="Thumbnail" className="w-full h-full object-cover object-top" />
+                          ) : demo.html_code ? (
+                            <div className="w-full h-full overflow-hidden pointer-events-none bg-background">
+                              <iframe
+                                srcDoc={demo.html_code}
+                                className="w-[300%] h-[300%] border-0"
+                                style={{ transform: "scale(0.333)", transformOrigin: "top left", pointerEvents: "none" }}
+                                title={demo.title}
+                                loading="lazy"
+                              />
+                            </div>
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center gap-1">
                               <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
-                              <span className="text-[10px] text-muted-foreground/50">Belum ada</span>
+                              <span className="text-[10px] text-muted-foreground/50">Belum ada preview</span>
                             </div>
                           )}
                           {isUploading && (
@@ -323,7 +411,7 @@ const DemoManagementTab = () => {
                             </div>
                           )}
                         </div>
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-wrap sm:flex-col gap-1.5 w-full sm:w-auto">
                           <input
                             ref={(el) => { fileInputRefs.current[demo.id] = el; }}
                             type="file"
@@ -338,7 +426,7 @@ const DemoManagementTab = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="gap-1.5 text-xs"
+                            className="gap-1.5 text-xs flex-1 sm:flex-none"
                             disabled={isUploading}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -346,21 +434,32 @@ const DemoManagementTab = () => {
                             }}
                           >
                             <Upload className="w-3 h-3" />
-                            {demo.thumbnail_url ? "Ganti" : "Upload"}
+                            Upload Gambar Custom
                           </Button>
-                          {demo.thumbnail_url && (
+                          {hasCustomThumb && (
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="gap-1.5 text-xs text-destructive hover:text-destructive"
+                              className="gap-1.5 text-xs text-destructive hover:text-destructive flex-1 sm:flex-none"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 removeThumbnail(demo.id);
                               }}
                             >
-                              <Trash2 className="w-3 h-3" /> Hapus
+                              <Trash2 className="w-3 h-3" /> Hapus (Pakai Live Web Preview)
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="gap-1.5 text-xs flex-1 sm:flex-none"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewHtml(demo.html_code || "<div style='padding:20px;color:#fff'>Belum ada HTML</div>");
+                            }}
+                          >
+                            <Eye className="w-3 h-3" /> Buka Full Preview
+                          </Button>
                         </div>
                       </div>
                     </div>

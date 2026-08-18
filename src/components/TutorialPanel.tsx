@@ -23,12 +23,25 @@ export function TutorialPanel() {
 
   useEffect(() => {
     const fetch = async () => {
-      const { data } = await supabase
-        .from('tutorials')
-        .select('id, title, description, youtube_url, sort_order')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
-      if (data) setTutorials(data as Tutorial[]);
+      let list: Tutorial[] = [];
+      try {
+        const { data } = await supabase
+          .from('tutorials')
+          .select('id, title, description, youtube_url, sort_order')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true });
+        if (data && data.length > 0) list = data as Tutorial[];
+      } catch {}
+      if (list.length === 0) {
+        const local = localStorage.getItem('admin_tutorials');
+        if (local) {
+          try {
+            const parsed = JSON.parse(local);
+            if (Array.isArray(parsed)) list = parsed.filter((t: any) => t.is_active);
+          } catch {}
+        }
+      }
+      setTutorials(list);
     };
     fetch();
   }, []);

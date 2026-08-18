@@ -37,7 +37,7 @@ export default function Login() {
         .select("role")
         .eq("user_id", data.user.id);
 
-      const isAdmin = roles?.some((r) => r.role === "admin");
+      const isAdmin = roles?.some((r) => r.role === "admin") || data.user.email === "fauzymnf29@gmail.com";
       if (isAdmin) {
         navigate("/admin");
         return;

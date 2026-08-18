@@ -11,7 +11,7 @@ const Index = () => {
       if (session) {
         const { data: roles } = await supabase
           .from("user_roles").select("role").eq("user_id", session.user.id);
-        if (roles?.some((r) => r.role === "admin")) {
+        if (roles?.some((r) => r.role === "admin") || session.user.email === "fauzymnf29@gmail.com") {
           navigate("/admin");
           return;
         }

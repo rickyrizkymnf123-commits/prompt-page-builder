@@ -780,10 +780,13 @@
 
   demos.forEach((d, index)=>{
     const div=document.createElement('div');
-    // Use static thumbnail image instead of live iframe to prevent mobile crashes
-    var thumbnailHtml = d.thumb
+    var demoCode = (d.code || d.html || '').trim();
+    var hasCustomThumb = d.thumb && !d.thumb.includes('placehold.co');
+    var thumbnailHtml = hasCustomThumb
       ? '<img src="'+d.thumb+'" alt="'+(d.style || 'Demo preview')+'" loading="lazy" decoding="async" class="w-full h-full object-cover object-top" style="min-height:120px">'
-      : '<div class="w-full h-full flex items-center justify-center" style="background:linear-gradient(135deg,hsl(265 85% 15%),hsl(250 30% 8%));min-height:120px"><p class="text-xs" style="color:hsl(250 10% 55%)">Preview belum tersedia</p></div>';
+      : (demoCode
+          ? '<div class="w-full h-full overflow-hidden" style="pointer-events:none;background:#0f0d1a;min-height:140px"><iframe srcdoc="'+demoCode.replace(/"/g, '&quot;')+'" class="w-[400%] h-[400%] border-0" style="transform:scale(0.25);transform-origin:top left;pointer-events:none" loading="lazy"></iframe></div>'
+          : '<div class="w-full h-full flex items-center justify-center" style="background:linear-gradient(135deg,hsl(265 85% 15%),hsl(250 30% 8%));min-height:120px"><p class="text-xs" style="color:hsl(250 10% 55%)">Preview belum tersedia</p></div>');
 
     div.className='glass rounded-xl overflow-hidden gradient-border group block cursor-pointer hover:-translate-y-1 transition-transform';
     div.style.setProperty('width','100%','important');
@@ -818,8 +821,8 @@ function wrapDemoHtml(rawHtml){
   return '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'+guardStyle+'</head><body>'+html+'</body></html>';
 }
 
-var SUPABASE_URL='https://npgglrvvdlhagztsxsjc.supabase.co';
-var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZ2dscnZ2ZGxoYWd6dHN4c2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTA1OTQsImV4cCI6MjA4NjQ4NjU5NH0.gBtG_TCTr99ALNiF7Xyb9mzAfYF50rOBmMVhaieNH0U';
+var SUPABASE_URL='https://uxerfoonlifdpgiiwvdi.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4ZXJmb29ubGlmZHBnaWl3dmRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNDc4NjgsImV4cCI6MjEwMjYyMzg2OH0.DsPZ92jnjHjQ3E7xgw5c5xzljr0ZRWr5OcFZjkx_eZY';
 
 // === Modal State ===
 var __demoScrollY = 0;
@@ -932,8 +935,9 @@ function openDemo(demo, title) {
   var fallbackEmpty = '<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#ccc;font-family:sans-serif">Preview belum tersedia</div>';
   var fallbackError = '<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:#ccc;font-family:sans-serif">Gagal memuat preview</div>';
 
-  if (demo.html && demo.html.trim()) {
-    renderDemoHtml(iframe, demo.html, requestId);
+  var htmlContent = (demo.html || demo.code || '').trim();
+  if (htmlContent) {
+    renderDemoHtml(iframe, htmlContent, requestId);
     return;
   }
 

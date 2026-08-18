@@ -1154,7 +1154,7 @@ const colorMap: Record<string, [string, string, string]> = {
 export const sampleTemplates: LpTemplate[] = rawTemplates.map(t => {
   const cfg = colorMap[t.id];
   const extras = templateExtras[t.id];
-  if (!cfg || !extras) return t;
-  const extraHtml = extras.map(fn => fn(cfg[0], cfg[1], cfg[2])).join('');
-  return { ...t, html_content: t.html_content.replace('</div></body></html>', extraHtml + '</div></body></html>') };
+  const extraHtml = (cfg && extras) ? extras.map(fn => fn(cfg[0], cfg[1], cfg[2])).join('') : '';
+  const html_content = extraHtml ? t.html_content.replace('</div></body></html>', extraHtml + '</div></body></html>') : t.html_content;
+  return { ...t, thumbnail_url: '', html_content };
 });

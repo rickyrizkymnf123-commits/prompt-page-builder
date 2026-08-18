@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { THEME_PRESETS, hslToHex, hexToHsl, getPresetColors } from "@/data/themePresets";
+import { sampleTemplates } from "@/data/sampleTemplates";
 
 const LANDING_HTML_URL = "/landing.html";
 
@@ -186,7 +187,30 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
         stepImages: savedStepImages,
       }));
 
-      setDemos((demosRes.data as DemoConfig[]) || []);
+      let demoList = (demosRes.data as DemoConfig[]) || [];
+      if (demoList.length === 0) {
+        const cached = localStorage.getItem("admin_demos");
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) demoList = parsed;
+          } catch {}
+        }
+      }
+      if (demoList.length === 0) {
+        demoList = sampleTemplates.map((t, idx) => ({
+          id: t.id,
+          title: t.title,
+          description: t.description,
+          type: t.category,
+          thumbnail_url: t.thumbnail_url || "",
+          html_code: t.html_content,
+          sort_order: idx + 1,
+          is_active: true,
+        }));
+      }
+
+      setDemos(demoList);
     };
 
     loadData();
@@ -324,13 +348,37 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
       );
     }
 
-    const demoPayload = demos.map((demo) => ({
+    let activeDemos = demos;
+    if (activeDemos.length === 0) {
+      const cached = localStorage.getItem("admin_demos");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) activeDemos = parsed;
+        } catch {}
+      }
+    }
+    if (activeDemos.length === 0) {
+      activeDemos = sampleTemplates.map((t, idx) => ({
+        id: t.id,
+        title: t.title,
+        description: t.description,
+        type: t.category,
+        thumbnail_url: "",
+        html_code: t.html_content,
+        sort_order: idx + 1,
+        is_active: true,
+      }));
+    }
+
+    const demoPayload = activeDemos.map((demo) => ({
       id: demo.id,
       type: demo.type || "Landing Page",
       style: demo.title || "Demo Landing Page",
       desc: demo.description || "Preview landing page demo",
-      thumb: demo.thumbnail_url || "",
+      thumb: (demo.thumbnail_url && !demo.thumbnail_url.includes("placehold.co")) ? demo.thumbnail_url : "",
       html: demo.html_code || "",
+      code: demo.html_code || "",
     }));
 
     const demosSerialized = JSON.stringify(demoPayload).replace(/<\/script/gi, "<\\/script");

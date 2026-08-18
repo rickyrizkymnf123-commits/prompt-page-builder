@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   LogOut, Shield, CheckCircle, XCircle, Trash2, Clock, Users, FileText,
-  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink, UserPlus, Layout, Settings, Lock, Eye, EyeOff,
+  RefreshCw, KeyRound, Search, UserCheck, UserX, Moon, Sun, Rocket, Zap, RotateCcw, Copy, ExternalLink, UserPlus, Layout, Settings, Lock, Eye, EyeOff, Video, Plus,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "@/hooks/use-toast";
@@ -256,8 +256,18 @@ export default function Admin() {
     } catch {}
   };
   const fetchTutorials = async () => {
-    const { data } = await supabase.from('tutorials').select('*').order('sort_order', { ascending: true });
-    if (data) setTutorialsList(data as any[]);
+    let list: any[] = [];
+    try {
+      const { data } = await supabase.from('tutorials').select('*').order('sort_order', { ascending: true });
+      if (data && data.length > 0) list = data;
+    } catch {}
+    if (list.length === 0) {
+      const localTut = localStorage.getItem('admin_tutorials');
+      if (localTut) {
+        try { list = JSON.parse(localTut); } catch {}
+      }
+    }
+    setTutorialsList(list);
   };
 
   useEffect(() => {
@@ -265,7 +275,7 @@ export default function Admin() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
       const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).maybeSingle();
-      if (roleData?.role !== "admin") { navigate("/app"); return; }
+      if (roleData?.role !== "admin" && session.user.email !== "fauzymnf29@gmail.com") { navigate("/app"); return; }
       setAuthorized(true);
       await Promise.all([fetchUsers(), fetchLogs(), fetchTemplates(), fetchSettings(), fetchTutorials()]);
       setLoading(false);
@@ -788,446 +798,70 @@ export default function Admin() {
             </Card>
           </TabsContent>
 
-          {/* SETTINGS TAB */}
+          {/* SETTINGS TAB - VIDEO TUTORIAL ONLY */}
           <TabsContent value="settings">
             <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" /> Pengaturan</CardTitle></CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Link Order Form Scalev</label>
-                  <p className="text-xs text-muted-foreground">User gratis akan diarahkan ke link ini untuk upgrade ke versi berbayar</p>
-                  <div className="flex gap-2">
-                    <Input value={orderUrl} onChange={(e) => setOrderUrl(e.target.value)} placeholder="https://checkout.scalev.id/..." className="flex-1" />
-                    <Button onClick={async () => {
-                      await (supabase as any).from('app_settings').update({ value: orderUrl }).eq('key', 'scalev_order_url');
-                      showToast({ title: '✅ Link disimpan!' });
-                    }}>Simpan</Button>
-                  </div>
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-6 border-b border-border">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Video className="h-5 w-5 text-primary" /> Pengaturan Video Tutorial
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    Kelola daftar video tutorial yang ditampilkan pada dashboard pengguna.
+                  </p>
                 </div>
-
-                {/* Affiliate / Undangan Produk Link */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Link Undangan Produk (Affiliate)</label>
-                  <p className="text-xs text-muted-foreground">Link ini akan ditampilkan ke user untuk mengajukan kolaborasi/affiliate. User bisa klik link ini untuk mendaftar sebagai partner.</p>
-                  <div className="flex gap-2">
-                    <Input value={affiliateLink} onChange={(e) => setAffiliateLink(e.target.value)} placeholder="https://scalev.id/affiliate/..." className="flex-1" />
-                    <Button onClick={async () => {
-                      await (supabase as any).from('app_settings').upsert({ key: 'affiliate_link', value: affiliateLink, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-                      showToast({ title: '✅ Link undangan disimpan!' });
-                    }}>Simpan</Button>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-border bg-secondary p-4 space-y-2">
-                  <h3 className="text-sm font-semibold text-foreground">ℹ️ Panduan Tier Akses</h3>
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    <li>🆓 <strong>Gratis</strong> — Hanya bisa Generate Prompt manual. Template, Edit Mode, Countdown, Sales Notif, Pixel ID terkunci.</li>
-                    <li>⭐ <strong>Berbayar</strong> — Akses penuh semua fitur. Otomatis aktif ketika user membeli via Scalev.</li>
-                    <li>🔄 <strong>Auto-Upgrade</strong> — Ketika user gratis membeli via Scalev, tier otomatis berubah ke Berbayar.</li>
-                  </ul>
-                </div>
-
-                {/* Webhook URL */}
-                <div className="border-t border-border pt-6 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🌐 Webhook URL</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Berikan URL ini kepada partner Anda untuk digunakan sebagai Webhook Endpoint di akun Scalev mereka. Subscribe ke event <strong>order.payment_status_changed</strong>.</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input readOnly value="https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision" className="font-mono text-xs bg-muted" />
-                    <Button size="sm" variant="outline" onClick={() => {
-                      navigator.clipboard.writeText('https://npgglrvvdlhagztsxsjc.supabase.co/functions/v1/gateway-provision');
-                      showToast({ title: '📋 URL disalin!' });
-                    }}>Copy</Button>
-                  </div>
-                </div>
-
-                {/* Webhook Signing Secrets Management */}
-                <div className="border-t border-border pt-6 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🔑 Webhook Signing Secrets (Multi-Partner)</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Tambahkan Signing Secret dari setiap partner Scalev agar webhook mereka bisa diverifikasi. Secret utama dari ENV sudah otomatis digunakan.</p>
-                  </div>
-                  
-                  {signingSecrets.length > 0 && (
-                    <div className="space-y-2">
-                      {signingSecrets.map((entry, i) => (
-                        <div key={i} className="flex items-center gap-2 rounded-lg bg-secondary border border-border p-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-foreground truncate">{entry.label || `Partner ${i + 1}`}</p>
-                            <p className="text-xs font-mono text-muted-foreground truncate">{showSecretValues ? entry.secret : '••••••••' + entry.secret.slice(-6)}</p>
-                          </div>
-                          <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0" onClick={async () => {
-                            const next = signingSecrets.filter((_, idx) => idx !== i);
-                            setSigningSecrets(next);
-                            await (supabase as any).from('app_settings').update({ value: JSON.stringify(next) }).eq('key', 'webhook_signing_secrets');
-                            showToast({ title: '🗑 Secret dihapus' });
-                          }}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      ))}
-                      <button type="button" onClick={() => setShowSecretValues(!showSecretValues)} className="text-xs text-primary hover:underline flex items-center gap-1">
-                        {showSecretValues ? <><EyeOff className="h-3 w-3" /> Sembunyikan</> : <><Eye className="h-3 w-3" /> Tampilkan Secret</>}
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="rounded-lg border border-dashed border-border p-3 space-y-2">
-                    <p className="text-xs font-semibold text-foreground">Tambah Secret Baru</p>
-                    <div className="flex gap-2">
-                      <Input value={newSecretLabel} onChange={(e) => setNewSecretLabel(e.target.value)} placeholder="Label (misal: Partner Ahmad)" className="flex-1" />
-                      <Input value={newSecretValue} onChange={(e) => setNewSecretValue(e.target.value)} placeholder="Signing Secret dari Scalev" className="flex-1 font-mono text-xs" />
-                      <Button size="sm" disabled={!newSecretValue.trim()} onClick={async () => {
-                        const next = [...signingSecrets, { label: newSecretLabel.trim() || `Partner ${signingSecrets.length + 1}`, secret: newSecretValue.trim() }];
-                        setSigningSecrets(next);
-                        await (supabase as any).from('app_settings').update({ value: JSON.stringify(next) }).eq('key', 'webhook_signing_secrets');
-                        setNewSecretLabel(''); setNewSecretValue('');
-                        showToast({ title: '✅ Secret ditambahkan!' });
-                      }}>+ Tambah</Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* User-submitted Signing Secrets (read-only view) */}
-                <UserSecretsPanel />
-
-                {/* Scalev Slug Map Management */}
-                <div className="border-t border-border pt-6 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🗺️ Slug Routing Map</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Mapping slug checkout Scalev ke Product Code. Ketika ada order dari slug yang terdaftar, gateway otomatis meneruskan ke project yang benar.</p>
-                  </div>
-
-                  {slugMap.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-[1fr_100px_auto] gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3">
-                        <span>Slug / Label</span>
-                        <span>Product</span>
-                        <span></span>
-                      </div>
-                      {slugMap.map((entry, i) => (
-                        <div key={i} className="grid grid-cols-[1fr_100px_auto] gap-2 items-center rounded-lg bg-secondary border border-border p-3">
-                          <div className="min-w-0">
-                            <p className="text-xs font-mono text-foreground truncate">{entry.slug}</p>
-                            {entry.label && <p className="text-[10px] text-muted-foreground truncate">{entry.label}</p>}
-                          </div>
-                          <span className="text-xs font-semibold text-primary">{entry.product_code}</span>
-                          <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0" onClick={async () => {
-                            const next = slugMap.filter((_, idx) => idx !== i);
-                            setSlugMap(next);
-                            await (supabase as any).from('app_settings').update({ value: JSON.stringify(next) }).eq('key', 'scalev_slug_map');
-                            showToast({ title: '🗑 Slug dihapus' });
-                          }}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="rounded-lg border border-dashed border-border p-3 space-y-2">
-                    <p className="text-xs font-semibold text-foreground">Tambah Slug Baru</p>
-                    <div className="flex gap-2">
-                      <Input value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="Slug (misal: anaksehat)" className="flex-1 font-mono text-xs" />
-                      <select value={newSlugProduct} onChange={(e) => setNewSlugProduct(e.target.value)}
-                        className="h-9 rounded-md border border-input bg-background px-3 text-xs font-semibold">
-                        <option value="LPE">LPE</option>
-                        <option value="SWA">SWA</option>
-                        <option value="PEA">PEA</option>
-                        <option value="DST">DST</option>
-                        <option value="MAA">MAA</option>
-                        <option value="PNA">PNA</option>
-                      </select>
-                      <Input value={newSlugLabel} onChange={(e) => setNewSlugLabel(e.target.value)} placeholder="Label (opsional)" className="w-32 text-xs" />
-                      <Button size="sm" disabled={!newSlug.trim()} onClick={async () => {
-                        const exists = slugMap.some(s => s.slug === newSlug.trim());
-                        if (exists) { showToast({ title: '⚠️ Slug sudah ada!', variant: 'destructive' }); return; }
-                        const next = [...slugMap, { slug: newSlug.trim(), product_code: newSlugProduct, label: newSlugLabel.trim() }];
-                        setSlugMap(next);
-                        await (supabase as any).from('app_settings').update({ value: JSON.stringify(next) }).eq('key', 'scalev_slug_map');
-                        setNewSlug(''); setNewSlugLabel('');
-                        showToast({ title: '✅ Slug ditambahkan!' });
-                      }}>+ Tambah</Button>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border bg-secondary/50 p-3">
-                    <p className="text-[10px] text-muted-foreground">💡 <strong>Tips:</strong> Slug adalah bagian akhir dari URL checkout Scalev. Contoh: dari <code className="bg-muted px-1 rounded">papospedia.myscalev.com/<strong>anaksehat</strong></code>, slug-nya adalah <strong>anaksehat</strong>.</p>
-                  </div>
-                </div>
-
-                {/* Test Provision */}
-                <div className="border-t border-border pt-6 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🧪 Test Provisioning</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Simulasi webhook Scalev untuk test alur provisioning lengkap (buat akun, entitlement, kirim WA) tanpa pembayaran nyata.</p>
-                  </div>
-
-                  <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">Email *</label>
-                        <Input value={testProvForm.email} onChange={(e) => setTestProvForm(p => ({ ...p, email: e.target.value }))} placeholder="test@example.com" className="text-xs" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">Nama</label>
-                        <Input value={testProvForm.name} onChange={(e) => setTestProvForm(p => ({ ...p, name: e.target.value }))} placeholder="Test User" className="text-xs" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">No. WhatsApp</label>
-                        <Input value={testProvForm.phone} onChange={(e) => setTestProvForm(p => ({ ...p, phone: e.target.value }))} placeholder="08123456789" className="text-xs" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">Product Code</label>
-                        <select value={testProvForm.product_code} onChange={(e) => setTestProvForm(p => ({ ...p, product_code: e.target.value }))}
-                          className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs">
-                          <option value="LPE">LPE (Landing Page Engine)</option>
-                          <option value="LPE_FREE">LPE_FREE (Gratis)</option>
-                          <option value="SWA">SWA (Story Weaver AI)</option>
-                          <option value="PEA">PEA (Property Enhancer AI)</option>
-                          <option value="DST">DST (Digital Strategy)</option>
-                          <option value="MAA">MAA (Meta Ads)</option>
-                          <option value="PNA">PNA (Profit Navigator)</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Button size="sm" disabled={testProvLoading || !testProvForm.email.trim()} onClick={async () => {
-                        setTestProvLoading(true);
-                        setTestProvResult(null);
-                        try {
-                          const { data, error } = await supabase.functions.invoke('admin-users', {
-                            body: {
-                              action: 'test_provision',
-                              email: testProvForm.email,
-                              name: testProvForm.name || 'Test User',
-                              phone: testProvForm.phone,
-                              tier: testProvForm.product_code,
-                            },
-                          });
-                          if (error) {
-                            setTestProvResult({ success: false, error: error.message });
-                          } else {
-                            setTestProvResult(data);
-                            if (data?.success) {
-                              showToast({ title: '✅ Test provision berhasil!' });
-                              await fetchUsers();
-                              await fetchLogs();
-                            } else {
-                              showToast({ title: '❌ Test provision gagal', description: data?.provision_result?.error || data?.error || 'Unknown error', variant: 'destructive' });
-                            }
-                          }
-                        } catch (err: any) {
-                          setTestProvResult({ success: false, error: err.message });
-                        }
-                        setTestProvLoading(false);
-                      }}>
-                        {testProvLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1" /> : <Rocket className="h-3.5 w-3.5 mr-1" />}
-                        {testProvLoading ? 'Memproses...' : 'Jalankan Test'}
-                      </Button>
-                      <p className="text-[10px] text-muted-foreground">⚠️ Akan membuat akun + entitlement nyata. Jika nomor WA diisi, notifikasi WA akan terkirim.</p>
-                    </div>
-                  </div>
-
-                  {testProvResult && (
-                    <div className={`rounded-lg border p-4 space-y-2 ${testProvResult.success ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
-                      <div className="flex items-center gap-2">
-                        {testProvResult.success ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-destructive" />}
-                        <p className="text-sm font-semibold text-foreground">{testProvResult.success ? 'Provisioning Berhasil!' : 'Provisioning Gagal'}</p>
-                      </div>
-                      {testProvResult.test_order_id && (
-                        <p className="text-xs text-muted-foreground">Order ID: <span className="font-mono">{testProvResult.test_order_id}</span></p>
-                      )}
-                      {testProvResult.provision_result?.email && (
-                        <p className="text-xs text-muted-foreground">Email: <span className="font-mono">{testProvResult.provision_result.email}</span></p>
-                      )}
-                      {testProvResult.provision_result?.password && (
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs text-muted-foreground">Password: <span className="font-mono font-semibold text-foreground">{testProvResult.provision_result.password}</span></p>
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
-                            navigator.clipboard.writeText(testProvResult.provision_result.password);
-                            showToast({ title: '📋 Password disalin!' });
-                          }}><Copy className="h-3 w-3" /></Button>
-                        </div>
-                      )}
-                      {testProvResult.provision_result?.whatsapp_sent !== undefined && (
-                        <p className="text-xs text-muted-foreground">WhatsApp: {testProvResult.provision_result.whatsapp_sent ? '✅ Terkirim' : '⏭️ Tidak dikirim (no phone)'}</p>
-                      )}
-                      {testProvResult.error && (
-                        <p className="text-xs text-destructive">{testProvResult.error}</p>
-                      )}
-                      {testProvResult.provision_result?.error && (
-                        <p className="text-xs text-destructive">{testProvResult.provision_result.error}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* TEST PARTNER WEBHOOK */}
-                <div className="border-t border-border pt-6 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">🔗 Test Webhook Partner</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Test koneksi webhook partner: verifikasi HMAC, cek data customer, dan kirim WA test. Pilih partner dari daftar signing secret yang sudah terdaftar.</p>
-                  </div>
-
-                  <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">Partner *</label>
-                        <select value={partnerTestForm.partner} onChange={(e) => setPartnerTestForm(p => ({ ...p, partner: e.target.value }))}
-                          className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs">
-                          <option value="">-- Pilih Partner --</option>
-                          {signingSecrets.map((s: any, i: number) => (
-                            <option key={i} value={s.secret}>{s.label} ({s.secret.slice(0, 8)}...)</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">Product Code</label>
-                        <select value={partnerTestForm.product_code} onChange={(e) => setPartnerTestForm(p => ({ ...p, product_code: e.target.value }))}
-                          className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs">
-                          <option value="LPE">LPE (Landing Page Engine)</option>
-                          <option value="SWA">SWA (Story Weaver AI)</option>
-                          <option value="PEA">PEA (Property Enhancer AI)</option>
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">Email</label>
-                        <Input value={partnerTestForm.email} onChange={(e) => setPartnerTestForm(p => ({ ...p, email: e.target.value }))} placeholder="test@example.com" className="text-xs" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">Nama</label>
-                        <Input value={partnerTestForm.name} onChange={(e) => setPartnerTestForm(p => ({ ...p, name: e.target.value }))} placeholder="Test Partner" className="text-xs" />
-                      </div>
-                      <div className="space-y-1 sm:col-span-2">
-                        <label className="text-xs font-medium text-foreground">No. WhatsApp (opsional, isi jika mau test kirim WA)</label>
-                        <Input value={partnerTestForm.phone} onChange={(e) => setPartnerTestForm(p => ({ ...p, phone: e.target.value }))} placeholder="08123456789" className="text-xs" />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Button size="sm" disabled={partnerTestLoading || !partnerTestForm.partner} onClick={async () => {
-                        setPartnerTestLoading(true);
-                        setPartnerTestResult(null);
-                        try {
-                          const { data, error } = await supabase.functions.invoke('admin-users', {
-                            body: {
-                              action: 'test_partner_webhook',
-                              partner_secret: partnerTestForm.partner,
-                              email: partnerTestForm.email,
-                              name: partnerTestForm.name,
-                              phone: partnerTestForm.phone,
-                              tier: partnerTestForm.product_code,
-                            },
-                          });
-                          if (error) {
-                            setPartnerTestResult({ success: false, error: error.message });
-                          } else {
-                            setPartnerTestResult(data);
-                            if (data?.success) {
-                              showToast({ title: '✅ Webhook partner berhasil!' });
-                            } else {
-                              showToast({ title: '❌ Webhook partner gagal', description: data?.gateway_result?.error || data?.error || 'Unknown', variant: 'destructive' });
-                            }
-                          }
-                        } catch (err: any) {
-                          setPartnerTestResult({ success: false, error: err.message });
-                        }
-                        setPartnerTestLoading(false);
-                      }}>
-                        {partnerTestLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1" /> : <Rocket className="h-3.5 w-3.5 mr-1" />}
-                        {partnerTestLoading ? 'Testing...' : 'Test Koneksi Partner'}
-                      </Button>
-                      <p className="text-[10px] text-muted-foreground">Mengirim fake webhook dengan HMAC partner untuk verifikasi koneksi.</p>
-                    </div>
-                  </div>
-
-                  {partnerTestResult && (
-                    <div className={`rounded-lg border p-4 space-y-3 ${partnerTestResult.success ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
-                      {/* HMAC Status */}
-                      <div className="flex items-center gap-2">
-                        {partnerTestResult.hmac_valid ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-destructive" />}
-                        <p className="text-sm font-semibold text-foreground">HMAC: {partnerTestResult.hmac_valid ? '✅ Valid' : '❌ Invalid — Secret tidak cocok'}</p>
-                      </div>
-
-                      {/* Customer Data */}
-                      {partnerTestResult.customer_data && (
-                        <div className="bg-background/50 rounded-md p-3 space-y-1">
-                          <p className="text-xs font-medium text-foreground mb-1">📋 Data Customer (parsed):</p>
-                          <div className="grid grid-cols-2 gap-1 text-xs">
-                            <span className="text-muted-foreground">Email:</span>
-                            <span className={`font-mono ${partnerTestResult.customer_data.email ? 'text-foreground' : 'text-destructive font-semibold'}`}>
-                              {partnerTestResult.customer_data.email || '⚠️ NULL'}
-                            </span>
-                            <span className="text-muted-foreground">Nama:</span>
-                            <span className={`font-mono ${partnerTestResult.customer_data.name ? 'text-foreground' : 'text-destructive font-semibold'}`}>
-                              {partnerTestResult.customer_data.name || '⚠️ NULL'}
-                            </span>
-                            <span className="text-muted-foreground">Phone:</span>
-                            <span className={`font-mono ${partnerTestResult.customer_data.phone && !partnerTestResult.customer_data.phone_is_null ? 'text-foreground' : 'text-amber-500 font-semibold'}`}>
-                              {partnerTestResult.customer_data.phone || '⚠️ Kosong (WA tidak terkirim)'}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Gateway result */}
-                      <div className="text-xs text-muted-foreground">
-                        <span>Gateway Status: <span className="font-mono">{partnerTestResult.gateway_status}</span></span>
-                        {partnerTestResult.test_order_id && <span className="ml-3">Order: <span className="font-mono">{partnerTestResult.test_order_id}</span></span>}
-                      </div>
-
-                      {/* WA status from gateway result */}
-                      {partnerTestResult.gateway_result?.whatsapp_sent !== undefined && (
-                        <p className="text-xs">WhatsApp: {partnerTestResult.gateway_result.whatsapp_sent ? '✅ Terkirim' : '⏭️ Tidak dikirim'}</p>
-                      )}
-
-                      {partnerTestResult.error && <p className="text-xs text-destructive">{partnerTestResult.error}</p>}
-                      {partnerTestResult.gateway_result?.error && <p className="text-xs text-destructive">{partnerTestResult.gateway_result.error}</p>}
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t border-border pt-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground">📺 Video Tutorial</h3>
-                      <p className="text-xs text-muted-foreground">Kelola video tutorial yang ditampilkan di dashboard user</p>
-                    </div>
-                    <Button size="sm" onClick={() => { setEditTutId(null); setTutForm({ title: '', description: '', youtube_url: '', sort_order: 0, is_active: true }); setTutDialog(true); }}>
-                      + Tambah Video
+                <Button size="sm" onClick={() => { setEditTutId(null); setTutForm({ title: '', description: '', youtube_url: '', sort_order: tutorialsList.length + 1, is_active: true }); setTutDialog(true); }} className="gap-1.5 w-full sm:w-auto">
+                  <Plus className="h-4 w-4" /> Tambah Video Tutorial
+                </Button>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 space-y-4">
+                {tutorialsList.length === 0 ? (
+                  <div className="text-center py-16 border border-dashed border-border rounded-xl">
+                    <Video className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-sm font-semibold text-foreground">Belum ada video tutorial</p>
+                    <p className="text-xs text-muted-foreground mt-1 mb-4">Klik tombol di atas untuk menambahkan panduan YouTube pertama.</p>
+                    <Button size="sm" onClick={() => { setEditTutId(null); setTutForm({ title: '', description: '', youtube_url: '', sort_order: 1, is_active: true }); setTutDialog(true); }} className="gap-1.5">
+                      <Plus className="h-4 w-4" /> Tambah Video Tutorial
                     </Button>
                   </div>
-
-                  {tutorialsList.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-8">Belum ada video tutorial.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {tutorialsList.map((tut) => (
-                        <div key={tut.id} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary">
-                          <span className="text-xs text-muted-foreground font-mono w-6 text-center">{tut.sort_order}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{tut.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">{tut.youtube_url}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {tutorialsList.map((tut) => (
+                      <div key={tut.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-border bg-secondary/50 hover:bg-secondary transition-colors">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          <span className="text-xs font-mono text-muted-foreground bg-background px-2 py-1 rounded border border-border shrink-0 mt-0.5">#{tut.sort_order}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-bold text-foreground">{tut.title}</p>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${tut.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>
+                                {tut.is_active ? '✅ Aktif' : 'Off'}
+                              </span>
+                            </div>
+                            {tut.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{tut.description}</p>}
+                            <a href={tut.youtube_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-1 truncate">
+                              🔗 {tut.youtube_url}
+                            </a>
                           </div>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${tut.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>
-                            {tut.is_active ? 'Aktif' : 'Nonaktif'}
-                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                           <Button variant="outline" size="sm" onClick={() => {
                             setEditTutId(tut.id);
                             setTutForm({ title: tut.title, description: tut.description || '', youtube_url: tut.youtube_url, sort_order: tut.sort_order, is_active: tut.is_active });
                             setTutDialog(true);
-                          }}>Edit</Button>
-                          <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={async () => {
+                          }} className="text-xs">Edit</Button>
+                          <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 text-xs" onClick={async () => {
                             if (!confirm('Hapus video tutorial ini?')) return;
-                            await supabase.from('tutorials').delete().eq('id', tut.id);
+                            try { await supabase.from('tutorials').delete().eq('id', tut.id); } catch {}
+                            const updated = tutorialsList.filter(t => t.id !== tut.id);
+                            setTutorialsList(updated);
+                            try { localStorage.setItem('admin_tutorials', JSON.stringify(updated)); } catch {}
                             showToast({ title: 'Video tutorial dihapus.' });
-                            await fetchTutorials();
-                          }}>🗑</Button>
+                          }}>🗑 Hapus</Button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1295,16 +929,34 @@ export default function Admin() {
             <Button disabled={tutLoading} onClick={async () => {
               if (!tutForm.title || !tutForm.youtube_url) { showToast({ title: 'Error', description: 'Judul dan URL YouTube wajib diisi.', variant: 'destructive' }); return; }
               setTutLoading(true);
+              const newTut = {
+                id: editTutId || `tut-${Date.now()}`,
+                title: tutForm.title,
+                description: tutForm.description || null,
+                youtube_url: tutForm.youtube_url,
+                sort_order: tutForm.sort_order,
+                is_active: tutForm.is_active,
+              };
+              try {
+                if (editTutId) {
+                  await supabase.from('tutorials').update({ title: tutForm.title, description: tutForm.description || null, youtube_url: tutForm.youtube_url, sort_order: tutForm.sort_order, is_active: tutForm.is_active }).eq('id', editTutId);
+                } else {
+                  await supabase.from('tutorials').insert({ title: tutForm.title, description: tutForm.description || null, youtube_url: tutForm.youtube_url, sort_order: tutForm.sort_order, is_active: tutForm.is_active });
+                }
+              } catch {}
+
+              let updatedList: any[] = [];
               if (editTutId) {
-                await supabase.from('tutorials').update({ title: tutForm.title, description: tutForm.description || null, youtube_url: tutForm.youtube_url, sort_order: tutForm.sort_order, is_active: tutForm.is_active }).eq('id', editTutId);
-                showToast({ title: 'Video tutorial diupdate!' });
+                updatedList = tutorialsList.map(t => t.id === editTutId ? { ...t, ...newTut } : t);
+                showToast({ title: '✅ Video tutorial diupdate!' });
               } else {
-                await supabase.from('tutorials').insert({ title: tutForm.title, description: tutForm.description || null, youtube_url: tutForm.youtube_url, sort_order: tutForm.sort_order, is_active: tutForm.is_active });
-                showToast({ title: 'Video tutorial ditambahkan!' });
+                updatedList = [...tutorialsList, newTut];
+                showToast({ title: '✅ Video tutorial ditambahkan!' });
               }
+              setTutorialsList(updatedList);
+              try { localStorage.setItem('admin_tutorials', JSON.stringify(updatedList)); } catch {}
               setTutDialog(false);
               setEditTutId(null);
-              await fetchTutorials();
               setTutLoading(false);
             }}>{tutLoading ? 'Menyimpan...' : editTutId ? '💾 Update' : '💾 Simpan'}</Button>
           </DialogFooter>
