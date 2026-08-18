@@ -163,6 +163,7 @@ export default function Login() {
         // 2. Create Profile
         await supabase.from("profiles").upsert({
           user_id: newUserId,
+          email: regEmail.trim(),
           name: regName.trim(),
           phone: regPhone.trim(),
         }, { onConflict: "user_id" });

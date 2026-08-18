@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Step1Framework } from "@/components/steps/Step1Framework";
@@ -166,7 +166,18 @@ export default function AppPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [promptUsage, setPromptUsage] = useState(0);
   const [usageLimitReached, setUsageLimitReached] = useState(false);
-  const [activePage, setActivePage] = useState<'generator' | 'lpbuilder' | 'webhook' | 'tutorial'>('generator');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialPage = (searchParams.get("tab") as any) || localStorage.getItem("app_active_page") || "generator";
+  const [activePage, setActivePage] = useState<'generator' | 'lpbuilder' | 'webhook' | 'tutorial'>(initialPage);
+
+  const handlePageChange = (p: 'generator' | 'lpbuilder' | 'webhook' | 'tutorial') => {
+    setActivePage(p);
+    setSearchParams({ tab: p }, { replace: true });
+    try {
+      localStorage.setItem("app_active_page", p);
+    } catch {}
+  };
+
   const [userId, setUserId] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
@@ -302,21 +313,21 @@ export default function AppPage() {
       {/* Top-level page navigation */}
       <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4">
         <div className="flex gap-1 border-b border-border pb-0 mb-0">
-          <button type="button" onClick={() => setActivePage('generator')}
+          <button type="button" onClick={() => handlePageChange('generator')}
             className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'generator' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
             <Zap className="w-3.5 h-3.5" /> Prompt Generator
           </button>
           {isPaid && (
             <>
-              <button type="button" onClick={() => setActivePage('lpbuilder')}
+              <button type="button" onClick={() => handlePageChange('lpbuilder')}
                 className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'lpbuilder' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
                 <FileCode className="w-3.5 h-3.5" /> LP Builder
               </button>
-              <button type="button" onClick={() => setActivePage('webhook')}
+              <button type="button" onClick={() => handlePageChange('webhook')}
                 className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'webhook' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
                 <KeyRound className="w-3.5 h-3.5" /> Webhook
               </button>
-              <button type="button" onClick={() => setActivePage('tutorial')}
+              <button type="button" onClick={() => handlePageChange('tutorial')}
                 className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px ${activePage === 'tutorial' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
                 <PlayCircle className="w-3.5 h-3.5" /> Tutorial
               </button>

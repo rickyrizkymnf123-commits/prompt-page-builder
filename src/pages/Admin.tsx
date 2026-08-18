@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -213,6 +213,18 @@ export default function Admin() {
   const [tutLoading, setTutLoading] = useState(false);
 
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || localStorage.getItem("admin_active_tab") || "tools";
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    setSearchParams({ tab: val }, { replace: true });
+    try {
+      localStorage.setItem("admin_active_tab", val);
+    } catch {}
+  };
+
   const { toast: showToast } = useToast();
 
   useEffect(() => { document.documentElement.classList.toggle("dark", darkMode); }, [darkMode]);
@@ -675,7 +687,7 @@ export default function Admin() {
       </header>
 
       <main className="flex-1 px-3 py-4 sm:p-6 max-w-[1400px] mx-auto w-full">
-        <Tabs defaultValue="tools">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
           <TabsList className="sticky top-[49px] sm:top-[57px] z-40 mb-4 sm:mb-6 bg-card/95 backdrop-blur w-full overflow-x-auto flex justify-start">
             <TabsTrigger value="tools" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden xs:inline">Tools</span><span className="xs:hidden">⚡</span></TabsTrigger>
             <TabsTrigger value="users" className="gap-1 sm:gap-2 text-xs sm:text-sm">
