@@ -36,6 +36,7 @@ import DemoManagementTab from "@/components/admin/DemoManagementTab";
 import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 import { SavedProjectsDialog } from "@/components/projects/SavedProjectsDialog";
 import { LandingPageAuditor } from "@/components/audit/LandingPageAuditor";
+import { AffiliateProgram } from "@/components/affiliate/AffiliateProgram";
 
 interface AdminUser {
   id: string; email: string; name: string | null; phone: string | null;
@@ -482,12 +483,36 @@ export default function Admin() {
   };
 
   const handleResetPassword = async () => {
-    if (!newPassword || newPassword.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); return; }
+    if (!newPassword || newPassword.length < 6) {
+      showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" });
+      return;
+    }
     setActionLoading(resetDialog.userId);
-    const { error } = await supabase.functions.invoke("admin-users", { body: { action: "reset_password", user_id: resetDialog.userId, password: newPassword } });
-    if (error) showToast({ title: "Gagal", description: error.message, variant: "destructive" });
-    else showToast({ title: "Berhasil", description: `Password direset untuk ${resetDialog.email}` });
-    setResetDialog({ open: false, userId: "", email: "" }); setNewPassword(""); setShowNewPassword(false); setActionLoading(null);
+    try {
+      // 1. Direct RPC password reset
+      const { data: rpcData, error: rpcError } = await supabase.rpc('admin_set_user_password', {
+        target_user_id: resetDialog.userId,
+        new_plain_password: newPassword,
+      });
+
+      if (rpcError) {
+        // Fallback to Edge function if RPC fails
+        try {
+          await supabase.functions.invoke("admin-users", {
+            body: { action: "reset_password", user_id: resetDialog.userId, password: newPassword }
+          });
+        } catch {}
+      }
+
+      showToast({ title: "✅ Berhasil", description: `Password berhasil direset untuk ${resetDialog.email}` });
+      setResetDialog({ open: false, userId: "", email: "" });
+      setNewPassword("");
+      setShowNewPassword(false);
+    } catch (err: any) {
+      showToast({ title: "Gagal", description: err.message || "Gagal mereset password.", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleChangeTier = async (userId: string, newTier: 'free' | 'paid') => {
@@ -595,10 +620,10 @@ export default function Admin() {
         }
         for (const uid of ids) {
           try {
-            await supabase.functions.invoke("admin-users", { body: { action: "reset_password", user_id: uid, password: bulkPassword } });
+            await supabase.rpc('admin_set_user_password', { target_user_id: uid, new_plain_password: bulkPassword });
           } catch {}
         }
-        showToast({ title: `✅ Password ${ids.length} user direset` });
+        showToast({ title: `✅ Password ${ids.length} user berhasil direset` });
       }
     } catch (err: any) {
       showToast({ title: "Gagal memproses aksi massal", description: err.message, variant: "destructive" });
@@ -720,9 +745,15 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="templates" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Layout className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Templates</span></TabsTrigger>
             <TabsTrigger value="logs" className="gap-1 sm:gap-2 text-xs sm:text-sm"><FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Logs</span></TabsTrigger>
+            <TabsTrigger value="affiliate" className="gap-1 sm:gap-2 text-xs sm:text-sm">🤝 <span className="hidden sm:inline">Affiliate</span></TabsTrigger>
             <TabsTrigger value="settings" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Settings</span></TabsTrigger>
             <TabsTrigger value="lpbuilder" className="gap-1 sm:gap-2 text-xs sm:text-sm"><ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">LP Builder</span><span className="sm:hidden">LP</span></TabsTrigger>
           </TabsList>
+
+          {/* AFFILIATE TAB */}
+          <TabsContent value="affiliate">
+            <AffiliateProgram isAdmin={true} />
+          </TabsContent>
 
           {/* AUDIT LP TAB */}
           <TabsContent value="audit">

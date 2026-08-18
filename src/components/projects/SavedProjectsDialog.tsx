@@ -25,7 +25,6 @@ export function SavedProjectsDialog({ currentForm, userId, onLoadProject }: Prop
   const [loading, setLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [projectNameInput, setProjectNameInput] = useState('');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [mode, setMode] = useState<'list' | 'save_new'>('list');
   const { toast } = useToast();
 
@@ -139,40 +138,49 @@ export function SavedProjectsDialog({ currentForm, userId, onLoadProject }: Prop
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-4 sm:p-6 bg-card border-border">
-        <DialogHeader className="border-b border-border pb-3">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-base sm:text-lg font-bold flex items-center gap-2">
-              <FolderOpen className="w-5 h-5 text-primary" />
-              Kelola Proyek Landing Page
-            </DialogTitle>
-            <div className="flex items-center gap-1.5">
-              <Button
-                size="sm"
-                variant={mode === 'save_new' ? 'default' : 'outline'}
-                onClick={() => setMode(mode === 'save_new' ? 'list' : 'save_new')}
-                className="text-xs h-7 gap-1"
-              >
-                {mode === 'save_new' ? 'Kembali ke Daftar' : <><Plus className="w-3.5 h-3.5" /> Simpan Form Ini</>}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={fetchProjects} className="h-7 w-7 p-0">
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              </Button>
-            </div>
-          </div>
+        {/* Header with safe right padding (pr-12) to avoid overlapping the X close button on mobile */}
+        <DialogHeader className="border-b border-border pb-3 pr-10">
+          <DialogTitle className="text-base sm:text-lg font-bold flex items-center gap-2 text-foreground">
+            <FolderOpen className="w-5 h-5 text-primary flex-shrink-0" />
+            Kelola Proyek Landing Page
+          </DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">
             Simpan produk yang sedang Anda custom ke database agar bisa dibuka dan dimodifikasi lagi kapan saja.
           </p>
         </DialogHeader>
 
+        {/* Toolbar Action Bar - Separated with clean spacing */}
+        <div className="flex items-center justify-between gap-2 py-2 border-b border-border/50">
+          <Button
+            size="sm"
+            variant={mode === 'save_new' ? 'default' : 'outline'}
+            onClick={() => setMode(mode === 'save_new' ? 'list' : 'save_new')}
+            className="text-xs h-8 gap-1.5 font-semibold"
+          >
+            {mode === 'save_new' ? '← Kembali ke Daftar' : <><Plus className="w-3.5 h-3.5" /> Simpan Form Ini</>}
+          </Button>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={fetchProjects}
+            className="text-xs h-8 px-2.5 gap-1.5 text-muted-foreground hover:text-foreground"
+            title="Refresh daftar proyek"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span className="text-[11px] hidden sm:inline">Refresh</span>
+          </Button>
+        </div>
+
         {mode === 'save_new' ? (
-          <div className="space-y-4 py-4">
-            <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/25 space-y-2">
+          <div className="space-y-4 py-3">
+            <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/25 space-y-1.5">
               <p className="text-xs font-bold text-primary flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4" />
                 Simpan Form Saat Ini Sebagai Proyek Baru
               </p>
               <p className="text-xs text-muted-foreground">
-                Semua data step (Framework, Target Audience, Detail Produk, Harga, Desain, Sales Notif, Scarcity) akan disimpan.
+                Semua data step (Framework, Target Audience, Detail Produk, Harga, Desain, Sales Notif, Scarcity) akan disimpan ke akun Anda.
               </p>
             </div>
 
@@ -182,14 +190,14 @@ export function SavedProjectsDialog({ currentForm, userId, onLoadProject }: Prop
                 placeholder="Contoh: Landing Page dBestReload Agen..."
                 value={projectNameInput}
                 onChange={(e) => setProjectNameInput(e.target.value)}
-                className="bg-secondary"
+                className="bg-secondary h-10 text-sm"
                 autoFocus
               />
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" size="sm" onClick={() => setMode('list')}>Batal</Button>
-              <Button size="sm" onClick={handleSaveNew} disabled={saveLoading} className="gap-1.5">
+              <Button size="sm" onClick={handleSaveNew} disabled={saveLoading} className="gap-1.5 font-semibold">
                 <Save className="w-3.5 h-3.5" />
                 {saveLoading ? 'Menyimpan...' : 'Simpan ke Database'}
               </Button>
@@ -202,7 +210,7 @@ export function SavedProjectsDialog({ currentForm, userId, onLoadProject }: Prop
                 <RefreshCw className="w-4 h-4 animate-spin text-primary" /> Memuat daftar proyek...
               </div>
             ) : projects.length === 0 ? (
-              <div className="text-center py-12 space-y-3 bg-secondary/30 rounded-xl border border-dashed border-border/60">
+              <div className="text-center py-10 space-y-3 bg-secondary/30 rounded-xl border border-dashed border-border/60 p-4">
                 <FolderOpen className="w-10 h-10 text-muted-foreground mx-auto opacity-50" />
                 <div>
                   <p className="text-sm font-semibold text-foreground">Belum Ada Proyek Tersimpan</p>
@@ -210,7 +218,7 @@ export function SavedProjectsDialog({ currentForm, userId, onLoadProject }: Prop
                     Simpan produk landing page yang sedang Anda buat agar tidak hilang dan bisa dimodifikasi lagi nanti.
                   </p>
                 </div>
-                <Button size="sm" onClick={() => setMode('save_new')} className="gap-1.5 text-xs">
+                <Button size="sm" onClick={() => setMode('save_new')} className="gap-1.5 text-xs font-semibold">
                   <Plus className="w-3.5 h-3.5" /> Simpan Form Ini Sekarang
                 </Button>
               </div>
@@ -223,13 +231,13 @@ export function SavedProjectsDialog({ currentForm, userId, onLoadProject }: Prop
                     className="p-3.5 rounded-xl bg-secondary/50 border border-border hover:border-primary/40 hover:bg-secondary/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div className="min-w-0 space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-bold text-sm text-foreground truncate">{p.project_name}</h4>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                           {fd.platformTarget || 'Scalev'}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {new Date(p.updated_at || p.created_at).toLocaleDateString('id-ID', {
@@ -246,7 +254,7 @@ export function SavedProjectsDialog({ currentForm, userId, onLoadProject }: Prop
                         size="sm"
                         variant="default"
                         onClick={() => handleLoad(p)}
-                        className="text-xs h-8 gap-1"
+                        className="text-xs h-8 gap-1 font-semibold"
                       >
                         <FolderOpen className="w-3.5 h-3.5" /> Buka & Edit
                       </Button>
@@ -255,7 +263,7 @@ export function SavedProjectsDialog({ currentForm, userId, onLoadProject }: Prop
                         variant="outline"
                         title="Perbarui proyek ini dengan data form saat ini"
                         onClick={() => handleUpdateExisting(p)}
-                        className="text-xs h-8 px-2"
+                        className="text-xs h-8 px-2.5"
                       >
                         <Save className="w-3.5 h-3.5" />
                       </Button>

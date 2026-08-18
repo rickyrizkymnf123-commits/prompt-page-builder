@@ -103,10 +103,11 @@ export const tipeProdukOptions: GroupedOption[] = [
       'Kesehatan / Wellness',
       'Home & Living',
       'Gadget / Aksesoris',
+      'Server Pulsa & PPOB',
     ],
   },
   {
-    group: 'D. Software',
+    group: 'D. Software & Apps',
     options: ['SaaS / Software', 'App / Mobile', 'Plugin / Add-on'],
   },
   {
@@ -183,6 +184,27 @@ export const tujuanUtamaOptions: GroupedOption[] = [
   {
     group: 'G. Apply & Selection',
     options: ['Apply Now (Seleksi)', 'Join Waitlist'],
+  },
+];
+
+export const trafficCategoryOptions: GroupedOption[] = [
+  {
+    group: 'Iklan Berbayar (Paid Ads)',
+    options: [
+      'Meta Ads (Facebook & Instagram)',
+      'TikTok Ads (Impulse & Trend)',
+      'Google Search & Display Ads',
+      'YouTube Video Ads',
+    ],
+  },
+  {
+    group: 'Direct Action & Organik',
+    options: [
+      'Click to WhatsApp (CTWA Direct)',
+      'Affiliate & Review Landing Page',
+      'Lead Magnet / Free Webinar Funnel',
+      'General / All Traffic Channels',
+    ],
   },
 ];
 
@@ -266,12 +288,12 @@ export const gayaDesainOptions: GroupedOption[] = [
   {
     group: 'A. Archetype Brand (Specific Look)',
     options: [
-      'Apple Style',
-      'Stripe / Linear Style',
-      'Airbnb Style',
-      'Notion Style',
-      'Nike / Adidas Style',
-      'Tesla Style',
+      'Apple Style (Clean & Glass)',
+      'Stripe / Linear Style (Fintech)',
+      'Airbnb Style (Warm & Friendly)',
+      'Notion Style (Minimalist B&W)',
+      'Nike / Adidas Style (Bold & Dynamic)',
+      'Tesla Style (Sleek Futuristic)',
     ],
   },
   {
@@ -280,102 +302,89 @@ export const gayaDesainOptions: GroupedOption[] = [
       'Clean & Minimalist',
       'Modern SaaS',
       'Bold & High Conversion',
-      'Elegant & Premium',
+      'Elegant & Premium Luxury',
       'Trust & Authority',
-      'Dark Mode Style',
+      'Dark Mode Cyber',
     ],
   },
   {
-    group: 'C. Tech & Future',
-    options: [
-      'Futuristic Cyberpunk',
-      'AI / SaaS Modern',
-      'Holographic & Glass',
-      'Dark Tech Interface',
-      'Abstract Gradient',
-    ],
-  },
-  {
-    group: 'D. Trending & Aesthetic',
+    group: 'C. Trending & Aesthetic',
     options: [
       'Bento Grid / Modular',
+      'Glassmorphism & Glow',
       'Neobrutalism / Pop Art',
-      'Glassmorphism',
+      'Organic & Natural Earth',
     ],
-  },
-  {
-    group: 'E. Industry Specific',
-    options: [
-      'Medical / Health',
-      'Real Estate',
-      'Wedding / Event',
-      'Finance / Bank',
-      'Government / Formal',
-    ],
-  },
-  {
-    group: 'F. Industry Specific (Original)',
-    options: [
-      'Editorial / Magazine (Lifestyle)',
-      'Gamer / Neon',
-      'Organic & Natural',
-      'Corporate / Blue-Chip',
-    ],
-  },
-  {
-    group: 'G. Mood & Vibe',
-    options: [
-      'Playful & Fun',
-      'Typography-Driven',
-      'Retro / Vintage',
-    ],
-  },
-  {
-    group: 'H. Visual Storytelling',
-    options: ['Visual Storytelling'],
   },
 ];
 
-export const warnaBrandOptions: GroupedOption[] = [
-  {
-    group: 'Warm',
-    options: ['Red / Merah', 'Orange / Oranye', 'Yellow / Kuning', 'Coral', 'Gold / Emas', 'Crimson'],
-  },
-  {
-    group: 'Cool',
-    options: ['Blue / Biru', 'Royal Blue', 'Navy', 'Teal', 'Cyan', 'Emerald / Hijau'],
-  },
-  {
-    group: 'Neutral & Dark',
-    options: ['Black / Hitam', 'White / Putih', 'Grey / Abu-abu', 'Charcoal'],
-  },
-  {
-    group: 'Vibrant',
-    options: ['Violet / Purple', 'Pink / Magenta', 'Lime / Hijau Muda', 'Turquoise'],
-  },
+export interface ColorSwatch {
+  name: string;
+  hex: string;
+  accent: string;
+  bgDark: string;
+  label: string;
+  category: 'Modern' | 'Bold' | 'Luxury' | 'Vibrant' | 'Cool';
+}
+
+export const colorSwatchList: ColorSwatch[] = [
+  { name: 'Modern Purple', hex: '#6c63ff', accent: '#ff4757', bgDark: '#0f0f1a', label: 'Purple Indigo', category: 'Modern' },
+  { name: 'Emerald Growth', hex: '#10b981', accent: '#f59e0b', bgDark: '#061a12', label: 'Emerald Green', category: 'Modern' },
+  { name: 'Cyber Blue', hex: '#0284c7', accent: '#38bdf8', bgDark: '#081426', label: 'Ocean Cyan', category: 'Cool' },
+  { name: 'Electric Navy', hex: '#3b82f6', accent: '#fbbf24', bgDark: '#0b1329', label: 'Royal Navy', category: 'Cool' },
+  { name: 'Fire Orange', hex: '#ea580c', accent: '#e11d48', bgDark: '#1c0e07', label: 'Flame Orange', category: 'Bold' },
+  { name: 'Ruby Crimson', hex: '#e11d48', accent: '#fda4af', bgDark: '#1a080d', label: 'Ruby Red', category: 'Bold' },
+  { name: 'Golden Luxury', hex: '#d97706', accent: '#fbbf24', bgDark: '#171105', label: 'Gold Elegance', category: 'Luxury' },
+  { name: 'Rose Beauty', hex: '#ec4899', accent: '#f43f5e', bgDark: '#1a0714', label: 'Pink Magenta', category: 'Vibrant' },
+  { name: 'Dark Monolith', hex: '#18181b', accent: '#6366f1', bgDark: '#09090b', label: 'Midnight Black', category: 'Luxury' },
 ];
 
-export const temaOptions: string[] = [
-  'Default',
-  'Dark',
-  'Light',
-  'Colorful',
-  'Pastel',
+export interface VisualTheme {
+  id: string;
+  title: string;
+  desc: string;
+  bgClass: string;
+  borderClass: string;
+  accentColor: string;
+}
+
+export const visualThemes: VisualTheme[] = [
+  { id: 'Dark Mode Clean', title: '🌙 Dark Mode Clean', desc: 'Latar gelap elegan, kontras tinggi & fokus pada CTA', bgClass: 'bg-slate-950 text-slate-100', borderClass: 'border-slate-800', accentColor: '#6c63ff' },
+  { id: 'Light Modern', title: '☀️ Light Modern', desc: 'Bersih, profesional, nyaman dibaca untuk corporate/B2B', bgClass: 'bg-white text-slate-900', borderClass: 'border-slate-200', accentColor: '#0284c7' },
+  { id: 'Glassmorphism Apple', title: '✨ Glassmorphism Apple', desc: 'Efek liquid glass transparan bergradasi premium', bgClass: 'bg-gradient-to-br from-slate-900 to-indigo-950 text-white', borderClass: 'border-indigo-500/30', accentColor: '#818cf8' },
+  { id: 'Bold Vibrant', title: '🔥 Bold & High Energy', desc: 'Warna berani untuk flash sale & impulsif buyers', bgClass: 'bg-neutral-950 text-white', borderClass: 'border-amber-500/40', accentColor: '#ea580c' },
+];
+
+export const fontPresets = [
+  { name: 'Plus Jakarta Sans', category: 'Modern Geometric Sans (Sangat direkomendasikan untuk Indonesia)' },
+  { name: 'Inter', category: 'Clean Tech & Neutral Standard' },
+  { name: 'Outfit', category: 'Contemporary & Trendy Tech' },
+  { name: 'Playfair Display', category: 'Luxury & Elegant Editorial Serif' },
+  { name: 'Montserrat', category: 'Bold Display & High Impact' },
+  { name: 'Poppins', category: 'Friendly & Rounded Sans' },
+];
+
+export const animationOptions = [
+  { id: 'fade-in', label: 'Fade In Smooth (Halus & Elegan)' },
+  { id: 'slide-up', label: 'Slide Up Entrance (Modern & Dinamis)' },
+  { id: 'zoom-in', label: 'Zoom In Soft (Menarik Perhatian)' },
+  { id: 'pulse', label: 'Subtle Pulse on CTA (Tinggi Konversi)' },
+  { id: 'none', label: 'Tanpa Animasi (Statik Ringan)' },
 ];
 
 export const elemenTambahanOptions: string[] = [
   'Hero Section',
+  'Before-After',
+  'Feature List',
+  'How It Works',
   'Social Proof',
   'Testimonial',
-  'FAQ',
-  'Bonus Section',
-  'Guarantee',
-  'Scarcity / Timer',
-  'Pricing Table',
-  'Feature List',
   'Video Section',
-  'Before-After',
-  'How It Works',
+  'Bonus Section',
+  'Pricing Table',
+  'Scarcity / Timer',
+  'Guarantee',
+  'FAQ',
 ];
 
 export const platformTargetOptions: string[] = [

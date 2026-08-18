@@ -14,10 +14,10 @@ import { StepSalesNotif } from "@/components/steps/StepSalesNotif";
 import { StepCountdown } from "@/components/steps/StepCountdown";
 import { HtmlPreviewEditor } from "@/components/editor/HtmlPreviewEditor";
 import { TemplateGallery } from "@/components/templates/TemplateGallery";
-import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, ScarcitySeatConfig, BonusItem } from "@/types/form";
+import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, ScarcitySeatConfig, BonusItem, TieredPricingConfig, CtaModeConfig, MediaConfig, DesignTypographyConfig, MetaCapiConfig } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound, PlayCircle, ShieldCheck, FolderOpen } from "lucide-react";
+import { Zap, RotateCcw, Copy, ExternalLink, Lock, FileCode, KeyRound, PlayCircle, ShieldCheck, FolderOpen, Target, Video, Timer, DollarSign, BookmarkPlus, Globe, Sparkles, Wand2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +29,12 @@ import UserWebhookSettings from "@/components/user/UserWebhookSettings";
 import { TutorialFullPage } from "@/components/TutorialFullPage";
 import { SavedProjectsDialog } from "@/components/projects/SavedProjectsDialog";
 import { LandingPageAuditor } from "@/components/audit/LandingPageAuditor";
+import { CompetitorSpy } from "@/components/tools/CompetitorSpy";
+import { CreativeSync } from "@/components/tools/CreativeSync";
+import { FiveSecondTest } from "@/components/tools/FiveSecondTest";
+import { QuickPromptMode } from "@/components/tools/QuickPromptMode";
+import { AffiliateProgram } from "@/components/affiliate/AffiliateProgram";
+import { LiveBlueprintDisplay } from "@/components/preview/LiveBlueprintDisplay";
 
 function Stepper({ current }: { current: number }) {
   return (
@@ -38,10 +44,10 @@ function Stepper({ current }: { current: number }) {
         const active = s === current;
         return (
           <div key={s} className="flex items-center">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${active ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30' : done ? 'bg-transparent text-green-400 border-green-500' : 'bg-transparent text-muted-foreground border-muted-foreground/30'}`}>
-              {done ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> : s}
+            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${active ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30' : done ? 'bg-transparent text-emerald-400 border-emerald-500' : 'bg-transparent text-muted-foreground border-muted-foreground/30'}`}>
+              {done ? <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> : s}
             </div>
-            {s < 3 && <div className={`w-16 h-0.5 transition-all ${done ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />}
+            {s < 3 && <div className={`w-10 sm:w-16 h-0.5 transition-all ${done ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />}
           </div>
         );
       })}
@@ -51,26 +57,25 @@ function Stepper({ current }: { current: number }) {
 
 function GeneratingLoader() {
   const steps = [
-    { icon: '🔍', text: 'Menganalisis profil produk...' },
-    { icon: '✍️', text: 'Menyusun framework copywriting...' },
-    { icon: '🎨', text: 'Menerapkan gaya desain...' },
-    { icon: '🧱', text: 'Membangun struktur section...' },
-    { icon: '⚡', text: 'Finalisasi prompt...' },
+    { icon: '🔍', text: 'Menganalisis profil produk & target audience...' },
+    { icon: '✍️', text: 'Menyusun framework copywriting persuasif...' },
+    { icon: '🎨', text: 'Menerapkan warna brand & tipografi...' },
+    { icon: '🧱', text: 'Membangun struktur section & media embed...' },
+    { icon: '⚡', text: 'Finalisasi master prompt high-converting...' },
   ];
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
-    }, 500);
+    }, 450);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="max-w-md mx-auto p-6 flex flex-col items-center justify-center min-h-[60vh]">
-      {/* Spinner */}
+    <div className="max-w-md mx-auto p-4 sm:p-6 flex flex-col items-center justify-center min-h-[50vh]">
       <motion.div
-        className="relative w-20 h-20 mb-8"
+        className="relative w-16 h-16 sm:w-20 sm:h-20 mb-6"
         animate={{ rotate: 360 }}
         transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
       >
@@ -78,8 +83,7 @@ function GeneratingLoader() {
         <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary" />
       </motion.div>
 
-      {/* Steps */}
-      <div className="space-y-3 w-full">
+      <div className="space-y-2.5 w-full">
         {steps.map((step, i) => (
           <motion.div
             key={i}
@@ -88,106 +92,94 @@ function GeneratingLoader() {
               opacity: i <= activeStep ? 1 : 0.3,
               x: i <= activeStep ? 0 : -20,
             }}
-            transition={{ duration: 0.4, delay: i * 0.1 }}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${i === activeStep ? 'bg-primary/10 border border-primary/30' : i < activeStep ? 'bg-muted/30' : ''}`}
+            transition={{ duration: 0.3, delay: i * 0.08 }}
+            className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl transition-colors ${i === activeStep ? 'bg-primary/10 border border-primary/30' : i < activeStep ? 'bg-muted/30' : ''}`}
           >
-            <span className="text-lg">{i < activeStep ? '✅' : step.icon}</span>
-            <span className={`text-sm font-medium ${i === activeStep ? 'text-primary' : i < activeStep ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>
+            <span className="text-base">{i < activeStep ? '✅' : step.icon}</span>
+            <span className={`text-xs sm:text-sm font-medium ${i === activeStep ? 'text-primary font-bold' : i < activeStep ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>
               {step.text}
             </span>
-            {i === activeStep && (
-              <motion.div
-                className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
-              />
-            )}
           </motion.div>
         ))}
       </div>
-
-      <motion.p
-        className="mt-8 text-xs text-muted-foreground text-center"
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        Generating prompt berkualitas tinggi...
-      </motion.p>
     </div>
   );
 }
 
 function PromptStep({ promptText, onBack, onNext }: { promptText: string; onBack: () => void; onNext: () => void }) {
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(promptText);
-    toast({ title: 'Prompt disalin!' });
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(promptText);
+    setCopied(true);
+    toast({ title: '📋 Prompt Berhasil Disalin!', description: 'Tempelkan ke Claude, ChatGPT, atau AI Builder favorit Anda.' });
+    setTimeout(() => setCopied(false), 2000);
   };
-  const handleBuat = async () => {
-    try { await navigator.clipboard.writeText(promptText); } catch {}
-    window.open('https://chat.z.ai/', '_blank', 'noopener,noreferrer');
-    toast({ title: '✅ Prompt sudah disalin!', description: 'Paste prompt lalu tekan Enter.' });
-  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6"
-    >
-      <Stepper current={2} />
-      <p className="text-center text-xs sm:text-sm text-muted-foreground">Copy prompt lalu buka AI favorit kamu</p>
-      <div className="rounded-xl border border-border bg-card p-3 sm:p-5">
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
-          <h2 className="text-sm sm:text-base font-semibold text-foreground">📋 Prompt Siap Digunakan</h2>
-          <Button variant="outline" size="sm" onClick={handleCopy} className="gap-2 text-xs sm:text-sm"><Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Copy</Button>
+    <div className="max-w-4xl mx-auto space-y-4 p-3 sm:p-4">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div>
+          <h2 className="text-lg sm:text-xl font-black text-foreground">✨ Master Prompt Siap Digunakan</h2>
+          <p className="text-xs text-muted-foreground">Salin prompt ini ke AI pilihan Anda atau langsung lanjutkan ke Live HTML Editor.</p>
         </div>
-        <ScrollArea className="h-48 sm:h-64">
-          <pre className="text-xs sm:text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed p-2 sm:p-3 bg-secondary rounded-lg"><TypewriterText text={promptText} /></pre>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleCopy} className="gap-1.5 text-xs h-9 bg-primary text-primary-foreground font-bold">
+            <Copy className="w-3.5 h-3.5" /> {copied ? 'Tersalin!' : 'Salin Prompt'}
+          </Button>
+          <Button onClick={onNext} variant="outline" className="gap-1.5 text-xs h-9 font-semibold">
+            Buka Live Editor →
+          </Button>
+        </div>
+      </div>
+
+      <div className="relative rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xl">
+        <ScrollArea className="h-[450px] sm:h-[520px] pr-3">
+          <pre className="text-xs sm:text-sm font-mono text-foreground whitespace-pre-wrap leading-relaxed">
+            {promptText}
+          </pre>
         </ScrollArea>
       </div>
-      <Button onClick={handleBuat} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2 text-sm" size="lg">
-        <ExternalLink className="h-4 w-4" /> Buat Landing Page
-      </Button>
-      <Button variant="outline" onClick={onNext} className="w-full gap-2 text-sm" size="lg">Lanjut ke Preview & Edit HTML →</Button>
-      <Button variant="outline" onClick={onBack} className="w-full text-sm">← Kembali Edit Form</Button>
-    </motion.div>
+
+      <div className="flex justify-between pt-2">
+        <Button variant="ghost" onClick={onBack} className="text-xs">
+          ← Kembali Edit Form
+        </Button>
+      </div>
+    </div>
   );
 }
 
 export default function AppPage() {
-  const [loading, setLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
-  const [form, setForm] = useState<FormState>({ ...initialFormState });
-  const [promptText, setPromptText] = useState("");
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [form, setForm] = useState<FormState>(initialFormState);
   const [currentStep, setCurrentStep] = useState(1);
-  const [isDirty, setIsDirty] = useState(false);
-  const [mode, setMode] = useState<'manual' | 'template'>('manual');
-  const [templateHtml, setTemplateHtml] = useState('');
-  const [userTier, setUserTier] = useState<'free' | 'paid'>('free');
-  const [orderUrl, setOrderUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [promptText, setPromptText] = useState("");
+  const [templateHtml, setTemplateHtml] = useState("");
+  const [mode, setMode] = useState<'prompt' | 'template'>('prompt');
+  const [isDirty, setIsDirty] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [userTier, setUserTier] = useState<'free' | 'paid'>('free');
   const [promptUsage, setPromptUsage] = useState(0);
   const [usageLimitReached, setUsageLimitReached] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const initialPage = (searchParams.get("tab") as any) || localStorage.getItem("app_active_page") || "generator";
-  const [activePage, setActivePage] = useState<'generator' | 'lpbuilder' | 'audit' | 'webhook' | 'tutorial'>(initialPage);
-
-  const handlePageChange = (p: 'generator' | 'lpbuilder' | 'audit' | 'webhook' | 'tutorial') => {
-    setActivePage(p);
-    setSearchParams({ tab: p }, { replace: true });
-    try {
-      localStorage.setItem("app_active_page", p);
-    } catch {}
-  };
-
+  const [orderUrl, setOrderUrl] = useState('');
   const [userId, setUserId] = useState('');
   const [userEmail, setUserEmail] = useState('');
-  const navigate = useNavigate();
+  const [darkMode, setDarkMode] = useState(true);
+
+  const activePage = searchParams.get('tab') || 'generator';
+  const isPaid = userTier === 'paid';
   const FREE_LIMIT = 5;
 
-  const isPaid = userTier === 'paid';
+  const handlePageChange = (tabName: string) => {
+    setSearchParams({ tab: tabName });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  // Load draft from localStorage on mount
+  // Load draft from localStorage
   useEffect(() => {
     try {
       const savedDraft = localStorage.getItem('lpb_form_draft');
@@ -200,7 +192,7 @@ export default function AppPage() {
     } catch {}
   }, []);
 
-  // Autosave form draft to localStorage
+  // Autosave form draft
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
@@ -210,6 +202,7 @@ export default function AppPage() {
     return () => clearTimeout(timer);
   }, [form]);
 
+  // Auth & Session Check
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -219,35 +212,26 @@ export default function AppPage() {
 
       const isAdmin = session.user.email === 'fauzymnf29@gmail.com';
 
-      const { data: entitlements, error: entError } = await supabase
+      const { data: entitlements } = await supabase
         .from("entitlements")
         .select("id, product_code, status")
         .eq("user_id", session.user.id);
 
-      if (!isAdmin && entitlements && entitlements.length > 0) {
-        const activeEnt = entitlements.find((e: any) => e.status === 'active');
-        if (!activeEnt) {
-          navigate("/login");
-          return;
-        }
-      }
-
       const hasPaid = isAdmin || entitlements?.some((e: any) => e.status === 'active' && e.product_code === 'LPE');
       setUserTier(hasPaid ? 'paid' : 'free');
-      
+
       try {
         const { data: settings } = await (supabase as any).from('app_settings').select('value').eq('key', 'scalev_order_url').maybeSingle();
         if (settings?.value) setOrderUrl(settings.value);
       } catch {}
 
-      // Fetch prompt usage for free users
       if (!hasPaid) {
         const { data: usage } = await supabase.from('prompt_usage').select('used_count').eq('user_id', session.user.id).maybeSingle();
         const count = usage?.used_count ?? 0;
         setPromptUsage(count);
-        setUsageLimitReached(count >= 5);
+        setUsageLimitReached(count >= FREE_LIMIT);
       }
-      
+
       setLoading(false);
     };
 
@@ -258,37 +242,33 @@ export default function AppPage() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  useEffect(() => { document.documentElement.classList.toggle("dark", darkMode); }, [darkMode]);
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+  }, [darkMode]);
 
   const handleChange = useCallback((field: string, value: any) => {
     setForm(prev => ({ ...prev, [field]: value }));
-    if (currentStep > 1) setIsDirty(true);
-  }, [currentStep]);
+  }, []);
 
   const handleSalesNotifChange = useCallback((config: SalesNotifConfig) => {
     setForm(prev => ({ ...prev, salesNotif: config }));
-    if (currentStep > 1) setIsDirty(true);
-  }, [currentStep]);
+  }, []);
 
   const handleCountdownChange = useCallback((config: CountdownConfig) => {
     setForm(prev => ({ ...prev, countdown: config }));
-    if (currentStep > 1) setIsDirty(true);
-  }, [currentStep]);
+  }, []);
 
   const handleScarcityChange = useCallback((config: ScarcitySeatConfig) => {
     setForm(prev => ({ ...prev, scarcitySeat: config }));
-    if (currentStep > 1) setIsDirty(true);
-  }, [currentStep]);
+  }, []);
 
   const handleToggleElement = useCallback((element: string) => {
     setForm(prev => ({ ...prev, elemenTambahan: { ...prev.elemenTambahan, [element]: !prev.elemenTambahan[element] } }));
-    if (currentStep > 1) setIsDirty(true);
-  }, [currentStep]);
+  }, []);
 
   const handleChangeBonusList = useCallback((list: BonusItem[]) => {
     setForm(prev => ({ ...prev, bonusList: list }));
-    if (currentStep > 1) setIsDirty(true);
-  }, [currentStep]);
+  }, []);
 
   const handleGenerate = async () => {
     if (!isPaid && usageLimitReached) {
@@ -299,7 +279,6 @@ export default function AppPage() {
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Increment usage for free users
     if (!isPaid) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -307,28 +286,14 @@ export default function AppPage() {
         await supabase.from('prompt_usage').upsert({ user_id: session.user.id, used_count: newCount, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
         setPromptUsage(newCount);
         if (newCount >= FREE_LIMIT) setUsageLimitReached(true);
-        // Warning at 3rd generate
-        if (newCount === 3) {
-          toast({ title: '⚠️ Sisa 2x Generate', description: 'Kamu sudah pakai 3 dari 5 generate gratis. Upgrade untuk unlimited!' });
-        } else if (newCount === 4) {
-          toast({ title: '⚠️ Sisa 1x Generate!', description: 'Ini generate ke-4. Setelah ini tinggal 1x lagi!', variant: 'destructive' });
-        }
       }
     }
 
     setTimeout(() => {
       const prompt = generatePrompt(form);
       setPromptText(prompt);
-      setIsDirty(false);
       setIsGenerating(false);
-    }, 3000);
-  };
-
-  const handleReset = () => {
-    setForm({ ...initialFormState });
-    setPromptText("");
-    setCurrentStep(1);
-    setIsDirty(false);
+    }, 2400);
   };
 
   const handleSelectTemplate = (html: string) => {
@@ -343,252 +308,364 @@ export default function AppPage() {
     if (orderUrl) window.open(orderUrl, '_blank');
   };
 
+  const handleSaveAsCustomTemplate = async (htmlToSave: string) => {
+    const name = prompt('Masukkan Nama Template Kustom Anda:', form.namaProduk || 'Template Kustom');
+    if (!name) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUid = userId || session?.user?.id;
+      if (!currentUid) {
+        toast({ title: 'Sesi habis', description: 'Silakan login kembali.', variant: 'destructive' });
+        return;
+      }
+
+      await supabase.from('custom_user_templates').insert({
+        user_id: currentUid,
+        title: name,
+        description: `Dibuat dari proyek ${form.namaProduk || 'Custom'} (${form.platformTarget || 'Scalev'})`,
+        category: 'Template Saya',
+        html_content: htmlToSave,
+        form_data: form as any,
+      });
+
+      toast({ title: '⭐ Template Kustom Disimpan', description: `"${name}" kini tersedia di Galeri Template Anda.` });
+    } catch (err: any) {
+      toast({ title: 'Gagal Menyimpan', description: err.message, variant: 'destructive' });
+    }
+  };
+
   if (loading) {
-    return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Memuat...</p></div>;
+    return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground text-xs sm:text-sm">Memuat aplikasi...</p></div>;
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} />
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Sticky Top Header */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/80 shadow-sm">
+        <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} />
 
-      {/* Top-level page navigation */}
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-0 mb-0">
-          <div className="flex gap-1 overflow-x-auto pb-0">
-            <button type="button" onClick={() => handlePageChange('generator')}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'generator' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-              <Zap className="w-3.5 h-3.5" /> Prompt Generator
-            </button>
-            <button type="button" onClick={() => handlePageChange('audit')}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'audit' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-              <ShieldCheck className="w-3.5 h-3.5" /> 🔍 Audit LP
-            </button>
-            {isPaid && (
-              <>
-                <button type="button" onClick={() => handlePageChange('lpbuilder')}
-                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'lpbuilder' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-                  <FileCode className="w-3.5 h-3.5" /> LP Builder
-                </button>
-                <button type="button" onClick={() => handlePageChange('webhook')}
-                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'webhook' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-                  <KeyRound className="w-3.5 h-3.5" /> Webhook
-                </button>
-                <button type="button" onClick={() => handlePageChange('tutorial')}
-                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap ${activePage === 'tutorial' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-                  <PlayCircle className="w-3.5 h-3.5" /> Tutorial
-                </button>
-              </>
-            )}
-            {!isPaid && (
-              <button type="button" onClick={handleUpgrade}
-                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-all border-b-2 -mb-px border-transparent whitespace-nowrap">
-                <Lock className="w-3.5 h-3.5" /> LP Builder & Webhook <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+        {/* Sticky Tab Navigation Bar */}
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6">
+          <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-none py-1">
+            <div className="flex gap-1 items-center flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => handlePageChange('generator')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                  activePage === 'generator' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>Generator</span>
               </button>
-            )}
-          </div>
 
-          {/* Saved Projects Button */}
-          <div className="pb-1.5 flex items-center gap-2">
-            <SavedProjectsDialog
-              currentForm={form}
-              userId={userId}
-              onLoadProject={(formData) => {
-                setForm(formData);
-                setPromptText("");
-                setCurrentStep(1);
-              }}
-            />
+              <button
+                type="button"
+                onClick={() => handlePageChange('quick_prompt')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                  activePage === 'quick_prompt' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                }`}
+              >
+                <Wand2 className="w-3.5 h-3.5 text-amber-400" />
+                <span>Prompt Cepat</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange('competitor_spy')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                  activePage === 'competitor_spy' ? 'bg-red-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                }`}
+              >
+                <Target className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Competitor Spy</span>
+                <span className="sm:hidden">Spy</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange('creative_sync')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                  activePage === 'creative_sync' ? 'bg-purple-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                }`}
+              >
+                <Video className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Creative Sync</span>
+                <span className="sm:hidden">Sync</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange('five_second')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                  activePage === 'five_second' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                }`}
+              >
+                <Timer className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Tes 5 Detik</span>
+                <span className="sm:hidden">Tes 5s</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange('audit')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                  activePage === 'audit' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Audit LP</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange('templates')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                  activePage === 'templates' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                }`}
+              >
+                <span>📋 Template</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange('affiliate')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold transition-all rounded-xl ${
+                  activePage === 'affiliate' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                }`}
+              >
+                <DollarSign className="w-3.5 h-3.5" />
+                <span>Affiliate</span>
+              </button>
+            </div>
+
+            {/* Right Tools: Language & Saved Projects */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Language Switcher */}
+              <button
+                type="button"
+                onClick={() => handleChange('language', form.language === 'id' ? 'en' : 'id')}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-secondary border border-border text-xs font-bold text-foreground hover:border-primary transition-all"
+                title="Ganti Bahasa (Language Switcher)"
+              >
+                <Globe className="w-3.5 h-3.5 text-primary" />
+                <span>{form.language === 'en' ? '🇬🇧 EN' : '🇮🇩 ID'}</span>
+              </button>
+
+              <SavedProjectsDialog
+                currentForm={form}
+                userId={userId}
+                onLoadProject={(formData) => {
+                  setForm(formData);
+                  setPromptText("");
+                  setCurrentStep(1);
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* AI Landing Page Auditor Page */}
-      {activePage === 'audit' && (
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
-          <LandingPageAuditor />
-        </div>
-      )}
+      {/* Main Page Container */}
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-4 sm:py-6">
+        {/* TAB 1: GENERATOR & BLUEPRINT WIZARD */}
+        {activePage === 'generator' && (
+          <div>
+            <Stepper current={currentStep} />
 
-      {/* LP Builder Page */}
-      {activePage === 'lpbuilder' && isPaid && (
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
-          <HtmlGeneratorTab isAdmin={false} />
-        </div>
-      )}
+            {currentStep === 1 && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Left / Center Wizard Form Steps */}
+                <div className="lg:col-span-8 space-y-4">
+                  <Step1Framework
+                    framework={form.framework}
+                    gayaBahasa={form.gayaBahasa}
+                    onChange={handleChange}
+                  />
 
-      {/* Webhook Settings Page */}
-      {activePage === 'webhook' && isPaid && (
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
-          <UserWebhookSettings userId={userId} userEmail={userEmail} />
-        </div>
-      )}
+                  <Step2Product
+                    tipeProduk={form.tipeProduk}
+                    tujuanUtama={form.tujuanUtama}
+                    trafficCategory={form.trafficCategory}
+                    onChange={handleChange}
+                  />
 
-      {/* Tutorial Page */}
-      {activePage === 'tutorial' && isPaid && (
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6">
-          <TutorialFullPage />
-        </div>
-      )}
+                  <Step3Target
+                    levelAwareness={form.levelAwareness}
+                    targetAudience={form.targetAudience}
+                    onChange={handleChange}
+                  />
 
-      {/* Prompt Generator Page (original content) */}
-      {activePage === 'generator' && (
-      <>
-      {/* Upgrade banner for free users */}
-      {!isPaid && currentStep === 1 && (
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4">
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
-            <div>
-              <p className="text-xs sm:text-sm font-semibold text-foreground">🆓 Mode Gratis — Fitur terbatas</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Upgrade untuk akses Template, Edit Mode, Countdown, Sales Notification, dan Pixel ID</p>
-            </div>
-            {orderUrl && (
-              <Button size="sm" onClick={handleUpgrade} className="gap-1 w-full sm:w-auto">
-                ⭐ Upgrade Sekarang
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+                  <Step4Detail
+                    namaProduk={form.namaProduk}
+                    hargaNormal={form.hargaNormal}
+                    hargaPromo={form.hargaPromo}
+                    hargaFinal={form.hargaFinal}
+                    keteranganDiskon={form.keteranganDiskon}
+                    pricingLayersConfig={form.pricingLayersConfig}
+                    tieredPricing={form.tieredPricing}
+                    ctaMode={form.ctaMode}
+                    bonusList={form.bonusList}
+                    deskripsiBenefit={form.deskripsiBenefit}
+                    ctaUtama={form.ctaUtama}
+                    onChange={handleChange}
+                    onChangeBonusList={handleChangeBonusList}
+                    onChangeTieredPricing={(t) => handleChange('tieredPricing', t)}
+                    onChangeCtaMode={(c) => handleChange('ctaMode', c)}
+                  />
 
-      {/* Tab Navigation for mode */}
-      {currentStep === 1 && (
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
-          <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
-            <button type="button" onClick={() => setMode('manual')} className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold border transition-all ${mode === 'manual' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border-border hover:border-primary/40'}`}>
-              ⚡ Buat Manual
-            </button>
-            <button type="button" onClick={() => setMode('template')} className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold border transition-all ${mode === 'template' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border-border hover:border-primary/40'}`}>
-              📋 Template {!isPaid && <Lock className="h-3 w-3" />}
-            </button>
-            {!isPaid && (
-              <button type="button" onClick={handleUpgrade} className="flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-all ml-auto cursor-pointer">
-                🔒 Premium
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+                  <Step5Design
+                    warnaBrand={form.warnaBrand}
+                    warnaBrandCustom={form.warnaBrandCustom}
+                    tema={form.tema}
+                    gayaDesain={form.gayaDesain}
+                    typography={form.typography}
+                    onChange={handleChange}
+                    onChangeTypography={(t) => handleChange('typography', t)}
+                  />
 
-      {currentStep === 2 && isGenerating && <GeneratingLoader />}
-      {currentStep === 2 && !isGenerating && <PromptStep promptText={promptText} onBack={() => setCurrentStep(1)} onNext={() => setCurrentStep(3)} />}
+                  <Step6Elements
+                    elemenTambahan={form.elemenTambahan}
+                    sectionOrder={form.sectionOrder}
+                    metaCapi={form.metaCapi}
+                    onToggle={handleToggleElement}
+                    onReorder={(order) => handleChange('sectionOrder', order)}
+                    onChangeMetaCapi={(c) => handleChange('metaCapi', c)}
+                  />
 
-      {currentStep === 3 && (
-        <HtmlPreviewEditor
-          onBack={() => {
-            if (mode === 'template') { setCurrentStep(1); setTemplateHtml(''); }
-            else setCurrentStep(2);
-          }}
-          initialHtml={mode === 'template' ? templateHtml : undefined}
-          isPaid={isPaid}
-          orderUrl={orderUrl}
-        />
-      )}
+                  <Step7Platform
+                    platformTarget={form.platformTarget}
+                    deviceTarget={form.deviceTarget}
+                    onChange={handleChange}
+                  />
 
-      {currentStep === 1 && mode === 'template' && (
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 pb-12 space-y-4">
-          <TemplateGallery onSelectTemplate={handleSelectTemplate} isPaid={isPaid} orderUrl={orderUrl} />
-        </div>
-      )}
+                  <Step8Reference
+                    linkReferensi={form.linkReferensi}
+                    inspirasiDesain={form.inspirasiDesain}
+                    media={form.media}
+                    onChange={handleChange}
+                    onChangeMedia={(m) => handleChange('media', m)}
+                  />
 
-      {currentStep === 1 && mode === 'manual' && (
-        <div className="max-w-[1440px] mx-auto px-3 sm:p-6">
-          <section className="text-center py-8 sm:py-12 px-4 sm:px-6 mb-4 sm:mb-6 rounded-lg border border-border bg-card">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-4 sm:mb-6">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />V11 — New Release 🚀
-            </motion.div>
-            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight max-w-3xl mx-auto">
-              Buat Landing Page professional cuman dalam{" "}<span className="text-primary">Hitungan menit</span> <Zap className="inline h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-            </motion.h2>
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="mt-3 sm:mt-4 text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
-              Generate Landing Page dari format yang benar, karena landing page yang gagal biasanya bukan salah katanya, tapi salah strukturnya.
-            </motion.p>
-          </section>
+                  <StepSalesNotif
+                    salesNotif={form.salesNotif}
+                    onChange={handleSalesNotifChange}
+                  />
 
-          <div className="space-y-3 sm:space-y-4 pb-6">
-            <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
-            <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
-            <Step3Target levelAwareness={form.levelAwareness} targetAudience={form.targetAudience} onChange={handleChange} />
-            <Step4Detail
-              namaProduk={form.namaProduk} hargaNormal={form.hargaNormal} hargaPromo={form.hargaPromo}
-              hargaFinal={form.hargaFinal} keteranganDiskon={form.keteranganDiskon}
-              pricingLayersConfig={form.pricingLayersConfig}
-              bonusList={form.bonusList}
-              deskripsiBenefit={form.deskripsiBenefit} ctaUtama={form.ctaUtama}
-              onChange={handleChange} onChangeBonusList={handleChangeBonusList}
-            />
-            <Step5Design warnaBrand={form.warnaBrand} tema={form.tema} gayaDesain={form.gayaDesain} onChange={handleChange} />
-            <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
-            <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
-            <Step8Reference linkReferensi={form.linkReferensi} inspirasiDesain={form.inspirasiDesain} onChange={handleChange} />
-            
-            {/* Sales Notif & Countdown/Scarcity */}
-            {isPaid ? (
-              <>
-                <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
-                <StepCountdown
-                  countdown={form.countdown}
-                  scarcitySeat={form.scarcitySeat}
-                  onChange={handleCountdownChange}
-                  onChangeScarcity={handleScarcityChange}
-                />
-              </>
-            ) : (
-              <div className="relative space-y-4">
-                <div className="pointer-events-none opacity-40 select-none">
-                  <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
                   <StepCountdown
                     countdown={form.countdown}
                     scarcitySeat={form.scarcitySeat}
                     onChange={handleCountdownChange}
                     onChangeScarcity={handleScarcityChange}
                   />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <div className="bg-card/95 backdrop-blur border border-border rounded-xl p-5 text-center shadow-xl">
-                    <div className="flex items-center gap-2 justify-center mb-2">
-                      <Lock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-semibold text-muted-foreground">Sales Notification & Scarcity Widget</span>
-                      <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">PREMIUM</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-3">Fitur ini hanya tersedia untuk pengguna berbayar.</p>
-                    {orderUrl && (
-                      <Button size="sm" onClick={handleUpgrade} className="gap-1">
-                        ⭐ Upgrade untuk Unlock
-                      </Button>
-                    )}
+
+                  {/* Submit Generate Action Button */}
+                  <div className="pt-4 flex items-center justify-between gap-3 sticky bottom-4 p-4 rounded-2xl bg-card/95 backdrop-blur-md border border-border shadow-2xl z-30">
+                    <Button variant="ghost" onClick={() => setForm(initialFormState)} className="text-xs text-muted-foreground">
+                      <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset Form
+                    </Button>
+
+                    <Button
+                      onClick={handleGenerate}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm px-6 h-11 gap-2 shadow-lg shadow-primary/30"
+                    >
+                      <Zap className="w-4 h-4" /> Generate Master Prompt →
+                    </Button>
                   </div>
+                </div>
+
+                {/* Right Side Live Blueprint Display (Desktop & Tablet) */}
+                <div className="hidden lg:block lg:col-span-4">
+                  <LiveBlueprintDisplay form={form} />
                 </div>
               </div>
             )}
 
-            <div className="space-y-2 pt-2">
-            {!isPaid && (
-                <div className="text-center space-y-1.5">
-                  <p className="text-xs text-muted-foreground">
-                    Generate tersisa: <span className={`font-bold ${usageLimitReached ? 'text-destructive' : 'text-primary'}`}>{Math.max(0, FREE_LIMIT - promptUsage)}/{FREE_LIMIT}</span>
-                    {usageLimitReached && ' — Upgrade untuk unlimited'}
-                  </p>
-                  <CostBreakdownModal />
+            {currentStep === 2 && isGenerating && <GeneratingLoader />}
+
+            {currentStep === 2 && !isGenerating && (
+              <PromptStep
+                promptText={promptText}
+                onBack={() => setCurrentStep(1)}
+                onNext={() => setCurrentStep(3)}
+              />
+            )}
+
+            {currentStep === 3 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-2 p-3 bg-secondary/50 rounded-xl border border-border">
+                  <Button variant="ghost" size="sm" onClick={() => setCurrentStep(2)} className="text-xs">
+                    ← Kembali ke Prompt
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleSaveAsCustomTemplate(templateHtml || promptText)}
+                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    <BookmarkPlus className="w-3.5 h-3.5" /> Simpan Sebagai Template Kustom
+                  </Button>
                 </div>
-              )}
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
-                {!isPaid && usageLimitReached ? (
-                  <Button onClick={handleUpgrade} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2" size="lg">
-                    <Lock className="h-4 w-4" /> Upgrade untuk Generate ⭐
-                  </Button>
-                ) : (
-                  <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
-                    <Zap className="h-4 w-4" /> {isDirty ? "Generate Ulang" : "Generate Prompt ⚡"}
-                  </Button>
-                )}
+
+                <HtmlPreviewEditor
+                  initialHtml={templateHtml || ''}
+                  onChange={(html) => setTemplateHtml(html)}
+                />
               </div>
-            </div>
+            )}
           </div>
-        </div>
-      )}
-      </>
-      )}
+        )}
+
+        {/* TAB 2: PROMPT CEPAT */}
+        {activePage === 'quick_prompt' && (
+          <QuickPromptMode
+            onApplyQuickForm={(quickForm) => {
+              setForm(quickForm);
+              handlePageChange('generator');
+            }}
+          />
+        )}
+
+        {/* TAB 3: COMPETITOR SPY */}
+        {activePage === 'competitor_spy' && <CompetitorSpy />}
+
+        {/* TAB 4: CREATIVE SYNC */}
+        {activePage === 'creative_sync' && <CreativeSync />}
+
+        {/* TAB 5: TES 5 DETIK */}
+        {activePage === 'five_second' && <FiveSecondTest />}
+
+        {/* TAB 6: AUDIT LP */}
+        {activePage === 'audit' && <LandingPageAuditor />}
+
+        {/* TAB 7: TEMPLATES GALLERY */}
+        {activePage === 'templates' && (
+          <TemplateGallery
+            onSelectTemplate={handleSelectTemplate}
+            isPaid={isPaid}
+            orderUrl={orderUrl}
+            userId={userId}
+          />
+        )}
+
+        {/* TAB 8: AFFILIATE PROGRAM */}
+        {activePage === 'affiliate' && (
+          <AffiliateProgram
+            userId={userId}
+            userEmail={userEmail}
+            isAdmin={userEmail === 'fauzymnf29@gmail.com'}
+          />
+        )}
+
+        {/* TAB 9: LP BUILDER */}
+        {activePage === 'lpbuilder' && isPaid && <HtmlGeneratorTab />}
+
+        {/* TAB 10: WEBHOOK */}
+        {activePage === 'webhook' && isPaid && <UserWebhookSettings userId={userId} />}
+
+        {/* TAB 11: TUTORIAL */}
+        {activePage === 'tutorial' && isPaid && <TutorialFullPage />}
+      </div>
     </div>
   );
 }

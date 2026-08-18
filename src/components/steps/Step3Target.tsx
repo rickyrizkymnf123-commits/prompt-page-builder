@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { StepCard } from '@/components/StepCard';
-import { GroupedSelect } from '@/components/GroupedSelect';
-import { Input } from '@/components/ui/input';
 import { levelAwarenessOptions, targetAudienceOptions } from '@/data/formOptions';
+import { LiquidGlassModal } from '@/components/ui/LiquidGlassModal';
+import { GroupedSelect } from '@/components/GroupedSelect';
 
 interface Props {
   levelAwareness: string;
@@ -11,43 +10,30 @@ interface Props {
 }
 
 export function Step3Target({ levelAwareness, targetAudience, onChange }: Props) {
-  const [isManualTarget, setIsManualTarget] = useState(targetAudience !== '' && !targetAudienceOptions.some(g => g.options.includes(targetAudience)));
-
-  const handleTargetChange = (v: string) => {
-    if (v === 'Lainnya (Isi Manual)') {
-      setIsManualTarget(true);
-      onChange('targetAudience', '');
-    } else {
-      setIsManualTarget(false);
-      onChange('targetAudience', v);
-    }
-  };
-
   return (
-    <StepCard step={3} title="Target Market">
-      <GroupedSelect
-        label="Level Awareness"
-        placeholder="Pilih level awareness..."
-        value={levelAwareness}
-        onValueChange={(v) => onChange('levelAwareness', v)}
-        options={levelAwarenessOptions}
-      />
-      <GroupedSelect
-        label="Target Audience"
-        placeholder="Pilih target audience..."
-        value={isManualTarget ? 'Lainnya (Isi Manual)' : targetAudience}
-        onValueChange={handleTargetChange}
-        options={targetAudienceOptions}
-      />
-      {isManualTarget && (
-        <Input
-          placeholder="Tulis target audience kamu..."
-          value={targetAudience}
-          onChange={(e) => onChange('targetAudience', e.target.value)}
-          className="bg-secondary border-border"
-          autoFocus
+    <StepCard step={3} title="Target Market & Awareness">
+      <div className="space-y-3.5">
+        <GroupedSelect
+          label="Level Awareness Calon Pembeli"
+          placeholder="Pilih level awareness..."
+          value={levelAwareness}
+          onValueChange={(v) => onChange('levelAwareness', v)}
+          options={levelAwarenessOptions}
         />
-      )}
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Target Audience Spesifik
+          </label>
+          <LiquidGlassModal
+            title="Pilih Target Audience"
+            placeholder="Pilih target audience atau tulis manual..."
+            value={targetAudience}
+            options={targetAudienceOptions}
+            onSelect={(val) => onChange('targetAudience', val)}
+          />
+        </div>
+      </div>
     </StepCard>
   );
 }

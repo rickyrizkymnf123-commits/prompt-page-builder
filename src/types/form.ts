@@ -45,11 +45,60 @@ export interface PricingLayersConfig {
   layerFinal: boolean;
 }
 
+export interface TierItem {
+  name: string; // e.g. "Batch 1 - Early Bird", "Batch 2 - Reguler", "Batch 3 - Last Call"
+  price: string;
+  originalPrice?: string;
+  quota?: string;
+  badge?: string;
+}
+
+export interface TieredPricingConfig {
+  enabled: boolean;
+  tiers: TierItem[];
+}
+
+export interface CtaModeConfig {
+  type: 'button' | 'whatsapp' | 'microsite' | 'lead_form';
+  buttonText: string;
+  waNumber: string;
+  waMessage: string;
+  micrositeUrl: string;
+  leadFormFields: {
+    name: boolean;
+    wa: boolean;
+    email: boolean;
+    note: boolean;
+    packageSelect: boolean;
+    buttonText: string;
+  };
+}
+
+export interface MediaConfig {
+  fotoProdukUrls: string[];
+  videoHeroUrl: string;
+  coverHeroUrl: string;
+}
+
+export interface DesignTypographyConfig {
+  fontFamily: string;
+  buttonSize: 'normal' | 'large' | 'full';
+  entranceAnimation: 'none' | 'fade-in' | 'slide-up' | 'zoom-in' | 'pulse';
+}
+
+export interface MetaCapiConfig {
+  enabled: boolean;
+  pixelId: string;
+  capiToken: string;
+  eventName: string;
+}
+
 export interface FormState {
   framework: string;
   gayaBahasa: string;
   tipeProduk: string;
   tujuanUtama: string;
+  trafficCategory: string; // Meta Ads, Google Ads, TikTok Ads, CTWA, Affiliate, General
   levelAwareness: string;
   targetAudience: string;
   namaProduk: string;
@@ -59,13 +108,20 @@ export interface FormState {
   keteranganDiskon: string;
   pricingLayers: 4;
   pricingLayersConfig: PricingLayersConfig;
+  tieredPricing: TieredPricingConfig;
   bonusList: BonusItem[];
   deskripsiBenefit: string;
   ctaUtama: string;
+  ctaMode: CtaModeConfig;
+  media: MediaConfig;
+  typography: DesignTypographyConfig;
+  metaCapi: MetaCapiConfig;
   warnaBrand: string;
+  warnaBrandCustom?: string;
   tema: string;
   gayaDesain: string;
   elemenTambahan: Record<string, boolean>;
+  sectionOrder: string[];
   platformTarget: string;
   deviceTarget: string;
   linkReferensi: string;
@@ -73,13 +129,30 @@ export interface FormState {
   salesNotif: SalesNotifConfig;
   countdown: CountdownConfig;
   scarcitySeat: ScarcitySeatConfig;
+  language: 'id' | 'en';
 }
+
+export const initialSectionOrder = [
+  'Hero Section',
+  'Before-After',
+  'Feature List',
+  'How It Works',
+  'Social Proof',
+  'Testimonial',
+  'Video Section',
+  'Bonus Section',
+  'Pricing Table',
+  'Scarcity / Timer',
+  'Guarantee',
+  'FAQ',
+];
 
 export const initialFormState: FormState = {
   framework: '',
   gayaBahasa: '',
   tipeProduk: '',
   tujuanUtama: '',
+  trafficCategory: 'General / All Channels',
   levelAwareness: '',
   targetAudience: '',
   namaProduk: '',
@@ -94,12 +167,52 @@ export const initialFormState: FormState = {
     layerPromo: true,
     layerFinal: true,
   },
+  tieredPricing: {
+    enabled: false,
+    tiers: [
+      { name: 'Batch 1 (Early Bird)', price: '99000', originalPrice: '299000', quota: 'Sisa 5 Slot', badge: '🔥 Termurah' },
+      { name: 'Batch 2 (Reguler)', price: '149000', originalPrice: '299000', quota: 'Kuota 50 Slot', badge: 'Populer' },
+      { name: 'Batch 3 (Normal / H-1)', price: '249000', originalPrice: '299000', quota: 'Harga Naik', badge: 'Terakhir' },
+    ],
+  },
   bonusList: [],
   deskripsiBenefit: '',
   ctaUtama: '',
-  warnaBrand: '',
-  tema: '',
-  gayaDesain: '',
+  ctaMode: {
+    type: 'button',
+    buttonText: 'Beli Sekarang',
+    waNumber: '6281234567890',
+    waMessage: 'Halo admin, saya ingin memesan [Nama Produk] sekarang. Apakah masih ada promo?',
+    micrositeUrl: '',
+    leadFormFields: {
+      name: true,
+      wa: true,
+      email: true,
+      note: false,
+      packageSelect: true,
+      buttonText: 'Kirim & Dapatkan Akses',
+    },
+  },
+  media: {
+    fotoProdukUrls: [],
+    videoHeroUrl: '',
+    coverHeroUrl: '',
+  },
+  typography: {
+    fontFamily: 'Plus Jakarta Sans',
+    buttonSize: 'large',
+    entranceAnimation: 'fade-in',
+  },
+  metaCapi: {
+    enabled: false,
+    pixelId: '',
+    capiToken: '',
+    eventName: 'Lead',
+  },
+  warnaBrand: 'Modern Purple',
+  warnaBrandCustom: '#6c63ff',
+  tema: 'Dark Mode Clean',
+  gayaDesain: 'Clean Minimalist',
   elemenTambahan: {
     'Hero Section': true,
     'Social Proof': true,
@@ -114,7 +227,8 @@ export const initialFormState: FormState = {
     'Before-After': true,
     'How It Works': true,
   },
-  platformTarget: '',
+  sectionOrder: [...initialSectionOrder],
+  platformTarget: 'Scalev',
   deviceTarget: 'Mobile',
   linkReferensi: '',
   inspirasiDesain: '',
@@ -150,6 +264,7 @@ export const initialFormState: FormState = {
     sisaSeat: 7,
     autoDecrease: true,
   },
+  language: 'id',
 };
 
 export interface SavedProject {
@@ -157,6 +272,19 @@ export interface SavedProject {
   user_id: string;
   project_name: string;
   form_data: FormState;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomUserTemplate {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  category: string;
+  html_content: string;
+  form_data?: FormState;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

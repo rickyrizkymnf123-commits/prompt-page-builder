@@ -9,18 +9,19 @@ export function generatePrompt(form: FormState): string {
   };
   const awarenessLevel = awarenessMap[form.levelAwareness] || form.levelAwareness;
   const fmt = (v: string) => v ? `Rp ${Number(v).toLocaleString('id-ID')}` : '-';
-  const platformName = form.platformTarget || 'Standalone';
+  const platformName = form.platformTarget || 'Scalev';
   const deviceTarget = form.deviceTarget || 'Mobile';
+  const lang = form.language === 'en' ? 'Bahasa Inggris (English Copywriting)' : 'Bahasa Indonesia';
 
-  return `# 🔥 MASTER PROMPT LANDING PAGE
+  return `# 🔥 MASTER PROMPT LANDING PAGE HIGH-CONVERTING
 
 Anda adalah **Senior Conversion Copywriter + Landing Page Developer Expert** yang telah membuat ratusan landing page high-converting untuk social media ads & direct sales.
 
 Mindset:
-- Conversion-focused
-- UI/UX minded
-- Paham compliance Meta & Google Ads
-- Menguasai struktur persuasion modern
+- Conversion-focused & Direct Action
+- UI/UX Mobile-First (Feel Native Mobile App)
+- Paham compliance Meta & Google Ads (Anti-Banned)
+- Bahasa Output: **${lang}**
 
 ---
   
@@ -48,9 +49,10 @@ ${buildProductBlock(form, fmt)}
 
 ---
   
-## 🧱 SECTION WAJIB ADA (URUTKAN DENGAN LOGIS)
+## 🧱 STRUKTUR & URUTAN SECTION WAJIB
+${buildSectionList(form.sectionOrder || activeElements, activeElements)}
 
-${buildSectionList(activeElements)}
+${buildMediaBlock(form)}
 ${buildReferensiBlock(form)}
 
 ---
@@ -66,19 +68,18 @@ ${buildSalesNotifBlock(form)}
 
 ---
   
-## 💰 CONVERSION RULES
-
+## 💰 CONVERSION & PRICING RULES
 ${buildPricingRules(form, fmt)}
 
-CTA harus:
-- \`<a href="#">\` atau \`<button>\`
-- Besar, kontras, centered
-- Teks: **"${form.ctaUtama || 'Beli Sekarang'}"**
+${buildCtaActionBlock(form)}
+
+---
+  
+${buildMetaCapiBlock(form)}
 
 ---
   
 ## 🔐 TRUST & REASSURANCE
-
 Wajib ada:
 - Social proof angka/logis
 - Testimoni realistis (tidak overclaim)
@@ -91,175 +92,103 @@ ${buildChecklistBlock(platformName, platformName === 'Scalev')}`;
 }
 
 // Section list builder
-function buildSectionList(activeElements: string[]): string {
-  const orderedSections = ['Hero Section','Social Proof','Problem Section','Before-After','Video Section','Feature List','Bonus Section','How It Works','Pricing Table','Guarantee','FAQ','Final CTA','Testimonial','Scarcity / Timer'];
-  const selected = activeElements.length > 0 ? activeElements : ['Hero Section','Social Proof','Problem Section','Before-After','Video Section','Feature List','Bonus Section','How It Works','Pricing Table','Guarantee','FAQ'];
-  const sorted = [...selected].sort((a, b) => {
-    const ia = orderedSections.indexOf(a);
-    const ib = orderedSections.indexOf(b);
-    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-  });
-  const desc: Record<string, string> = {
-    'Hero Section': 'hook + value + CTA', 'Social Proof': 'angka/logis', 'Problem Section': 'problem aware',
-    'Video Section': 'pakai img placeholder "Video Preview"', 'Feature List': 'benefit jelas',
-    'Pricing Table': 'harga normal dicoret, promo ditonjolkan + bonus', 'Guarantee': 'masuk akal', 'Final CTA': 'closing',
-    'Testimonial': 'realistis', 'Scarcity / Timer': 'countdown aktif',
-  };
-  return sorted.map((s, i) => `${i + 1}) ${s}${desc[s] ? ` (${desc[s]})` : ''}`).join('\n');
+function buildSectionList(sectionOrder: string[], activeElements: string[]): string {
+  const activeSet = new Set(activeElements);
+  const finalOrder = (sectionOrder || []).filter(s => activeSet.has(s));
+  const list = finalOrder.length > 0 ? finalOrder : activeElements;
+  return list.map((sec, i) => `${i + 1}. **${sec}**`).join('\n');
 }
 
 // Platform block builder
 function buildPlatformBlock(platformName: string, deviceTarget: string): string {
-  const scalevDeviceRules: Record<string, string> = {
-    Desktop: `- Padding halaman: 32px vertikal, 128px horizontal
-- Lebar konten efektif: ±432px
-- Padding internal section: 32px 128px`,
-    Tablet: `- Padding halaman: 32px vertikal, 50px horizontal
-- Lebar konten efektif: ±588px
-- Padding internal section: 32px 50px`,
-    Mobile: `- Padding halaman: 35px semua sisi
-- Lebar konten efektif: ±618px
-- Padding internal section: 35px
-- Margin antar komponen: 16px
-- Layout: SINGLE COLUMN
-- Flex direction: column untuk semua layout`,
-    Responsive: `- Layout responsif otomatis: Mobile padding 24px, Tablet padding 48px, Desktop padding 96px
-- Lebar konten max 688px terpusat (margin auto)
-- Single column prioritas mobile first`,
-  };
-  const rules: Record<string, string> = {
-    'OrderHero': `# 📐 ATURAN STRUKTUR & LAYOUT — ORDERHERO (${deviceTarget})
+  const isScalev = platformName === 'Scalev';
+  const isWinMe = platformName === 'WinMe';
+  const isOrderHero = platformName === 'OrderHero';
+  const isOrderOnline = platformName === 'OrderOnline';
+  const isLandingPress = platformName === 'LandingPress';
+  const isMayar = platformName === 'Mayar';
 
-0) WAJIB ada wrapper root:
-   \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;">\`
+  let specificRules = '';
+  if (isScalev) {
+    specificRules = `- Scalev Embed Target: Inject ke Custom HTML element Scalev
+- Container ID WAJIB: \`#lp-root\`
+- Maksimal lebar section: **688px**, margin: **auto**, padding: **35px 20px**
+- Single column layout (tanpa multi-kolom horizontal yang patah di mobile)`;
+  } else if (isWinMe) {
+    specificRules = `- WinMe Compatibility: Format full-width single page checkout / lead capture
+- Optimasi tombol CTA agar langsung terhubung ke form checkout WinMe`;
+  } else if (isOrderHero) {
+    specificRules = `- OrderHero Target: Single column landing page siap inject widget checkout OrderHero
+- Layout super responsif di layar smartphone`;
+  } else if (isOrderOnline) {
+    specificRules = `- OrderOnline Integration: Cocok di-embed bersama form checkout OrderOnline
+- Maksimal container: 720px centered`;
+  } else if (isLandingPress) {
+    specificRules = `- LandingPress WordPress Compatibility: Gunakan utility classes inline yang bersih dan tidak bentrok dengan CSS tema Elementor/LandingPress`;
+  } else if (isMayar) {
+    specificRules = `- Mayar Link Checkout: Tombol CTA disiapkan mengarah ke payment link Mayar`;
+  } else {
+    specificRules = `- Standalone HTML: 100% self-contained dengan font Google Fonts, CSS inline/internal, dan JS vanilla`;
+  }
 
-1) Layout WAJIB **single column** fokus konversi tinggi.
-2) Setiap SECTION WAJIB: \`max-width:680px\`, \`margin:0 auto\`, \`box-sizing:border-box\`, \`padding:28px 20px\` (mobile) / \`padding:40px 32px\` (desktop).
-3) Kompatibel dengan form checkout OrderHero & tracking pixel.
-4) Styling WAJIB inline CSS penuh pada elemen HTML.
-5) Gambar: \`<img>\` width:100%, responsive, format .webp.`,
-    'WinMe': `# 📐 ATURAN STRUKTUR & LAYOUT — WINME (${deviceTarget})
+  let deviceGuide = '';
+  if (deviceTarget === 'Mobile') {
+    deviceGuide = `- **Target Device: 📱 MOBILE ONLY**
+- Desain WAJIB 100% Mobile-First (feel seperti native smartphone app)
+- Ukuran font nyaman dibaca di layar HP (Headline: 24-30px, Body: 14-16px, CTA: 16-18px)
+- Touch targets minimal 48px tinggi agar nyaman di-tap jempol
+- Padding horizontal 16-20px, tanpa elemen meluap / horizontal scrollbar`;
+  } else if (deviceTarget === 'Tablet') {
+    deviceGuide = `- **Target Device: 📱 TABLET (iPad / Android Tablet)**
+- Container lebar maksimal 768px, layout rapi di orientasi portrait & landscape`;
+  } else if (deviceTarget === 'Desktop') {
+    deviceGuide = `- **Target Device: 💻 DESKTOP**
+- Container terpusat maksimal 960px dengan visual whitespace yang lega`;
+  } else {
+    deviceGuide = `- **Target Device: 📱💻 RESPONSIVE (All Devices)**
+- Single column adaptif dari layar HP 360px hingga Desktop 1200px`;
+  }
 
-0) WAJIB ada wrapper root:
-   \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;">\`
-
-1) Layout WAJIB **single column**, struktur ramping & loading ultra-cepat.
-2) Setiap SECTION WAJIB: \`max-width:700px\`, \`margin:0 auto\`, \`box-sizing:border-box\`, \`padding:30px 18px\`.
-3) Terintegrasi mulus dengan tombol CTA checkout WinMe & direct WA form.
-4) Inline CSS, tidak membutuhkan library JS eksternal yang memberatkan.
-5) Gambar: \`<img>\` width:100%, format .webp.`,
-    'OrderOnline': `# 📐 ATURAN — ORDERONLINE (${deviceTarget})
-
-0) Wrapper root: \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;...">\`
-1) Single column, max-width:720px, margin:0 auto, padding:25px.
-2) Terhubung mudah dengan embedded checkout embed OrderOnline.
-3) Inline CSS penuh, kompatibel mobile & desktop.`,
-    'LandingPress': `# 📐 ATURAN — LANDINGPRESS (${deviceTarget})
-
-1) File HTML/Section kompatibel Elementor & LandingPress Gutenberg.
-2) Single column, max-width:760px, responsive, clean typography.
-3) Inline styling & semantic HTML tags.`,
-    'Mayar': `# 📐 ATURAN — MAYAR (${deviceTarget})
-
-0) Wrapper root: \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;...">\`
-1) Single column, max-width:680px, margin:0 auto, padding:30px.
-2) CTA siap disambungkan ke link payment/checkout Mayar.
-3) Inline CSS, modern payment-ready aesthetic.`,
-    'Scalev': `# 📐 ATURAN STRUKTUR & LAYOUT — SCALEV (${deviceTarget})
-
-0) WAJIB ada wrapper root:
-   \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;">\`
-
-1) Layout WAJIB **single column** di semua ukuran layar.
-2) Setiap SECTION WAJIB: \`max-width:688px\`, \`margin:0 auto\`, \`box-sizing:border-box\`, \`padding:35px\`
-3) Tidak boleh grid / multi-column.
-4) Flex HANYA \`flex-direction:column\` (pengecualian: countdown angka boleh row).
-5) Semua styling WAJIB inline CSS pada elemen utama.
-6) Tidak boleh: CDN, external CSS, \`<style>\` tag.
-7) Tag: div, section, span, h1-h6, p, a, img, ul, li
-8) Gambar: \`<img>\` standar, placeholder placehold.co, width:100%, format .webp jika ada, no base64, no background-image.
-
-### Device Rules (${deviceTarget}):
-${scalevDeviceRules[deviceTarget] || scalevDeviceRules['Mobile']}`,
-    'Berdu': `# 📐 ATURAN — BERDU
-
-0) Wrapper root: \`<div id="lp-root" style="min-height:100vh;width:100%;background:#0a0a12;color:#e8e8f0;...">\`
-1) Single column, max-width:780px, margin:0 auto, padding:35px.
-2) Inline CSS. No CDN. Gambar: \`<img>\` + width:100% + format .webp`,
-    'Lynk.id': `# 📐 ATURAN — LYNK.ID
-
-0) Wrapper root wajib.
-1) Single column, inline CSS.
-2) Gambar: \`<img>\` + width:100% + format .webp`,
-    'WordPress': `# 📐 ATURAN — WORDPRESS
-
-1) HTML tunggal, boleh \`<style>\` scoped.
-2) Semantik HTML, kompatibel Elementor HTML widget.
-3) Gambar: \`<img>\` + width:100% + format .webp`,
-    'Shopify': `# 📐 ATURAN — SHOPIFY
-
-1) HTML tunggal + CSS inline.
-2) Tag standar. Gambar: \`<img>\` + width:100% + format .webp`,
-    'Standalone': `# 📐 ATURAN — STANDALONE HTML
-
-1) File HTML lengkap.
-2) Boleh \`<style>\` + Google Fonts.
-3) Single column, responsive.
-4) Gambar: \`<img>\` + width:100% + format .webp`,
-  };
-  return rules[platformName] || rules['Standalone'];
+  return `## ⚙️ TARGET PLATFORM & DEVICE
+- Platform: **${platformName}**
+- Device Target: **${deviceTarget}**
+${deviceGuide}
+${specificRules}`;
 }
 
 // Design block builder
 function buildDesignBlock(form: FormState): string {
-  const brand = form.warnaBrand || 'Violet / Purple';
-  const tema = form.tema || 'Default';
+  const hex = form.warnaBrandCustom || '#6c63ff';
+  const typo = form.typography || { fontFamily: 'Plus Jakarta Sans', buttonSize: 'large', entranceAnimation: 'fade-in' };
 
-  const temaMap: Record<string, string> = {
-    'Default': `- Tema: **Dark Mode** (background gelap, teks terang)
-- **KRITIS:** Background TIDAK BOLEH putih. Wrapper root dan setiap section WAJIB background gelap.
-- Warna background: \`#0a0a12\` (root), section bergantian: \`#0f0d1a\`, \`#13111c\`, \`#1a1a2e\`, \`#16132b\`
-- Teks: \`#e8e8f0\` / \`#ffffff\`, sekunder: \`#b0b0b0\` / \`#9ca3af\``,
-    'Dark': `- Tema: **Dark Mode** (background sangat gelap, teks terang)
-- **KRITIS:** Background TIDAK BOLEH putih. Wrapper root dan setiap section WAJIB background gelap.
-- Warna background: \`#0a0a12\` (root), section bergantian: \`#0f0d1a\`, \`#13111c\`, \`#1a1a2e\`, \`#16132b\`
-- Teks: \`#e8e8f0\` / \`#ffffff\`, sekunder: \`#b0b0b0\` / \`#9ca3af\``,
-    'Light': `- Tema: **Light Mode** (background terang, teks gelap)
-- **KRITIS:** Background WAJIB terang/putih. Wrapper root dan setiap section WAJIB background terang.
-- Warna background: \`#ffffff\` (root), section bergantian: \`#f9fafb\`, \`#f3f4f6\`, \`#e5e7eb\`, \`#ffffff\`
-- Teks: \`#111827\` / \`#1f2937\`, sekunder: \`#6b7280\` / \`#9ca3af\``,
-    'Colorful': `- Tema: **Colorful** (warna-warni cerah, playful)
-- Gunakan palet warna cerah dan kontras tinggi yang sesuai warna brand.
-- Background boleh gradien warna-warni lembut, section bergantian warna berbeda.
-- Teks gelap pada background terang, atau terang pada background gelap — pastikan kontras tinggi.`,
-    'Pastel': `- Tema: **Pastel** (warna lembut, elegan, soft)
-- Gunakan palet pastel lembut (soft pink, soft blue, lavender, mint, cream, dll).
-- Background: warna pastel sangat lembut, section bergantian pastel berbeda.
-- Teks: warna gelap lembut seperti \`#2d3748\` atau \`#4a5568\`.`,
-  };
+  return `## 🎨 ATURAN DESAIN & VISUAL
+- Warna Brand Utama (Aksen): **${form.warnaBrand || 'Modern Purple'} (${hex})**
+- Tema Nuansa: **${form.tema || 'Dark Mode Clean'}**
+- Gaya Desain: **${form.gayaDesain || 'Clean Minimalist'}**
+- Font Utama: **${typo.fontFamily}** (Muat via Google Fonts di dalam \`<head>\`)
+- Ukuran Tombol CTA: **${typo.buttonSize === 'full' ? 'Full-Width 100% Layar Mobile' : typo.buttonSize === 'large' ? 'Besar / Prominent (Tinggi 52px)' : 'Normal (44px)'}**
+- Animasi Transisi: **${typo.entranceAnimation || 'fade-in'}**
 
-  const temaBlock = temaMap[tema] || temaMap['Default'];
-
-  return `# 🎨 DESAIN VISUAL
-
-- Gaya: ${form.gayaDesain || 'Modern Minimalis'} (Premium)
-- Warna Brand / Aksen Utama: **${brand}** — gunakan warna ini sebagai warna utama untuk CTA, heading aksen, border highlight, ikon, badge, dan elemen penting lainnya.
-${temaBlock}
-- CTA besar, kontras, centered. Setiap section background berbeda.
-- Pastikan warna brand (**${brand}**) terlihat dominan sebagai aksen di seluruh landing page.`;
+Prinsip Visual:
+1. Skema warna konsisten beraksen ${hex}
+2. Hierarchy kontras: Judul tebal, subjudul abu-abu halus, tombol CTA paling mencolok
+3. Rounded corners modern (\`border-radius: 12px\` sampai \`16px\`)
+4. Efek Glassmorphism halus pada kartu testimoni & container`;
 }
 
 // Copywriting block builder
 function buildCopywritingBlock(form: FormState, awarenessLevel: string): string {
-  return `# ✍️ COPYWRITING FRAMEWORK
+  const traffic = form.trafficCategory ? `\n- Saluran Iklan / Traffic: **${form.trafficCategory}**` : '';
+  return `## ✍️ COPYWRITING STRATEGY
+- Framework: **${form.framework || 'PAS (Problem–Agitate–Solution)'}**
+- Tone of Voice: **${form.gayaBahasa || 'Friendly & Conversational'}**
+- Level Awareness: **${awarenessLevel || 'Problem Aware'}**${traffic}
+- Bahasa: **${form.language === 'en' ? 'English (Professional Conversion Copywriting)' : 'Bahasa Indonesia (Natural, Mengalir, Anti-Kaku)'}**
 
-Gunakan framework **${form.framework || 'PAS'}** secara natural:
-1) Attention → Hook kuat 2) Interest → Problem spesifik 3) Desire → Agitasi 4) Conviction → Solusi + Social Proof 5) Action → CTA + urgency
-
-Awareness: **${awarenessLevel}**
-Gaya bahasa: **${form.gayaBahasa || 'Profesional'}**
-
-Hindari: Klaim "pasti"/"jamin"/"100%", overclaim medis/finansial, janji tidak realistis`;
+Aturan Copywriting:
+- Headline WAJIB memikat dalam 3 detik pertama
+- Angkat pain point spesifik dan tawarkan transformasi produk sebagai jalan keluar
+- Hindari kata overclaim "pasti kaya", "garansi sembuh total", atau janji tidak realistis agar aman dari Meta & Google Ads policy`;
 }
 
 // Product block builder
@@ -268,8 +197,13 @@ function buildProductBlock(form: FormState, fmt: (v: string) => string): string 
   const lines: string[] = [];
 
   if (cfg.noPriceMode) {
-    lines.push(`- Model Penawaran: **Pendaftaran / Akses Gratis / Lead Generation (Tanpa Biaya / Non-Komersial)**`);
-    lines.push(`- Biaya / Harga: **100% Gratis / Tanpa Biaya Pendaftaran**`);
+    lines.push(`- Model Penawaran: **Pendaftaran / Akses Gratis / Lead Generation (Tanpa Biaya)**`);
+    lines.push(`- Biaya: **100% Gratis / Tanpa Biaya Pendaftaran**`);
+  } else if (form.tieredPricing?.enabled && form.tieredPricing.tiers.length > 0) {
+    lines.push(`- Model Harga: **Harga Bertingkat (Batch / Tiered Pricing):**`);
+    form.tieredPricing.tiers.forEach((t) => {
+      lines.push(`  - **${t.name}**: ${fmt(t.price)} ${t.originalPrice ? `(dicoret: ~~${fmt(t.originalPrice)}~~)` : ''} ${t.quota ? `[${t.quota}]` : ''}`);
+    });
   } else {
     if (cfg.layerNormal && form.hargaNormal) {
       lines.push(`- Harga Normal: **${fmt(form.hargaNormal)}** (dicoret)`);
@@ -278,9 +212,7 @@ function buildProductBlock(form: FormState, fmt: (v: string) => string): string 
       lines.push(`- Harga Promo: **${fmt(form.hargaPromo)}** (dicoret)`);
     }
     if (cfg.layerFinal && form.hargaFinal) {
-      lines.push(`- 🔥 Harga Final / Diskon (untuk kamu yang beli sekarang): **${fmt(form.hargaFinal)}**`);
-    } else if (!cfg.layerNormal && !cfg.layerPromo && !cfg.layerFinal) {
-      lines.push(`- Harga: Penawaran Khusus / Hubungi Kami`);
+      lines.push(`- 🔥 Harga Final / Diskon (Beli Sekarang): **${fmt(form.hargaFinal)}**`);
     }
     if (form.keteranganDiskon) {
       lines.push(`- Keterangan Diskon: ${form.keteranganDiskon}`);
@@ -290,25 +222,43 @@ function buildProductBlock(form: FormState, fmt: (v: string) => string): string 
   const pricingInfo = lines.join('\n');
 
   let bonusInfo = '';
-  if (form.bonusList.length > 0) {
+  if (form.bonusList && form.bonusList.length > 0) {
     const bonusItems = form.bonusList.filter(b => b.nama).map(b =>
       `  - ✅ ${b.nama}${b.hargaAsli ? ` → Senilai: ~~${fmt(b.hargaAsli)}~~ (Gratis)` : ''}`
     ).join('\n');
     if (bonusItems) {
       const totalBonus = form.bonusList.reduce((s, b) => s + (Number(b.hargaAsli) || 0), 0);
-      bonusInfo = `\n- **Fasilitas / Bonus yang disertakan:**\n${bonusItems}\n- Total nilai fasilitas gratis: **${fmt(String(totalBonus))}**`;
+      bonusInfo = `\n- **Fasilitas / Bonus yang disertakan:**\n${bonusItems}\n- Total nilai bonus: **${fmt(String(totalBonus))}**`;
     }
   }
 
   return `# 📦 PROFIL PRODUK / LAYANAN
-
 - Nama Produk/Brand: **${form.namaProduk || '[Nama Produk]'}**
 - Tipe: ${form.tipeProduk || '-'}
 - Tujuan: ${form.tujuanUtama || '-'}
 ${pricingInfo}
-- CTA Utama: **${form.ctaUtama || 'Daftar Sekarang'}**
+- CTA Utama: **${form.ctaUtama || 'Beli Sekarang'}**
 - Target Audience: **${form.targetAudience || '-'}**
 ${form.deskripsiBenefit ? `- Keunggulan / Benefit: ${form.deskripsiBenefit}` : ''}${bonusInfo}`;
+}
+
+// Media block builder
+function buildMediaBlock(form: FormState): string {
+  const m = form.media;
+  if (!m || (!m.coverHeroUrl && !m.videoHeroUrl && (!m.fotoProdukUrls || m.fotoProdukUrls.length === 0))) return '';
+
+  const lines: string[] = ['\n## 🖼️ MEDIA ASSETS WAJIB DI-EMBED'];
+  if (m.coverHeroUrl) {
+    lines.push(`- Background Cover Hero Banner: \`<img src="${m.coverHeroUrl}" alt="Hero Cover" style="width:100%;max-height:360px;object-fit:cover;border-radius:16px;margin-bottom:20px;" />\``);
+  }
+  if (m.videoHeroUrl) {
+    lines.push(`- Video Hero Embed: Tampilkan video player responsif (iframe / video tag) untuk URL: **${m.videoHeroUrl}**`);
+  }
+  if (m.fotoProdukUrls && m.fotoProdukUrls.length > 0) {
+    lines.push(`- Galeri Foto Produk: Tampilkan gambar berikut dalam grid/slider:`);
+    m.fotoProdukUrls.forEach((url, i) => lines.push(`  ${i + 1}. \`${url}\``));
+  }
+  return lines.join('\n');
 }
 
 // Pricing rules builder
@@ -316,58 +266,81 @@ function buildPricingRules(form: FormState, fmt: (v: string) => string): string 
   const cfg = form.pricingLayersConfig || { noPriceMode: false, layerNormal: true, layerPromo: true, layerFinal: true };
   
   if (cfg.noPriceMode) {
-    return `- **MODE NON-KOMERSIAL / TANPA HARGA (Lead Generation / Pendaftaran Agen / Free App):**
-- JANGAN tampilkan tabel harga rupiah atau nominal biaya.
-- Fokuskan copy pada: **Kemudahan Pendaftaran / Akses**, **Keunggulan Layanan**, **Keuntungan Jadi Mitra/Agen**, **Fasilitas Bimbingan**, dan **CTA langsung**.
-- CTA harus:
-  - Teks: **"${form.ctaUtama || 'Daftar Sekarang'}"**
-  - Micro-copy trust di bawah tombol: "Gratis Pendaftaran · Proses Instan · CS Siap Bantu 24/7"`;
+    return `- **MODE NON-KOMERSIAL / TANPA HARGA:**
+- JANGAN tampilkan tabel harga rupiah.
+- Fokuskan copy pada kemudahan pendaftaran/akses dan nilai keuntungan bergabung.`;
   }
 
-  const activeCount = [cfg.layerNormal, cfg.layerPromo, cfg.layerFinal].filter(Boolean).length;
-  
-  const rulesList: string[] = [];
-  const visualLayers: string[] = [];
-  let layerIndex = 1;
-
-  if (cfg.layerNormal && form.hargaNormal) {
-    rulesList.push(`- Harga normal dicoret: **${fmt(form.hargaNormal)}**`);
-    visualLayers.push(`${layerIndex}. Harga tertinggi / normal (coret, merah): **${fmt(form.hargaNormal)}**`);
-    layerIndex++;
+  if (form.tieredPricing?.enabled && form.tieredPricing.tiers.length > 0) {
+    return `- **STRUKTUR HARGA BERTINGKAT (TIERED BATCH):**
+- Tampilkan tabel/kartu perbandingan batch harga yang jelas (Batch 1, Batch 2, Batch 3) lengkap dengan sisa kuota dan badge penawaran.`;
   }
 
-  if (cfg.layerPromo && form.hargaPromo) {
-    rulesList.push(`- Harga promo dicoret: **${fmt(form.hargaPromo)}**`);
-    visualLayers.push(`${layerIndex}. Harga promo (coret juga): **${fmt(form.hargaPromo)}**`);
-    layerIndex++;
+  return `- Tampilkan struktur layer harga kontras (harga normal dicoret, harga promo, dan harga final besar bercahaya).
+- Setiap CTA wajib disertai micro-copy trust (misal: "Garansi 100% aman · Akses instan · Support 24/7").`;
+}
+
+// CTA Action block builder
+function buildCtaActionBlock(form: FormState): string {
+  const cta = form.ctaMode || { type: 'button', buttonText: form.ctaUtama || 'Beli Sekarang', waNumber: '', waMessage: '', micrositeUrl: '', leadFormFields: { name: true, wa: true, email: true, note: false, packageSelect: true, buttonText: 'Kirim Sekarang' } };
+
+  if (cta.type === 'whatsapp') {
+    const enc = encodeURIComponent(cta.waMessage || 'Halo, saya mau pesan sekarang');
+    const waLink = `https://wa.me/${cta.waNumber || '6281234567890'}?text=${enc}`;
+    return `### 💬 CALL TO ACTION: DIRECT WHATSAPP (CTWA)
+- Tombol CTA HARUS langsung membuka WhatsApp dengan link: \`<a href="${waLink}" target="_blank" class="cta-btn">\`
+- Teks Tombol: **"${form.ctaUtama || cta.buttonText || 'Chat WhatsApp Sekarang'}"**
+- Icon WhatsApp hijau menyala di samping teks tombol`;
   }
 
-  if (form.keteranganDiskon) {
-    rulesList.push(`- ${form.keteranganDiskon}`);
-    visualLayers.push(`${layerIndex}. Keterangan diskon: "${form.keteranganDiskon}"`);
-    layerIndex++;
+  if (cta.type === 'microsite' && cta.micrositeUrl) {
+    return `### 🔗 CALL TO ACTION: DIRECT MICROSITE CHECKOUT
+- Tombol CTA mengarah langsung ke URL Checkout: \`<a href="${cta.micrositeUrl}" target="_blank" class="cta-btn">\`
+- Teks Tombol: **"${form.ctaUtama || cta.buttonText || 'Beli Sekarang'}"**`;
   }
 
-  if (cfg.layerFinal && form.hargaFinal) {
-    rulesList.push(`- **🔥 HARGA DISKON untuk kamu yang beli sekarang (tidak dicoret, paling besar):** **${fmt(form.hargaFinal)}**`);
-    visualLayers.push(`${layerIndex}. 🔥 Harga penawaran aktif (besar, bold, warna aksen, TIDAK dicoret): **${fmt(form.hargaFinal)}**`);
+  if (cta.type === 'lead_form') {
+    return `### 📋 CALL TO ACTION: LEAD CAPTURE FORM LANGSUNG
+- Tampilkan form pendaftaran bersih & terpusat di landing page dengan input:
+  ${cta.leadFormFields?.name ? '- Input Nama Lengkap\n' : ''}${cta.leadFormFields?.wa ? '- Input Nomor WhatsApp\n' : ''}${cta.leadFormFields?.email ? '- Input Alamat Email\n' : ''}${cta.leadFormFields?.packageSelect ? '- Pilihan Dropdown Paket\n' : ''}
+- Tombol Submit: **"${cta.leadFormFields?.buttonText || 'Daftar Sekarang'}"**`;
   }
 
-  rulesList.push(`- Tambahkan urgency wajar (tanpa overclaim)`);
-  rulesList.push(`- Setiap CTA WAJIB ada micro-copy trust 1–2 baris di bawah tombol`);
+  return `### 🔘 CALL TO ACTION: TOMBOL STANDAR
+- Teks Tombol: **"${form.ctaUtama || 'Beli Sekarang'}"**
+- Tombol besar, kontras, berpusat, dengan efek hover/pulse modern`;
+}
 
-  return `${rulesList.join('\n')}
+// Meta CAPI block builder
+function buildMetaCapiBlock(form: FormState): string {
+  const c = form.metaCapi;
+  if (!c || !c.enabled || !c.pixelId) return '';
 
-**PENTING:** Tampilkan struktur ${activeCount} layer harga secara visual yang kontras & jelas:
-${visualLayers.join('\n')}`;
+  return `## 📡 META PIXEL & CONVERSIONS API SCRIPT
+Tambahkan script tracking Meta berikut di dalam \`<head>\` dan pada tombol CTA:
+\`\`\`html
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${c.pixelId}');
+fbq('track', 'PageView');
+function trackCtaLead(){ fbq('track', '${c.eventName || 'Lead'}'); }
+</script>
+<!-- End Meta Pixel Code -->
+\`\`\`
+Pada setiap tombol CTA, tambahkan attribute \`onclick="trackCtaLead()"\`.`;
 }
 
 // Referensi block builder
 function buildReferensiBlock(form: FormState): string {
   if (!form.linkReferensi && !form.inspirasiDesain) return '';
   let block = '\n\n## 🔗 REFERENSI DESAIN';
-  if (form.linkReferensi) block += `\n- URL: ${form.linkReferensi}`;
-  if (form.inspirasiDesain) block += `\n- Yang ditiru: ${form.inspirasiDesain}`;
+  if (form.linkReferensi) block += `\n- URL Referensi: ${form.linkReferensi}`;
+  if (form.inspirasiDesain) block += `\n- Inspirasi yang ditiru: ${form.inspirasiDesain}`;
   return block;
 }
 
@@ -382,13 +355,12 @@ function buildCountdownBlock(form: FormState): string {
   const durasi = c?.enabled ? `${c.hari} hari, ${c.jam} jam, ${c.menit} menit, ${c.detik} detik` : '2 hari, 0 jam, 0 menit, 0 detik';
 
   return `## ⏳ COUNTDOWN TIMER (WAJIB BERGERAK)
-
 Durasi: ${durasi}
 Label: **"${label}"**
 Background: **${bg}**, Text: **${text}**, Accent: **${accent}**
 
-JavaScript WAJIB (salin PERSIS tanpa modifikasi):
-\`\`\`
+JavaScript Countdown Timer Wajib:
+\`\`\`html
 <script>
 (function(){
   var totalSec = ${Math.floor(totalMs / 1000)};
@@ -413,38 +385,6 @@ JavaScript WAJIB (salin PERSIS tanpa modifikasi):
   tick();
 })();
 </script>
-\`\`\`
-
-**PENTING:** Script countdown HARUS diletakkan SEBELUM \`</body>\`. Gunakan \`setTimeout(tick, 1000)\` bukan \`setInterval\` supaya tidak drift. ID elemen WAJIB: \`cd-days\`, \`cd-hours\`, \`cd-minutes\`, \`cd-seconds\`.
-
-HTML WAJIB: Container \`div#countdown-container\`, angka \`span#cd-days/hours/minutes/seconds\` style: \`background:${accent};color:${text}\``;
-}
-
-// Sales notification block builder
-function buildSalesNotifBlock(form: FormState): string {
-  const n = form.salesNotif;
-  if (!n.enabled) return 'Tidak ada sales notification.';
-  const widths = { small: 280, medium: 320, large: 380 };
-  const w = widths[n.ukuran];
-  const posStyle: Record<string, string> = { 'bottom-left': 'bottom:24px;left:24px', 'bottom-right': 'bottom:24px;right:24px', 'top-left': 'top:24px;left:24px', 'top-right': 'top:24px;right:24px' };
-  const pos = posStyle[n.position] || 'bottom:24px;left:24px';
-  const namaProduk = n.namaProdukNotif || form.namaProduk || 'produk ini';
-  const names = n.namaPembeli.split(',').map(s => s.trim()).filter(Boolean);
-
-  return `Tambahkan **PERSIS** sebelum \`</body>\`:
-
-\`\`\`html
-<div id="sn-popup" style="display:none;position:fixed;${pos};width:${w}px;background:${n.bgColor};border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:14px 16px;z-index:99999;font-family:sans-serif;align-items:center;gap:12px;border-left:4px solid ${n.borderColor};">
-  <span style="font-size:24px;">${n.emoji}</span>
-  <div>
-    <p id="sn-name" style="margin:0;font-size:13px;font-weight:700;color:${n.textColor};"></p>
-    <p id="sn-product" style="margin:2px 0 0;font-size:12px;color:${n.borderColor};font-weight:600;">${namaProduk}</p>
-    <p style="margin:3px 0 0;font-size:11px;color:#9ca3af;">Baru saja · beberapa menit lalu</p>
-  </div>
-</div>
-<script>
-(function(){var names=${JSON.stringify(names)};var msg="${n.pesanNotif}";var interval=${n.interval * 1000};var durasi=${n.durasi * 1000};var idx=0;var popup=document.getElementById('sn-popup');function showNotif(){var name=names[idx%names.length];idx++;document.getElementById('sn-name').textContent=name+' '+msg;popup.style.display='flex';popup.style.opacity='0';popup.style.transform='translateY(10px)';popup.style.transition='opacity 0.4s,transform 0.4s';setTimeout(function(){popup.style.opacity='1';popup.style.transform='translateY(0)';},50);setTimeout(function(){popup.style.opacity='0';popup.style.transform='translateY(10px)';setTimeout(function(){popup.style.display='none';},400);},durasi);}setTimeout(function(){showNotif();setInterval(showNotif,interval+durasi);},2000);})();
-</script>
 \`\`\``;
 }
 
@@ -455,11 +395,10 @@ function buildScarcityBlock(form: FormState): string {
   const percent = Math.min(100, Math.round(((s.totalSeat - s.sisaSeat) / (s.totalSeat || 1)) * 100));
 
   return `## 🔥 SCARCITY & SISA KUOTA WIDGET (WAJIB ADA)
-
 Label: **"${s.label}"**
 Total Kuota: **${s.totalSeat}**, Sisa Kuota: **${s.sisaSeat}** (${percent}% terisi)
 
-Struktur HTML & CSS Progress Bar Wajib:
+Struktur HTML & CSS Progress Bar:
 \`\`\`html
 <div id="scarcity-bar" style="background:#1e1b2e;border:1px solid #f59e0b;border-radius:12px;padding:14px 18px;margin:20px auto;max-width:580px;text-align:center;">
   <p style="margin:0 0 8px;font-size:13px;font-weight:800;color:#f59e0b;letter-spacing:0.5px;">
@@ -492,10 +431,42 @@ ${s.autoDecrease ? `
 \`\`\``;
 }
 
+// Sales notif builder
+function buildSalesNotifBlock(form: FormState): string {
+  const n = form.salesNotif;
+  if (!n || !n.enabled) return '*(Sales notification dinonaktifkan)*';
+
+  const widths = { small: 280, medium: 320, large: 380 };
+  const w = widths[n.ukuran] || 320;
+  const posStyle: Record<string, string> = {
+    'bottom-left': 'bottom:24px;left:24px',
+    'bottom-right': 'bottom:24px;right:24px',
+    'top-left': 'top:24px;left:24px',
+    'top-right': 'top:24px;right:24px',
+  };
+  const pos = posStyle[n.position] || 'bottom:24px;left:24px';
+  const namaProduk = n.namaProdukNotif || form.namaProduk || 'produk ini';
+  const names = n.namaPembeli.split(',').map(s => s.trim()).filter(Boolean);
+
+  return `Tambahkan **PERSIS** sebelum \`</body>\`:
+\`\`\`html
+<div id="sn-popup" style="display:none;position:fixed;${pos};width:${w}px;background:${n.bgColor};border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:14px 16px;z-index:99999;font-family:sans-serif;align-items:center;gap:12px;border-left:4px solid ${n.borderColor};">
+  <span style="font-size:24px;">${n.emoji}</span>
+  <div>
+    <p id="sn-name" style="margin:0;font-size:13px;font-weight:700;color:${n.textColor};"></p>
+    <p id="sn-product" style="margin:2px 0 0;font-size:12px;color:${n.borderColor};font-weight:600;">${namaProduk}</p>
+    <p style="margin:3px 0 0;font-size:11px;color:#9ca3af;">Baru saja · beberapa menit lalu</p>
+  </div>
+</div>
+<script>
+(function(){var names=${JSON.stringify(names)};var msg="${n.pesanNotif}";var interval=${n.interval * 1000};var durasi=${n.durasi * 1000};var idx=0;var popup=document.getElementById('sn-popup');function showNotif(){var name=names[idx%names.length];idx++;document.getElementById('sn-name').textContent=name+' '+msg;popup.style.display='flex';popup.style.opacity='0';popup.style.transform='translateY(10px)';popup.style.transition='opacity 0.4s,transform 0.4s';setTimeout(function(){popup.style.opacity='1';popup.style.transform='translateY(0)';},50);setTimeout(function(){popup.style.opacity='0';popup.style.transform='translateY(10px)';setTimeout(function(){popup.style.display='none';},400);},durasi);}setTimeout(function(){showNotif();setInterval(showNotif,interval+durasi);},2000);})();
+</script>
+\`\`\``;
+}
+
 // Checklist block builder
 function buildChecklistBlock(platformName: string, isScalev: boolean): string {
   return `## ✅ OUTPUT FINAL
-
 Output HARUS:
 - 1 file HTML tunggal${isScalev ? '\n- Semua di dalam `#lp-root`\n- Section: max-width 688px + margin auto + padding 35px' : ''}
 - CSS inline pada elemen utama
