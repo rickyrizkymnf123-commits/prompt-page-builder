@@ -35,15 +35,12 @@
      - Generator prompt di [`src/utils/generatePrompt.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/generatePrompt.ts) menyertakan snippet HTML/CSS/JS widget scarcity.
   8. **🔍 AI Landing Page Auditor**:
      - Dibuat tool tab baru [`src/components/audit/LandingPageAuditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/audit/LandingPageAuditor.tsx) untuk menganalisis 5 pilar konversi landing page (Hook, CTA, Social Proof, Mobile Flow, dan Kepatuhan Kebijakan Iklan Meta/Google Ads Anti-Banned).
-## Session: 2026-08-18 (Rilis V17: Perbaikan Double Garis 3, Optimalisasi PC/Tablet/HP & Pengingat Akun Admin)
+## Session: 2026-08-18 (Rilis V18: Optimalisasi Kelegaan Layar Smartphone & Penghapusan Bar Duplikat)
 
 - **User Request**:
-  1. Hapus double garis 3 (hamburger icon ganda di subheader).
-  2. Optimalkan tampilan untuk PC (agar penuh/full tidak sempit di pinggir), tablet, dan HP.
-  3. Beritahu kembali email dan kata sandi admin yang terlupa.
+  - Tampilan di HP terlalu sempit, teks terpotong (`Landing P...`), tombol bahasa terlipat, dan ada baris `📁 Proyek` duplikat.
 
 - **Solusi & Implementasi**:
-  - Dihapus ikon menu `☰` duplikat dari subheader di [`Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/Admin.tsx) dan [`AppPage.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/AppPage.tsx).
-  - Diperluas max width container menjadi `max-w-[1536px]` dengan responsive padding `px-3 sm:px-6 lg:px-8` agar tampilan di layar PC luas, penuh, dan proporsional.
+  - Di [`Header.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/Header.tsx) dan [`Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/Admin.tsx), disesuaikan tipografi mobile (`LP Builder`), language switcher dibuat ringkas dan single-line, serta ukuran tombol icon disesuaikan agar pas dan lega di layar smartphone.
+  - Dihapus baris sub-header duplikat `PROMPT GENERATOR WIZARD` + `[📁 Proyek]` di dalam tab Tools.
   - Diverifikasi build `npm run build` (0 error), dicommit ke GitHub, dan live di Vercel: `https://prompt-page-builder-app.vercel.app`.
-  - Disertakan data akun admin: `fauzymnf29@gmail.com` / `Eci12345!`.
