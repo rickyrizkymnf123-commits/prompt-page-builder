@@ -15,6 +15,10 @@ import {
   LogOut,
   ChevronRight,
   Sparkles,
+  Users,
+  FileText,
+  Settings,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -25,6 +29,7 @@ interface Props {
   onSelectTab: (tab: string) => void;
   userEmail?: string;
   isAdmin?: boolean;
+  pendingUsersCount?: number;
   onLogout?: () => void;
   onOpenSavedProjects?: () => void;
 }
@@ -36,12 +41,13 @@ export function SidebarDrawer({
   onSelectTab,
   userEmail,
   isAdmin,
+  pendingUsersCount = 0,
   onLogout,
   onOpenSavedProjects,
 }: Props) {
   if (!isOpen) return null;
 
-  const menuItems = [
+  const coreMenuItems = [
     {
       id: 'generator',
       label: 'LP Generator (Utama)',
@@ -61,7 +67,7 @@ export function SidebarDrawer({
     {
       id: 'api_settings',
       label: 'Konfigurasi API AI',
-      desc: 'Koneksi KoboiLLM / OpenAI & Live Chat Test',
+      desc: 'Koneksi KoboiLLM / OpenAI & Live Chat',
       icon: <Cpu className="w-4 h-4 text-indigo-400" />,
       badge: 'v8.0',
       badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
@@ -77,7 +83,7 @@ export function SidebarDrawer({
     {
       id: 'creative_sync',
       label: 'Creative-to-LP Sync',
-      desc: 'Sinkronisasi naskah video iklan TikTok/FB',
+      desc: 'Sinkronisasi naskah video TikTok/FB',
       icon: <Video className="w-4 h-4 text-purple-400" />,
       badge: 'AI Tool',
       badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
@@ -113,6 +119,41 @@ export function SidebarDrawer({
       icon: <DollarSign className="w-4 h-4 text-emerald-400" />,
       badge: 'Cuan',
       badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    },
+  ];
+
+  const adminMenuItems = [
+    {
+      id: 'users',
+      label: 'Kelola Pengguna (Users)',
+      desc: 'Approval & daftar member terdaftar',
+      icon: <Users className="w-4 h-4 text-amber-400" />,
+      badge: pendingUsersCount > 0 ? `${pendingUsersCount} Pending` : 'Users',
+      badgeColor: pendingUsersCount > 0 ? 'bg-amber-500 text-white font-black' : 'bg-white/10 text-slate-300',
+    },
+    {
+      id: 'logs',
+      label: 'Aktivitas & Log Webhook',
+      desc: 'Riwayat transaksi & webhook masuk',
+      icon: <FileText className="w-4 h-4 text-blue-400" />,
+      badge: 'Logs',
+      badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+    },
+    {
+      id: 'settings',
+      label: 'Pengaturan Sistem & Webhook',
+      desc: 'Secret key, URL order & endpoint',
+      icon: <Settings className="w-4 h-4 text-slate-400" />,
+      badge: 'Config',
+      badgeColor: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+    },
+    {
+      id: 'lpbuilder',
+      label: 'Live LP Builder Engine',
+      desc: 'Engine generator HTML langsung',
+      icon: <ExternalLink className="w-4 h-4 text-purple-400" />,
+      badge: 'Engine',
+      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
     },
   ];
 
@@ -153,13 +194,13 @@ export function SidebarDrawer({
             </button>
           </div>
 
-          {/* Menu Items List */}
+          {/* Menu Items List - Core & AI Tools */}
           <div className="space-y-1.5 pt-1">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2">
               Menu & Fitur AI
             </p>
 
-            {menuItems.map((item) => {
+            {coreMenuItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
                 <button
@@ -192,9 +233,50 @@ export function SidebarDrawer({
             })}
           </div>
 
+          {/* Admin Management Section */}
+          {isAdmin && (
+            <div className="space-y-1.5 pt-3 border-t border-white/10">
+              <p className="text-[10px] font-black text-amber-400 uppercase tracking-wider px-2 flex items-center gap-1.5">
+                👑 Menu Administrator
+              </p>
+
+              {adminMenuItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleItemClick(item.id)}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-left transition-all border ${
+                      isActive
+                        ? 'bg-amber-500/20 border-amber-500/50 text-white shadow-md shadow-amber-900/30 font-bold'
+                        : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/5 text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 pr-1">
+                      <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                        {item.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold truncate">{item.label}</p>
+                        <p className="text-[10px] text-slate-400 truncate opacity-80">{item.desc}</p>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`text-[9px] font-black px-2 py-0.5 rounded-full border flex-shrink-0 ${item.badgeColor}`}
+                    >
+                      {item.badge}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Saved Projects Shortcut */}
           {onOpenSavedProjects && (
-            <div className="pt-2">
+            <div className="pt-2 border-t border-white/10">
               <button
                 type="button"
                 onClick={() => {

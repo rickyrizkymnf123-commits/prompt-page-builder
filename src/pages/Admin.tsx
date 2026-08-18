@@ -36,6 +36,13 @@ import HtmlGeneratorTab from "@/components/admin/HtmlGeneratorTab";
 import { SavedProjectsDialog } from "@/components/projects/SavedProjectsDialog";
 import { LandingPageAuditor } from "@/components/audit/LandingPageAuditor";
 import { AffiliateProgram } from "@/components/affiliate/AffiliateProgram";
+import { SidebarDrawer } from "@/components/navigation/SidebarDrawer";
+import { AiApiSettings } from "@/components/settings/AiApiSettings";
+import { CompetitorSpy } from "@/components/tools/CompetitorSpy";
+import { CreativeSync } from "@/components/tools/CreativeSync";
+import { FiveSecondTest } from "@/components/tools/FiveSecondTest";
+import { QuickPromptMode } from "@/components/tools/QuickPromptMode";
+import { Globe, Menu } from "lucide-react";
 
 interface AdminUser {
   id: string; email: string; name: string | null; phone: string | null;
@@ -218,6 +225,8 @@ export default function Admin() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || localStorage.getItem("admin_active_tab") || "tools";
   const [activeTab, setActiveTab] = useState<string>(initialTab);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [language, setLanguage] = useState<'id' | 'en'>('id');
 
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");
@@ -719,35 +728,182 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-50 border-b border-border bg-card px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0"><Rocket className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" /></div>
+      {/* Top Header with Hamburger ☰ and Language Switcher beside Dark Mode */}
+      <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-xl px-3 sm:px-6 py-2.5 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(true)}
+            className="w-9 h-9 rounded-xl bg-secondary hover:bg-secondary/80 border border-border flex items-center justify-center text-foreground transition-all hover:border-primary/50 flex-shrink-0 shadow-sm"
+            title="Buka Menu & Fitur AI"
+          >
+            <Menu className="w-5 h-5 text-primary" />
+          </button>
+
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-purple-600/30">
+            <Rocket className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-white" />
+          </div>
+
           <div className="flex flex-col min-w-0">
-            <h1 className="text-sm sm:text-xl font-bold text-foreground truncate">LP <span className="text-primary">Builder</span> <span className="hidden sm:inline">V.11</span></h1>
-            <span className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1"><Shield className="h-3 w-3" /> Admin</span>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm sm:text-base font-black text-foreground truncate">
+                Landing Page <span className="text-primary">Builder</span>
+              </h1>
+              <span className="text-[9px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.2 rounded-full">
+                👑 Admin
+              </span>
+            </div>
+            <span className="text-[10px] text-muted-foreground hidden sm:block">Control Center & AI Engine</span>
           </div>
         </div>
-        <div className="flex items-center gap-1 sm:gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setDarkMode(!darkMode)}>{darkMode ? <Sun className="h-4 w-4 sm:h-5 sm:w-5" /> : <Moon className="h-4 w-4 sm:h-5 sm:w-5" />}</Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={async () => { await supabase.auth.signOut(); navigate("/login"); }}><LogOut className="h-4 w-4 sm:h-5 sm:w-5" /></Button>
+
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Language Switcher */}
+          <button
+            type="button"
+            onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-secondary hover:bg-secondary/80 border border-border text-xs font-bold text-foreground transition-all hover:border-primary/50 shadow-sm"
+            title="Ganti Bahasa (Language Switcher)"
+          >
+            <Globe className="w-3.5 h-3.5 text-primary" />
+            <span>{language === 'en' ? '🇬🇧 EN' : '🇮🇩 ID'}</span>
+          </button>
+
+          {/* Dark / Light Mode */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-secondary/50 border border-border"
+            onClick={() => setDarkMode(!darkMode)}
+          >
+            {darkMode ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-400" />}
+          </Button>
+
+          {/* Logout */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-secondary/50 border border-border hover:bg-red-500/15 hover:text-red-400"
+            onClick={async () => { await supabase.auth.signOut(); navigate("/login"); }}
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
       </header>
 
+      {/* Slide-out Sidebar Drawer */}
+      <SidebarDrawer
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        activeTab={activeTab === 'tools' ? 'generator' : activeTab}
+        onSelectTab={(tab) => {
+          handleTabChange(tab === 'generator' ? 'tools' : tab);
+          setIsSidebarOpen(false);
+        }}
+        isAdmin={true}
+        pendingUsersCount={pendingCount}
+        onLogout={async () => {
+          await supabase.auth.signOut();
+          navigate('/login');
+        }}
+      />
+
+      {/* Clean Sub-header Bar with Active Menu Title */}
+      <div className="border-b border-border/70 bg-card/60 px-3 sm:px-6 py-2.5">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-foreground hover:text-primary transition-colors"
+          >
+            <Menu className="w-4 h-4 text-primary" />
+            <span>
+              {activeTab === 'tools' || activeTab === 'generator'
+                ? '🚀 Landing Page Generator'
+                : activeTab === 'quick_prompt'
+                ? '⚡ Prompt Cepat (AI Auto-Fill)'
+                : activeTab === 'api_settings'
+                ? '⚙️ Konfigurasi API AI (KoboiLLM / OpenAI)'
+                : activeTab === 'competitor_spy'
+                ? '🕵️‍♂️ AI Competitor Spy Tool'
+                : activeTab === 'creative_sync'
+                ? '🎬 Creative-to-Landing Page Sync'
+                : activeTab === 'five_second'
+                ? '⏱️ Tes 5 Detik (Clarity Test)'
+                : activeTab === 'audit'
+                ? '🔍 AI Landing Page Auditor'
+                : activeTab === 'templates'
+                ? '📋 Kelola Template Landing Page'
+                : activeTab === 'affiliate'
+                ? '🤝 Kelola Program Affiliate'
+                : activeTab === 'users'
+                ? `👥 Kelola Pengguna (${pendingCount > 0 ? `${pendingCount} Pending` : 'Semua User'})`
+                : activeTab === 'logs'
+                ? '📄 Aktivitas & Log Webhook'
+                : activeTab === 'settings'
+                ? '⚙️ Pengaturan Sistem & Webhook'
+                : activeTab === 'lpbuilder'
+                ? '🚀 Live LP Builder Engine'
+                : 'Menu Administrator'}
+            </span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            {activeTab !== 'tools' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleTabChange('tools')}
+                className="text-xs h-8 gap-1 font-semibold"
+              >
+                ← Ke Generator
+              </Button>
+            )}
+
+            <SavedProjectsDialog
+              currentForm={form}
+              onLoadProject={(formData) => {
+                setForm(formData);
+                setPromptText("");
+                setToolStep(1);
+                handleTabChange('tools');
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
       <main className="flex-1 px-3 py-4 sm:p-6 max-w-[1400px] mx-auto w-full">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
-          <TabsList className="sticky top-[49px] sm:top-[57px] z-40 mb-4 sm:mb-6 bg-card/95 backdrop-blur w-full overflow-x-auto flex justify-start">
-            <TabsTrigger value="tools" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden xs:inline">Tools</span><span className="xs:hidden">⚡</span></TabsTrigger>
-            <TabsTrigger value="audit" className="gap-1 sm:gap-2 text-xs sm:text-sm"><ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Audit LP</span><span className="sm:hidden">Audit</span></TabsTrigger>
-            <TabsTrigger value="users" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Users</span>
-              {pendingCount > 0 && <span className="ml-0.5 bg-amber-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">{pendingCount}</span>}
-            </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Layout className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Templates</span></TabsTrigger>
-            <TabsTrigger value="logs" className="gap-1 sm:gap-2 text-xs sm:text-sm"><FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Logs</span></TabsTrigger>
-            <TabsTrigger value="affiliate" className="gap-1 sm:gap-2 text-xs sm:text-sm">🤝 <span className="hidden sm:inline">Affiliate</span></TabsTrigger>
-            <TabsTrigger value="settings" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Settings</span></TabsTrigger>
-            <TabsTrigger value="lpbuilder" className="gap-1 sm:gap-2 text-xs sm:text-sm"><ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">LP Builder</span><span className="sm:hidden">LP</span></TabsTrigger>
-          </TabsList>
+          {/* KOBOILLM AI API CONFIGURATION TAB */}
+          <TabsContent value="api_settings">
+            <AiApiSettings />
+          </TabsContent>
+
+          {/* QUICK PROMPT TAB */}
+          <TabsContent value="quick_prompt">
+            <QuickPromptMode
+              onApplyQuickForm={(quickForm) => {
+                setForm(quickForm);
+                handleTabChange('tools');
+              }}
+            />
+          </TabsContent>
+
+          {/* COMPETITOR SPY TAB */}
+          <TabsContent value="competitor_spy">
+            <CompetitorSpy />
+          </TabsContent>
+
+          {/* CREATIVE SYNC TAB */}
+          <TabsContent value="creative_sync">
+            <CreativeSync />
+          </TabsContent>
+
+          {/* FIVE SECOND TEST TAB */}
+          <TabsContent value="five_second">
+            <FiveSecondTest />
+          </TabsContent>
 
           {/* AFFILIATE TAB */}
           <TabsContent value="affiliate">
