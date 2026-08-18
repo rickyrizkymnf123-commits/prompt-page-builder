@@ -35,19 +35,13 @@
      - Generator prompt di [`src/utils/generatePrompt.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/generatePrompt.ts) menyertakan snippet HTML/CSS/JS widget scarcity.
   8. **🔍 AI Landing Page Auditor**:
      - Dibuat tool tab baru [`src/components/audit/LandingPageAuditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/audit/LandingPageAuditor.tsx) untuk menganalisis 5 pilar konversi landing page (Hook, CTA, Social Proof, Mobile Flow, dan Kepatuhan Kebijakan Iklan Meta/Google Ads Anti-Banned).
-## Session: 2026-08-18 (Rilis V14: AI API Configuration, Hamburger Sidebar Drawer & Apple Glass Blur)
+## Session: 2026-08-18 (Rilis V15: Restorasi Penuh Mode Edit Visual Interaktif - Teks, Warna, Gambar, Video & CTA)
 
 - **User Request**:
-  1. Tambahkan menu penambahan API seperti di gambar 1 (KoboiLLM API Configuration v8.0 Engine & Uji Interaktif AI Live Chat Test).
-  2. Perbaiki desain Apple AI agar latarnya benar-benar transparan kabur (backdrop-blur) saat pop-up dibuka.
-  3. Pindahkan tombol Bahasa Indonesia / Bahasa Inggris ke samping mode terang/gelap (khusus untuk menerjemahkan antarmuka tools).
-  4. Semua fitur AI harus memiliki menu mandiri/terpisah (jangan disatukan).
-  5. Menu navigasi tidak disimpan di atas secara menumpuk, melainkan di pinggir dengan tombol Garis Tiga ☰ (Sidebar Drawer) agar tampilan lebih bersih dan lega (*clear*).
+  - Pulihkan fitur edit teks, ubah warna CTA, gambar, video, dan background langsung di preview live HTML editor (tidak hanya edit CTA massal).
 
 - **Solusi & Implementasi**:
-  - Dibuat komponen [`src/components/settings/AiApiSettings.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/settings/AiApiSettings.tsx) dan utilitas [`src/utils/aiClient.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/aiClient.ts) dengan konfigurasi API Key, Endpoint URL presets (KoboiLLM, OpenAI, OpenRouter, Groq), Model selector, tombol uji jalur API, dan modul Live Chat Test interaktif.
-  - Di [`src/components/ui/dialog.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/ui/dialog.tsx), `DialogOverlay` diperbarui dengan `bg-slate-950/45 backdrop-blur-xl` sehingga seluruh latar belakang menjadi frosted glass blur saat modal dibuka.
-  - Dibuat komponen [`src/components/navigation/SidebarDrawer.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/navigation/SidebarDrawer.tsx) yang meluncur mulus dari samping saat tombol Garis Tiga ☰ di Header ditekan.
-  - Di [`src/components/Header.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/Header.tsx), tombol bahasa (ID/EN) diposisikan persis di samping ikon dark mode.
-  - Di [`src/pages/AppPage.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/AppPage.tsx), tab bar horizontal atas dihapus dan digantikan oleh navigasi drawer yang bersih.
+  - Di [`HtmlPreviewEditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/editor/HtmlPreviewEditor.tsx), ditambahkan tombol **`[✏️ Mode Edit Visual]`** di toolbar.
+  - Mengaktifkan bridge postMessage interaktif di dalam iframe: setiap elemen (judul, paragraf, gambar, tombol, video) diberi highlight interaktif.
+  - Saat elemen diklik, terbuka [`EditModal.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/editor/EditModal.tsx) untuk mengubah teks, color picker teks & latar belakang, ganti gambar/video YouTube, edit link/WA/Pixel, serta tombol hapus elemen.
   - Diverifikasi build `npm run build` (0 error), dicommit ke GitHub, dan live di Vercel: `https://prompt-page-builder-app.vercel.app`.
