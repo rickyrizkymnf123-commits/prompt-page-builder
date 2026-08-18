@@ -5,7 +5,24 @@ import { EditModal, EditTarget } from './EditModal';
 import { EditorMarketingPanel, SalesNotifEditorConfig, CountdownEditorConfig } from './EditorMarketingPanel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
-import { Lock, MessageSquare, Link, Sparkles, Layers, Trash2, ArrowUp, ArrowDown, Palette, Smartphone, Monitor } from 'lucide-react';
+import {
+  Lock,
+  MessageSquare,
+  Link,
+  Sparkles,
+  Layers,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  Palette,
+  Smartphone,
+  Monitor,
+  Edit3,
+  CheckCircle2,
+  Download,
+  Copy,
+  Plus,
+} from 'lucide-react';
 
 interface SectionInfo {
   index: number;
@@ -29,8 +46,6 @@ const SECTION_TEMPLATES: Record<string, string> = {
   'Bonus Section': `<section style="max-width:688px;margin:0 auto;padding:40px 20px;background:#13111c;box-sizing:border-box;"><h2 style="font-size:24px;font-weight:700;color:#ff4757;text-align:center;margin:0 0 24px;">🎁 BONUS TAMBAHAN</h2><div style="padding:16px;background:#1a1a2e;border-radius:12px;margin-bottom:12px;border-left:4px solid #ff4757;"><p style="color:#ffffff;font-weight:600;margin:0 0 4px;">✅ Fasilitas Eksklusif</p></div></section>`,
 };
 
-const PREMIUM_SECTIONS = ['Countdown Timer', 'Sales Notification'];
-
 export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl }: Props) {
   const [htmlCode, setHtmlCode] = useState(initialHtml || '');
   const [previewHtml, setPreviewHtml] = useState(initialHtml || '');
@@ -41,7 +56,6 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
   const [showSectionPanel, setShowSectionPanel] = useState(false);
   const [showCtaQuickInspector, setShowCtaQuickInspector] = useState(false);
   const [showAddSection, setShowAddSection] = useState(false);
-  const [dragSectionIdx, setDragSectionIdx] = useState<number | null>(null);
 
   // Quick CTA Inspector states
   const [quickCtaText, setQuickCtaText] = useState('Beli Sekarang');
@@ -84,10 +98,35 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     }
   }, [initialHtml]);
 
-  const handleLoadPreview = () => {
-    setPreviewHtml(htmlCode);
-    setEditMode(false);
-  };
+  // Listen to postMessage from iframe when elements are clicked in Edit Mode
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'EDIT_ELEMENT') {
+        const { tag, value, href, index, pixelEvent, bgColor, textColor, elType } = e.data;
+        let inferredType: EditTarget['type'] = elType || 'text';
+        if (tag === 'IMG') inferredType = 'img';
+        else if (tag === 'A') inferredType = 'link';
+        else if (tag === 'IFRAME') inferredType = 'video';
+        else if (tag === 'DIV' && value && value.includes('youtube')) inferredType = 'video';
+
+        setEditTarget({
+          type: inferredType,
+          tag,
+          value: value || '',
+          href: href || '',
+          index,
+          pixelEvent: pixelEvent || '',
+          bgColor,
+          textColor,
+        });
+      } else if (e.data?.type === 'SCROLL_POS') {
+        scrollPosRef.current = e.data.scrollY || 0;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const serializeDoc = (doc: Document) => '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
 
@@ -97,15 +136,178 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     }
   };
 
-  const getPreviewHtml = () => {
-    return previewHtml;
+  // Helper to extract editable elements
+  const getEditableElements = (doc: Document): HTMLElement[] => {
+    const selectors = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'a', 'button', 'img', 'iframe'];
+    const root = doc.getElementById('lp-root') || doc.body;
+    const elements: HTMLElement[] = [];
+    root.querySelectorAll(selectors.join(',')).forEach((el) => {
+      if (el.id === 'sn-popup' || el.closest('#sn-popup')) return;
+      if (el.closest('[data-section-type="countdown"]')) return;
+      elements.push(el as HTMLElement);
+    });
+    return elements;
   };
 
+  // Generate HTML for Edit Mode with hover highlight and click listener
   const getEditableHtml = () => {
-    return previewHtml;
+    if (!previewHtml) return '';
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(previewHtml, 'text/html');
+      const elements = getEditableElements(doc);
+
+      elements.forEach((el, index) => {
+        el.setAttribute('data-edit-index', String(index));
+        el.setAttribute('data-editable', 'true');
+      });
+
+      const editStyles = `
+        <style id="lp-edit-styles">
+          [data-editable="true"] {
+            outline: 2px dashed rgba(168, 85, 247, 0.6) !important;
+            outline-offset: 2px !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+          }
+          [data-editable="true"]:hover {
+            outline: 2px solid #a855f7 !important;
+            background-color: rgba(168, 85, 247, 0.15) !important;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4) !important;
+          }
+          a, button {
+            pointer-events: auto !important;
+          }
+        </style>
+      `;
+
+      const editScript = `
+        <script id="lp-edit-script">
+          document.addEventListener('click', function(e) {
+            var target = e.target.closest('[data-editable="true"]');
+            if (target) {
+              e.preventDefault();
+              e.stopPropagation();
+              var index = parseInt(target.getAttribute('data-edit-index'), 10);
+              var tag = target.tagName;
+              var href = target.getAttribute('href') || '';
+              var value = target.tagName === 'IMG' ? (target.getAttribute('src') || '') : (target.innerText || target.textContent || '');
+              var pixelEvent = target.getAttribute('data-pixel-event') || '';
+              var style = window.getComputedStyle(target);
+              var bgColor = style.backgroundColor;
+              var textColor = style.color;
+
+              window.parent.postMessage({
+                type: 'EDIT_ELEMENT',
+                tag: tag,
+                value: value,
+                href: href,
+                index: index,
+                pixelEvent: pixelEvent,
+                bgColor: bgColor,
+                textColor: textColor
+              }, '*');
+            }
+          }, true);
+
+          window.addEventListener('scroll', function() {
+            window.parent.postMessage({ type: 'SCROLL_POS', scrollY: window.scrollY }, '*');
+          });
+        </script>
+      `;
+
+      if (doc.head) {
+        doc.head.insertAdjacentHTML('beforeend', editStyles);
+      }
+      if (doc.body) {
+        doc.body.insertAdjacentHTML('beforeend', editScript);
+      }
+
+      return serializeDoc(doc);
+    } catch {
+      return previewHtml;
+    }
   };
 
-  // Reorder sections
+  // Preview HTML when editMode is OFF (disables links from navigating)
+  const getPreviewHtml = () => {
+    if (!previewHtml) return '';
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(previewHtml, 'text/html');
+
+      const clickPrevention = `
+        <script>
+          document.addEventListener('click', function(e) {
+            var a = e.target.closest('a, button');
+            if (a && a.getAttribute('href') && !a.getAttribute('href').startsWith('#')) {
+              e.preventDefault();
+              console.log('Link clicked in preview:', a.getAttribute('href'));
+            }
+          }, true);
+        </script>
+      `;
+      if (doc.body) doc.body.insertAdjacentHTML('beforeend', clickPrevention);
+      return serializeDoc(doc);
+    } catch {
+      return previewHtml;
+    }
+  };
+
+  // Handle saving edits from EditModal
+  const handleSaveEdit = (newValue: string, newHref?: string, pixelEvent?: string, styles?: { bgColor?: string; textColor?: string }) => {
+    if (!editTarget) return;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(previewHtml, 'text/html');
+      const elements = getEditableElements(doc);
+      const targetEl = elements[editTarget.index];
+
+      if (targetEl) {
+        if (editTarget.type === 'img' || targetEl.tagName === 'IMG') {
+          targetEl.setAttribute('src', newValue);
+        } else if (editTarget.type === 'video' || targetEl.tagName === 'IFRAME') {
+          targetEl.setAttribute('src', newValue);
+        } else if (editTarget.type === 'link' || targetEl.tagName === 'A' || targetEl.tagName === 'BUTTON') {
+          targetEl.textContent = newValue;
+          if (newHref !== undefined) targetEl.setAttribute('href', newHref);
+        } else {
+          targetEl.textContent = newValue;
+        }
+
+        if (styles?.textColor) targetEl.style.color = styles.textColor;
+        if (styles?.bgColor) targetEl.style.backgroundColor = styles.bgColor;
+
+        const updatedHtml = serializeDoc(doc);
+        setPreviewHtml(updatedHtml);
+        setHtmlCode(updatedHtml);
+        toast({ title: '✅ Perubahan Disimpan!' });
+      }
+    } catch (err: any) {
+      toast({ title: 'Gagal Menyimpan', description: err.message, variant: 'destructive' });
+    }
+    setEditTarget(null);
+  };
+
+  const handleDeleteElement = () => {
+    if (!editTarget) return;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(previewHtml, 'text/html');
+      const elements = getEditableElements(doc);
+      const targetEl = elements[editTarget.index];
+      if (targetEl) {
+        targetEl.remove();
+        const updatedHtml = serializeDoc(doc);
+        setPreviewHtml(updatedHtml);
+        setHtmlCode(updatedHtml);
+        toast({ title: '🗑️ Elemen Dihapus' });
+      }
+    } catch {}
+    setEditTarget(null);
+  };
+
+  // Section Reordering
   const moveSection = (sectionIndex: number, direction: 'up' | 'down') => {
     try {
       const parser = new DOMParser();
@@ -175,7 +377,6 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       let count = 0;
 
       buttons.forEach((btn) => {
-        // Only update CTA-like buttons
         if (btn.tagName === 'A' || btn.tagName === 'BUTTON') {
           if (quickCtaText.trim()) btn.textContent = quickCtaText.trim();
 
@@ -210,10 +411,6 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
     a.click();
     URL.revokeObjectURL(url);
     toast({ title: '⬇️ File HTML Diunduh' });
-  };
-
-  const handleUpgrade = () => {
-    if (orderUrl) window.open(orderUrl, '_blank');
   };
 
   return (
@@ -255,6 +452,20 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
             </button>
           </div>
 
+          {/* EDIT MODE VISUAL TOGGLE BUTTON (CLICK ANY TEXT / IMAGE / CTA TO EDIT) */}
+          <Button
+            size="sm"
+            onClick={() => setEditMode(!editMode)}
+            className={`text-xs h-8 gap-1.5 font-bold transition-all ${
+              editMode
+                ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 ring-2 ring-amber-400 shadow-md'
+                : 'bg-secondary hover:bg-secondary/80 text-foreground border border-border'
+            }`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>{editMode ? '🔓 Mode Edit ON' : '✏️ Mode Edit Visual'}</span>
+          </Button>
+
           {/* Quick CTA Inspector Button */}
           <Button
             size="sm"
@@ -263,8 +474,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
             className={`text-xs h-8 gap-1 font-semibold ${showCtaQuickInspector ? 'bg-primary/10 border-primary text-primary' : ''}`}
           >
             <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="hidden sm:inline">Edit CTA & WA</span>
-            <span className="sm:hidden">CTA</span>
+            <span>Edit CTA & WA</span>
           </Button>
 
           {/* Section Reorder Toggle */}
@@ -279,10 +489,25 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
           </Button>
 
           <Button size="sm" onClick={handleExport} className="text-xs h-8 gap-1 font-bold bg-emerald-600 hover:bg-emerald-700 text-white">
-            ⬇ Download
+            <Download className="w-3.5 h-3.5" /> Download
           </Button>
         </div>
       </div>
+
+      {/* EDIT MODE ON HELPER BANNER */}
+      {editMode && (
+        <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-between gap-2 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
+            <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <span>
+              <strong>Mode Edit Visual Aktif:</strong> Klik langsung pada teks, judul, paragraf, gambar, atau tombol mana pun di preview untuk mengedit teks, warna background, warna tombol, atau tautan!
+            </span>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => setEditMode(false)} className="text-xs h-7 text-amber-300 hover:text-white">
+            Selesai Edit ✓
+          </Button>
+        </div>
+      )}
 
       {/* QUICK CTA INSPECTOR POPUP PANEL */}
       {showCtaQuickInspector && (
@@ -380,7 +605,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
 
           <div className="flex items-center gap-2 pt-1 flex-wrap">
             <Button size="sm" variant="outline" onClick={() => setShowAddSection(!showAddSection)} className="text-xs h-7 gap-1">
-              ➕ Tambah Section Standar
+              <Plus className="w-3.5 h-3.5" /> Tambah Section Standar
             </Button>
           </div>
 
@@ -409,7 +634,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
         >
           <iframe
             ref={iframeRef}
-            srcDoc={previewHtml || htmlCode}
+            srcDoc={editMode ? getEditableHtml() : getPreviewHtml()}
             className="w-full"
             style={{ height: '640px', border: 'none' }}
             title="Preview Live Editor"
@@ -423,7 +648,7 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
       <div className="rounded-2xl border border-border bg-card p-3 sm:p-4 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-muted-foreground uppercase">💻 Kode HTML Sumber</span>
-          <Button size="sm" variant="ghost" onClick={handleLoadPreview} className="text-xs h-7 text-primary">
+          <Button size="sm" variant="ghost" onClick={() => setPreviewHtml(htmlCode)} className="text-xs h-7 text-primary">
             Perbarui Preview
           </Button>
         </div>
@@ -434,6 +659,16 @@ export function HtmlPreviewEditor({ onBack, initialHtml, isPaid = true, orderUrl
           placeholder="Kode HTML landing page..."
         />
       </div>
+
+      {/* Modal for editing individual element (Headline, Paragraph, Image, Video, Link, Color) */}
+      {editTarget && (
+        <EditModal
+          editTarget={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSave={handleSaveEdit}
+          onDelete={handleDeleteElement}
+        />
+      )}
     </div>
   );
 }
