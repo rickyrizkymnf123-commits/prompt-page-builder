@@ -76,114 +76,83 @@ export const gayaBahasaOptions: GroupedOption[] = [
 
 export const tipeProdukOptions: GroupedOption[] = [
   {
-    group: 'A. Digital Product',
+    group: 'A. Website Modern & Web App (Full Multi-Section)',
     options: [
-      'Ebook / Template',
-      'Mini Course / Video',
-      'Toolkit / Resource Pack',
-      'Membership / Komunitas',
-      'Bundle / Paket',
+      'Website SaaS / Startup (Linear & Stripe Style 3D)',
+      'Website Agency & Studio Kreatif (3D Portfolio)',
+      'Website Company Profile & Korporat Modern',
+      'Website E-Commerce & Brand Store 3D',
+      'Portal Kursus & Edukasi Digital (LMS)',
     ],
   },
   {
-    group: 'B. Service / Jasa',
+    group: 'B. Landing Page Direct Response (Ads & Sales)',
     options: [
-      'Agency / Freelance',
-      'Konsultasi 1:1',
-      'Done-For-You',
-      'Audit / Review',
-      'Maintenance / Retainer',
+      'Landing Page Produk Digital (Ebook / Template / Tool)',
+      'Landing Page Mini Course & Workshop Video',
+      'Landing Page Skincare / Fashion / F&B',
+      'Landing Page Server Pulsa & PPOB',
+      'Landing Page Gadget & Aksesoris',
+      'Landing Page Webinar & Event Funnel',
     ],
   },
   {
-    group: 'C. Physical / Commerce',
+    group: 'C. Jasa Profesional & High-Ticket',
     options: [
-      'Skincare / Fashion',
-      'Food & Beverage',
-      'Kesehatan / Wellness',
-      'Home & Living',
-      'Gadget / Aksesoris',
-      'Server Pulsa & PPOB',
+      'High-Ticket Mentoring / Konsultasi 1:1',
+      'Agency Done-For-You Service',
+      'Real Estate & Properti Mewah',
+      'Automotive & Luxury Goods',
+      'Interior Design & Arsitektur',
     ],
   },
   {
-    group: 'D. Software & Apps',
-    options: ['SaaS / Software', 'App / Mobile', 'Plugin / Add-on'],
-  },
-  {
-    group: 'E. Education',
-    options: ['Kursus / Coaching', 'Bootcamp', 'Workshop'],
-  },
-  {
-    group: 'F. Event & Social',
-    options: ['Event / Webinar', 'Event Offline', 'Fundraising / Donasi'],
-  },
-  {
-    group: 'H. Properti & High Value',
+    group: 'D. Komunitas & Aplikasi',
     options: [
-      'Real Estate / Properti',
-      'Interior Design / Renovasi',
-      'Automotive',
-      'Luxury Goods',
+      'Membership & Komunitas Eksklusif',
+      'Mobile App Landing Page & Download',
+      'SaaS Add-on / Plugin',
     ],
   },
   {
-    group: 'G. Lainnya',
+    group: 'E. Lainnya',
     options: ['Lainnya (Isi Manual)'],
   },
 ];
 
 export const tujuanUtamaOptions: GroupedOption[] = [
   {
-    group: 'A. Acquire',
+    group: 'A. Penjualan & Konversi Langsung',
     options: [
-      'Lead Generation (WA/Email)',
-      'Download (Lead Magnet)',
-      'Registrasi (Event/WL)',
-      'Newsletter Signup',
-      'Quiz / Assessment Opt-in',
-      'Early Access / Beta Access',
+      'Sales / Beli Langsung (Checkout Instan)',
+      'Direct WhatsApp Order (CTWA Conversions)',
+      'Pre-Order & Flash Sale Eksklusif',
+      'Affiliate & Review Conversion',
+      'Upsell / Paket Bundle',
     ],
   },
   {
-    group: 'B. Convert',
+    group: 'B. Lead Generation & Akuisisi',
     options: [
-      'Sales / Beli Langsung',
-      'Checkout (Keranjang)',
-      'Pre-Order',
-      'Upsell / Downsell',
-      'Affiliate Conversion',
-      'Flash Sale / Limited Offer',
+      'Lead Generation Form (Nama, WA, Email)',
+      'Download Ebook / Free Lead Magnet',
+      'Registrasi Webinar / Early Bird Waitlist',
+      'Free Trial / Demo Software',
+      'Free Consultation Booking (Jadwal 1:1)',
     ],
   },
   {
-    group: 'C. Try',
-    options: ['Trial / Demo', 'Sample / Preview', 'Free Consultation Entry'],
-  },
-  {
-    group: 'D. Subscribe',
+    group: 'C. Website Brand & Showcase',
     options: [
-      'Subscribe (Membership)',
-      'Join Community',
-      'Renewal / Upgrade Plan',
+      'Company Profile & Kredibilitas Perusahaan',
+      'Showcase Portfolio Agency / Studio',
+      'Membership & Join Komunitas',
+      'Download Aplikasi Mobile (App Store / Play Store)',
     ],
   },
   {
-    group: 'E. Contact',
-    options: [
-      'Chat (WA/DM)',
-      'Booking (Jadwal)',
-      'Konsultasi (Call)',
-      'Request Proposal',
-    ],
-  },
-  {
-    group: 'F. Impact',
-    options: ['Donasi / Fundraising', 'Volunteer Signup'],
-  },
-  {
-    group: 'G. Apply & Selection',
-    options: ['Apply Now (Seleksi)', 'Join Waitlist'],
+    group: 'D. Donasi & Program',
+    options: ['Donasi / Fundraising', 'Pendaftaran Program Seleksi'],
   },
 ];
 
@@ -218,66 +187,32 @@ export const levelAwarenessOptions: string[] = [
 
 export const targetAudienceOptions: GroupedOption[] = [
   {
-    group: 'A. Marketing & Ads',
+    group: 'Bisnis & Karir',
     options: [
-      'Advertiser',
-      'Performance Marketer',
-      'Digital Marketing Manager',
-      'Content Strategist',
-      'Media Buyer Agency',
+      'Pebisnis Online & UMKM',
+      'Digital Marketer & Media Buyer',
+      'Agency Owner & Freelancer',
+      'Content Creator & Influencer',
+      'Karyawan / Professional',
+      'Mahasiswa / Fresh Graduate',
     ],
   },
   {
-    group: 'B. Business',
+    group: 'Lifestyle & Personal',
     options: [
-      'Business Owner (UMKM)',
-      'Founder Startup',
-      'Owner Toko Offline',
-      'Sales Team / Leader',
-      'Franchise Owner',
+      'Ibu Rumah Tangga / Mompreneur',
+      'Pria Dewasa (Gaya Hidup & Karir)',
+      'Wanita Aktif (Kecantikan & Fashion)',
+      'Pecinta Fitness / Olahraga / Kesehatan',
+      'Keluarga Muda / Pasangan Baru',
     ],
   },
   {
-    group: 'C. Commerce',
+    group: 'Niche Khusus',
     options: [
-      'Seller Marketplace',
-      'Reseller / Dropshipper',
-      'Distributor / Grosir',
-      'Brand Lokal / D2C',
-    ],
-  },
-  {
-    group: 'D. Creator Economy',
-    options: [
-      'Content Creator / Affiliate',
-      'Influencer (Nano/Micro)',
-      'Coach / Mentor / Trainer',
-      'Educator / Course Creator',
-    ],
-  },
-  {
-    group: 'E. B2B / Corporate',
-    options: [
-      'HR / People Ops',
-      'Ops / Finance / Admin',
-      'IT / Tech Team',
-      'Procurement / Purchasing',
-    ],
-  },
-  {
-    group: 'G. Demographics Specific',
-    options: [
-      'Ibu Rumah Tangga / Moms',
-      'Pelajar / Mahasiswa',
-      'Fresh Graduate',
-      'Investor / Trader',
-      'Pensiunan',
-    ],
-  },
-  {
-    group: 'F. Other',
-    options: [
-      'Non-Profit / Organization',
+      'Investor & Trader',
+      'Developer & Tech Enthusiast',
+      'Agen / Reseller / Dropshipper',
       'Umum (General Audience)',
       'Lainnya (Isi Manual)',
     ],
@@ -286,34 +221,25 @@ export const targetAudienceOptions: GroupedOption[] = [
 
 export const gayaDesainOptions: GroupedOption[] = [
   {
-    group: 'A. Archetype Brand (Specific Look)',
+    group: 'A. 🔮 3D & World-Class International Archetypes',
     options: [
-      'Apple Style (Clean & Glass)',
-      'Stripe / Linear Style (Fintech)',
-      'Airbnb Style (Warm & Friendly)',
-      'Notion Style (Minimalist B&W)',
-      'Nike / Adidas Style (Bold & Dynamic)',
-      'Tesla Style (Sleek Futuristic)',
+      '🔮 Ultra 3D Glassmorphism & Aurora Glow (Linear / Framer Style)',
+      '🍏 Apple visionOS Liquid Glass (Frosted Blur & Silver 3D)',
+      '⚡ Cyberpunk Neo-Dark 3D (Neon Violet & Emerald Glow)',
+      '💎 Luxury Gold & Champagne (Prestige High-Ticket)',
+      '🏢 Stripe & Vercel Clean Tech (Precision Grid)',
+      '🎨 Swiss Style & Bold Typography (Modern Studio)',
     ],
   },
   {
-    group: 'B. Popular & Standard',
+    group: 'B. Gaya Populer & Standard Industri',
     options: [
-      'Clean & Minimalist',
-      'Modern SaaS',
-      'Bold & High Conversion',
-      'Elegant & Premium Luxury',
-      'Trust & Authority',
-      'Dark Mode Cyber',
-    ],
-  },
-  {
-    group: 'C. Trending & Aesthetic',
-    options: [
-      'Bento Grid / Modular',
-      'Glassmorphism & Glow',
-      'Neobrutalism / Pop Art',
-      'Organic & Natural Earth',
+      'Modern SaaS (Clean & High Trust)',
+      'Clean & Minimalist Light Mode',
+      'Bold & High Conversion (Red/Orange Punch)',
+      'Elegant Dark Mode (Midnight Indigo)',
+      'Bento Grid 3D (Modular Cards)',
+      'Warm Organic & Earth Tone',
     ],
   },
 ];
