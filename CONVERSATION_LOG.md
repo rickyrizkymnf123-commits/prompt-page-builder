@@ -35,12 +35,15 @@
      - Generator prompt di [`src/utils/generatePrompt.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/generatePrompt.ts) menyertakan snippet HTML/CSS/JS widget scarcity.
   8. **🔍 AI Landing Page Auditor**:
      - Dibuat tool tab baru [`src/components/audit/LandingPageAuditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/audit/LandingPageAuditor.tsx) untuk menganalisis 5 pilar konversi landing page (Hook, CTA, Social Proof, Mobile Flow, dan Kepatuhan Kebijakan Iklan Meta/Google Ads Anti-Banned).
-## Session: 2026-08-18 (Rilis V18: Optimalisasi Kelegaan Layar Smartphone & Penghapusan Bar Duplikat)
+## Session: 2026-08-19 (Rilis V19: Upgrade Masif Master Prompt - Arsitektur 3D Website & High-Converting Agency Quality)
 
 - **User Request**:
-  - Tampilan di HP terlalu sempit, teks terpotong (`Landing P...`), tombol bahasa terlipat, dan ada baris `📁 Proyek` duplikat.
+  - Hasil prompt AI masih terasa standar/biasa, animasi kaku, dan desain kurang mewah.
+  - Upgrade prompt agar menghasilkan desain setara website/LP mewah bernilai puluhan juta rupiah dari agensi internasional (3D visual, aurora glow, bento grid, video showcase section, mockup gambar 3D, micro-animasi halus, dan copywriting konversi tinggi).
+  - Tambahkan dukungan khusus untuk pembuatan Website Multi-Section (SaaS, Agency, Company Profile).
 
 - **Solusi & Implementasi**:
-  - Di [`Header.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/Header.tsx) dan [`Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/Admin.tsx), disesuaikan tipografi mobile (`LP Builder`), language switcher dibuat ringkas dan single-line, serta ukuran tombol icon disesuaikan agar pas dan lega di layar smartphone.
-  - Dihapus baris sub-header duplikat `PROMPT GENERATOR WIZARD` + `[📁 Proyek]` di dalam tab Tools.
+  - Di [`generatePrompt.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/utils/generatePrompt.ts), dirombak total menjadi mesin prompt kelas dunia ($10,000+ Agency Quality) yang menyematkan CSS 3D Design Tokens lengkap (Aurora canvas, 3D perspective tilt, frosted glassmorphism, glowing pulse buttons, `@keyframes float3d`, `@keyframes shimmer`, bento grid, video explainer showcase, before-after cards, dan live widgets).
+  - Di [`formOptions.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/data/formOptions.ts), ditambahkan opsi arsitektur Website Multi-Section (SaaS, Agency 3D, Company Profile) dan gaya desain 3D internasional (Linear/Framer 3D, Apple visionOS, Cyberpunk Neo-Dark, Luxury Gold).
+  - Di [`HtmlPreviewEditor.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/editor/HtmlPreviewEditor.tsx), diperbarui template section standar dengan styling 3D Aurora Glassmorphism.
   - Diverifikasi build `npm run build` (0 error), dicommit ke GitHub, dan live di Vercel: `https://prompt-page-builder-app.vercel.app`.
