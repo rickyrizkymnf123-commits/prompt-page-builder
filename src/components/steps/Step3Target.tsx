@@ -2,10 +2,12 @@ import { StepCard } from '@/components/StepCard';
 import { levelAwarenessOptions, targetAudienceOptions } from '@/data/formOptions';
 import { LiquidGlassModal } from '@/components/ui/LiquidGlassModal';
 import { Users, Eye } from 'lucide-react';
+import { translations, Language } from '@/utils/i18n';
 
 interface Props {
   levelAwareness: string;
   targetAudience: string;
+  language?: Language;
   onChange: (field: string, value: string) => void;
 }
 
@@ -16,18 +18,20 @@ const awarenessGrouped = [
   },
 ];
 
-export function Step3Target({ levelAwareness, targetAudience, onChange }: Props) {
+export function Step3Target({ levelAwareness, targetAudience, language = 'id', onChange }: Props) {
+  const t = translations[language] || translations.id;
+
   return (
-    <StepCard step={3} title="Target Market & Awareness">
+    <StepCard step={3} title={t.step3Title}>
       <div className="space-y-3.5">
         {/* Level Awareness */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Level Awareness Calon Pembeli
+            {t.awarenessLabel}
           </label>
           <LiquidGlassModal
-            title="Pilih Level Awareness"
-            placeholder="Pilih level awareness (Problem Aware, Solution Aware)..."
+            title={t.awarenessLabel}
+            placeholder={t.awarenessPlaceholder}
             value={levelAwareness}
             options={awarenessGrouped}
             onSelect={(val) => onChange('levelAwareness', val)}
@@ -39,11 +43,11 @@ export function Step3Target({ levelAwareness, targetAudience, onChange }: Props)
         {/* Target Audience */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Target Audience Spesifik
+            {t.targetAudienceLabel}
           </label>
           <LiquidGlassModal
-            title="Pilih Target Audience"
-            placeholder="Pilih target audience atau tulis manual..."
+            title={t.targetAudienceLabel}
+            placeholder={t.targetAudiencePlaceholder}
             value={targetAudience}
             options={targetAudienceOptions}
             onSelect={(val) => onChange('targetAudience', val)}

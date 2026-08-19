@@ -931,9 +931,25 @@ export default function Admin() {
 
             {toolStep === 1 && (
               <div className="space-y-4 pb-6 max-w-3xl">
-                <Step1Framework framework={form.framework} gayaBahasa={form.gayaBahasa} onChange={handleChange} />
-                <Step2Product tipeProduk={form.tipeProduk} tujuanUtama={form.tujuanUtama} onChange={handleChange} />
-                <Step3Target levelAwareness={form.levelAwareness} targetAudience={form.targetAudience} onChange={handleChange} />
+                <Step1Framework
+                  framework={form.framework}
+                  gayaBahasa={form.gayaBahasa}
+                  language={language}
+                  onChange={handleChange}
+                />
+                <Step2Product
+                  tipeProduk={form.tipeProduk}
+                  tujuanUtama={form.tujuanUtama}
+                  trafficCategory={form.trafficCategory}
+                  language={language}
+                  onChange={handleChange}
+                />
+                <Step3Target
+                  levelAwareness={form.levelAwareness}
+                  targetAudience={form.targetAudience}
+                  language={language}
+                  onChange={handleChange}
+                />
                 <Step4Detail
                   namaProduk={form.namaProduk}
                   hargaNormal={form.hargaNormal}
@@ -941,15 +957,40 @@ export default function Admin() {
                   hargaFinal={form.hargaFinal}
                   keteranganDiskon={form.keteranganDiskon}
                   pricingLayersConfig={form.pricingLayersConfig}
+                  tieredPricing={form.tieredPricing}
+                  ctaMode={form.ctaMode}
                   bonusList={form.bonusList}
                   deskripsiBenefit={form.deskripsiBenefit}
                   ctaUtama={form.ctaUtama}
+                  language={language}
                   onChange={handleChange}
                   onChangeBonusList={handleChangeBonusList}
+                  onChangeTieredPricing={(t) => handleChange('tieredPricing', t)}
+                  onChangeCtaMode={(c) => handleChange('ctaMode', c)}
                 />
-                <Step5Design warnaBrand={form.warnaBrand} tema={form.tema} gayaDesain={form.gayaDesain} onChange={handleChange} />
-                <Step6Elements elemenTambahan={form.elemenTambahan} onToggle={handleToggleElement} />
-                <Step7Platform platformTarget={form.platformTarget} deviceTarget={form.deviceTarget} onChange={handleChange} />
+                <Step5Design
+                  warnaBrand={form.warnaBrand}
+                  warnaBrandCustom={form.warnaBrandCustom}
+                  tema={form.tema}
+                  gayaDesain={form.gayaDesain}
+                  typography={form.typography}
+                  language={language}
+                  onChange={handleChange}
+                  onChangeTypography={(t) => handleChange('typography', t)}
+                />
+                <Step6Elements
+                  elemenTambahan={form.elemenTambahan}
+                  metaCapi={form.metaCapi}
+                  language={language}
+                  onToggle={handleToggleElement}
+                  onChangeMetaCapi={(c) => handleChange('metaCapi', c)}
+                />
+                <Step7Platform
+                  platformTarget={form.platformTarget}
+                  deviceTarget={form.deviceTarget}
+                  language={language}
+                  onChange={handleChange}
+                />
                 <StepSalesNotif salesNotif={form.salesNotif} onChange={handleSalesNotifChange} />
                 <StepCountdown
                   countdown={form.countdown}
@@ -958,9 +999,9 @@ export default function Admin() {
                   onChangeScarcity={handleScarcityChange}
                 />
                 <div className="flex gap-3 pt-2">
-                  <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> Reset</Button>
+                  <Button variant="outline" onClick={handleReset} className="gap-2"><RotateCcw className="h-4 w-4" /> {language === 'en' ? 'Reset' : 'Reset Form'}</Button>
                   <Button onClick={handleGenerate} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2" size="lg">
-                    <Zap className="h-4 w-4" /> {isDirty ? "Generate Ulang" : "Generate Prompt ⚡"}
+                    <Zap className="h-4 w-4" /> {isDirty ? (language === 'en' ? 'Regenerate ⚡' : 'Generate Ulang ⚡') : (language === 'en' ? 'Generate Master Prompt ⚡' : 'Generate Prompt ⚡')}
                   </Button>
                 </div>
               </div>

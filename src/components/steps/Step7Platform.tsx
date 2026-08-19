@@ -1,5 +1,6 @@
 import { StepCard } from '@/components/StepCard';
 import { platformTargetOptions } from '@/data/formOptions';
+import { translations, Language } from '@/utils/i18n';
 
 const platformIcons: Record<string, string> = {
   'OrderHero': '🦸‍♂️',
@@ -20,40 +21,48 @@ const deviceOptions = [
     label: 'Mobile',
     icon: '📲',
     desc: 'Padding 35px — Fokus Layar HP & Traffic Ads',
+    descEn: 'Padding 35px — Mobile Screen & Ads Traffic',
   },
   {
     label: 'Tablet',
     icon: '📱',
     desc: 'Padding 50px — Layar iPad & Tablet',
+    descEn: 'Padding 50px — iPad & Tablet Screens',
   },
   {
     label: 'Desktop',
     icon: '🖥️',
     desc: 'Padding 128px — Tampilan Laptop & PC',
+    descEn: 'Padding 128px — Laptop & PC Screens',
   },
   {
     label: 'Responsive',
     icon: '💻📱',
     desc: 'Auto-adjust — Menyesuaikan Semua Layar',
+    descEn: 'Auto-adjust — Adapts to All Screen Sizes',
   },
 ];
 
 interface Props {
   platformTarget: string;
   deviceTarget: string;
+  language?: Language;
   onChange: (field: string, value: string) => void;
 }
 
-export function Step7Platform({ platformTarget, deviceTarget, onChange }: Props) {
+export function Step7Platform({ platformTarget, deviceTarget, language = 'id', onChange }: Props) {
+  const t = translations[language] || translations.id;
   const isScalev = platformTarget === 'Scalev';
   const isOrderHero = platformTarget === 'OrderHero';
   const isWinMe = platformTarget === 'WinMe';
 
   return (
-    <StepCard step={7} title="Platform & Device Target">
+    <StepCard step={7} title={t.step7Title}>
       {/* Platform selector */}
       <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Platform Tujuan</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+          {t.platformTargetLabel}
+        </p>
         <div className="flex flex-wrap gap-2">
           {platformTargetOptions.map((platform) => {
             const active = platformTarget === platform;
@@ -63,82 +72,69 @@ export function Step7Platform({ platformTarget, deviceTarget, onChange }: Props)
                 key={platform}
                 type="button"
                 onClick={() => onChange('platformTarget', platform)}
-                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all border ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                   active
-                    ? 'bg-primary/10 text-primary border-primary shadow-sm shadow-primary/20'
-                    : 'bg-secondary/70 text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
+                    : 'bg-secondary/40 text-muted-foreground border-border hover:bg-secondary hover:text-foreground'
                 }`}
               >
-                <span
-                  className={`flex-shrink-0 w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-all ${
-                    active ? 'border-primary' : 'border-muted-foreground/40'
-                  }`}
-                >
-                  {active && <span className="w-1.5 h-1.5 rounded-full bg-primary block" />}
-                </span>
-                <span className="text-base">{icon}</span>
-                <span className="font-bold tracking-wide">{platform}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Device selector */}
-      <div className="mt-5">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
-          Device Target
-          {isScalev && <span className="ml-2 text-primary normal-case font-normal">(Rekomendasi Scalev)</span>}
-          {isOrderHero && <span className="ml-2 text-primary normal-case font-normal">(Optimasi OrderHero)</span>}
-          {isWinMe && <span className="ml-2 text-primary normal-case font-normal">(Optimasi WinMe)</span>}
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {deviceOptions.map(({ label, icon, desc }) => {
-            const active = deviceTarget === label;
-            return (
-              <button
-                key={label}
-                type="button"
-                onClick={() => onChange('deviceTarget', label)}
-                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl text-xs sm:text-sm font-semibold transition-all border text-center ${
-                  active
-                    ? 'bg-primary/10 text-primary border-primary shadow-sm shadow-primary/20'
-                    : 'bg-secondary/70 text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
-                }`}
-              >
-                <span className="text-2xl">{icon}</span>
-                <span className="font-bold text-foreground">{label}</span>
-                <span className={`text-[10px] font-normal leading-snug ${active ? 'text-primary/80' : 'text-muted-foreground/70'}`}>
-                  {desc}
-                </span>
+                <span>{icon}</span>
+                <span>{platform}</span>
+                {active && <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground inline-block ml-0.5" />}
               </button>
             );
           })}
         </div>
 
-        {/* Scalev size hint */}
+        {/* Platform Info Banners */}
         {isScalev && (
-          <div className="mt-3 rounded-xl bg-primary/5 border border-primary/20 p-3 text-xs text-muted-foreground space-y-1">
-            <p className="font-semibold text-primary mb-1">📐 Scalev Width Reference</p>
-            <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
-              <div className={`rounded-lg p-2 border ${deviceTarget === 'Desktop' ? 'bg-primary/15 border-primary/40 text-primary font-semibold' : 'border-border/50'}`}>
-                <div className="font-bold">Desktop</div>
-                <div>~432px konten</div>
-                <div className="text-[10px] text-muted-foreground">(688 − 2×128)</div>
-              </div>
-              <div className={`rounded-lg p-2 border ${deviceTarget === 'Tablet' ? 'bg-primary/15 border-primary/40 text-primary font-semibold' : 'border-border/50'}`}>
-                <div className="font-bold">Tablet</div>
-                <div>~588px konten</div>
-                <div className="text-[10px] text-muted-foreground">(688 − 2×50)</div>
-              </div>
-              <div className={`rounded-lg p-2 border ${deviceTarget === 'Mobile' ? 'bg-primary/15 border-primary/40 text-primary font-semibold' : 'border-border/50'}`}>
-                <div className="font-bold">Mobile</div>
-                <div>~618px konten</div>
-                <div className="text-[10px] text-muted-foreground">(688 − 2×35)</div>
-              </div>
-            </div>
+          <div className="mt-3 p-3 bg-primary/10 border border-primary/30 rounded-xl text-xs space-y-1 animate-in fade-in duration-200">
+            <p className="font-semibold text-primary">🚀 Preset Khusus Scalev Aktif:</p>
+            <p className="text-muted-foreground">HTML terisolasi dalam <code>#lp-root</code>, single column responsif, siap salin dan pasang langsung di Scalev Custom HTML.</p>
           </div>
         )}
+        {isWinMe && (
+          <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs space-y-1 animate-in fade-in duration-200">
+            <p className="font-semibold text-amber-500">🏆 Preset Khusus WinMe Aktif:</p>
+            <p className="text-muted-foreground">Struktur disiapkan dengan class tombol <code>.cta-btn</code> yang siap dipadukan dengan modul checkout WinMe.</p>
+          </div>
+        )}
+        {isOrderHero && (
+          <div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs space-y-1 animate-in fade-in duration-200">
+            <p className="font-semibold text-emerald-500">🦸‍♂️ Preset Khusus OrderHero Aktif:</p>
+            <p className="text-muted-foreground">Optimal untuk landing page produk fisik dengan alur checkout form OrderHero.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Device Target */}
+      <div className="mt-4 pt-4 border-t border-border">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+          {t.deviceTargetLabel}
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {deviceOptions.map((dev) => {
+            const active = deviceTarget === dev.label;
+            return (
+              <button
+                key={dev.label}
+                type="button"
+                onClick={() => onChange('deviceTarget', dev.label)}
+                className={`flex flex-col items-center p-3 rounded-xl border text-center transition-all cursor-pointer ${
+                  active
+                    ? 'bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary/40'
+                    : 'bg-secondary/40 border-border text-muted-foreground hover:bg-secondary hover:text-foreground'
+                }`}
+              >
+                <span className="text-2xl mb-1">{dev.icon}</span>
+                <span className="text-xs font-bold text-foreground">{dev.label}</span>
+                <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
+                  {language === 'en' ? dev.descEn : dev.desc}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </StepCard>
   );

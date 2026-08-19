@@ -2,8 +2,9 @@ import { StepCard } from '@/components/StepCard';
 import { Switch } from '@/components/ui/switch';
 import { elemenTambahanOptions } from '@/data/formOptions';
 import { MetaCapiConfig } from '@/types/form';
-import { Radio, Sparkles, Check, Info } from 'lucide-react';
+import { Radio, Check, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { translations, Language } from '@/utils/i18n';
 
 const sectionIcons: Record<string, string> = {
   'Hero Section': '🏆',
@@ -23,6 +24,7 @@ const sectionIcons: Record<string, string> = {
 interface Props {
   elemenTambahan: Record<string, boolean>;
   metaCapi?: MetaCapiConfig;
+  language?: Language;
   onToggle: (element: string) => void;
   onChangeMetaCapi?: (metaCapi: MetaCapiConfig) => void;
 }
@@ -30,22 +32,24 @@ interface Props {
 export function Step6Elements({
   elemenTambahan,
   metaCapi = { enabled: false, pixelId: '', capiToken: '', eventName: 'Lead' },
+  language = 'id',
   onToggle,
   onChangeMetaCapi,
 }: Props) {
+  const t = translations[language] || translations.id;
   const activeCount = Object.values(elemenTambahan).filter(Boolean).length;
 
   return (
-    <StepCard step={6} title="Pilihan Section Landing Page">
+    <StepCard step={6} title={t.step6Title}>
       <div className="space-y-4">
         {/* Section Grid */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              Pilih Section yang Ingin Ditampilkan
+              {t.sectionsTitle}
             </p>
             <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
-              {activeCount} Section Aktif
+              {activeCount} {language === 'en' ? 'Active Sections' : 'Section Aktif'}
             </span>
           </div>
 
@@ -58,9 +62,9 @@ export function Step6Elements({
                   key={el}
                   type="button"
                   onClick={() => onToggle(el)}
-                  className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
+                  className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                     active
-                      ? 'bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary/30'
+                      ? 'bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary/30 font-bold'
                       : 'bg-secondary/50 border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
                   }`}
                 >
@@ -80,7 +84,9 @@ export function Step6Elements({
             })}
           </div>
           <p className="text-[11px] text-muted-foreground italic pt-1">
-            💡 Urutan susunan section dapat diatur dan digeser secara fleksibel nanti di <strong>Mode Edit HTML</strong>.
+            {language === 'en'
+              ? '💡 Section order can be rearranged anytime in Live HTML Edit Mode.'
+              : '💡 Urutan susunan section dapat diatur dan digeser secara fleksibel nanti di Mode Edit HTML.'}
           </p>
         </div>
 
@@ -92,13 +98,15 @@ export function Step6Elements({
                 <Radio className="w-4 h-4 text-blue-400 flex-shrink-0" />
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs sm:text-sm font-bold text-blue-400">Meta CAPI CTWA Tracking</span>
+                    <span className="text-xs sm:text-sm font-bold text-blue-400">{t.metaCapiTitle}</span>
                     <span className="text-[9px] font-black uppercase tracking-wider bg-blue-500 text-white px-2 py-0.5 rounded-full">
-                      🚀 Next Feature (Segera Hadir)
+                      {t.nextFeatureBadge}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-300 mt-0.5">
-                    Modul tracking server-side Meta Conversions API khusus iklan WhatsApp agar event Lead terkirim presisi.
+                    {language === 'en'
+                      ? 'Server-side Meta Conversions API tracking for precise WhatsApp conversion events.'
+                      : 'Modul tracking server-side Meta Conversions API khusus iklan WhatsApp agar event Lead terkirim presisi.'}
                   </p>
                 </div>
               </div>

@@ -426,6 +426,7 @@ export default function AppPage() {
                   <Step1Framework
                     framework={form.framework}
                     gayaBahasa={form.gayaBahasa}
+                    language={form.language || 'id'}
                     onChange={handleChange}
                   />
 
@@ -433,12 +434,14 @@ export default function AppPage() {
                     tipeProduk={form.tipeProduk}
                     tujuanUtama={form.tujuanUtama}
                     trafficCategory={form.trafficCategory}
+                    language={form.language || 'id'}
                     onChange={handleChange}
                   />
 
                   <Step3Target
                     levelAwareness={form.levelAwareness}
                     targetAudience={form.targetAudience}
+                    language={form.language || 'id'}
                     onChange={handleChange}
                   />
 
@@ -454,6 +457,7 @@ export default function AppPage() {
                     bonusList={form.bonusList}
                     deskripsiBenefit={form.deskripsiBenefit}
                     ctaUtama={form.ctaUtama}
+                    language={form.language || 'id'}
                     onChange={handleChange}
                     onChangeBonusList={handleChangeBonusList}
                     onChangeTieredPricing={(t) => handleChange('tieredPricing', t)}
@@ -466,6 +470,7 @@ export default function AppPage() {
                     tema={form.tema}
                     gayaDesain={form.gayaDesain}
                     typography={form.typography}
+                    language={form.language || 'id'}
                     onChange={handleChange}
                     onChangeTypography={(t) => handleChange('typography', t)}
                   />
@@ -473,6 +478,7 @@ export default function AppPage() {
                   <Step6Elements
                     elemenTambahan={form.elemenTambahan}
                     metaCapi={form.metaCapi}
+                    language={form.language || 'id'}
                     onToggle={handleToggleElement}
                     onChangeMetaCapi={(c) => handleChange('metaCapi', c)}
                   />
@@ -480,6 +486,7 @@ export default function AppPage() {
                   <Step7Platform
                     platformTarget={form.platformTarget}
                     deviceTarget={form.deviceTarget}
+                    language={form.language || 'id'}
                     onChange={handleChange}
                   />
 
