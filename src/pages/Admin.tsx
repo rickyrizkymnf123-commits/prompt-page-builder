@@ -42,6 +42,7 @@ import { CompetitorSpy } from "@/components/tools/CompetitorSpy";
 import { CreativeSync } from "@/components/tools/CreativeSync";
 import { FiveSecondTest } from "@/components/tools/FiveSecondTest";
 import { QuickPromptMode } from "@/components/tools/QuickPromptMode";
+import { LpCloner } from "@/components/tools/LpCloner";
 import { Globe, Menu } from "lucide-react";
 
 interface AdminUser {
@@ -532,6 +533,24 @@ export default function Admin() {
     setActionLoading(null);
   };
 
+  const handleImpersonateUser = (targetUser: AdminUser) => {
+    const impersonationData = {
+      id: targetUser.id,
+      email: targetUser.email,
+      name: targetUser.name || targetUser.email.split('@')[0],
+      role: targetUser.role,
+      tier: targetUser.product_code === 'LPE' ? 'paid' : 'free',
+      isImpersonating: true,
+      originalAdminEmail: userEmail || 'fauzymnf29@gmail.com',
+    };
+    sessionStorage.setItem('lpb_impersonated_user', JSON.stringify(impersonationData));
+    showToast({
+      title: '👀 Masuk Mode Intip User',
+      description: `Beralih ke tampilan dashboard ${targetUser.email}.`,
+    });
+    navigate('/app');
+  };
+
   const createMemberAccount = async (email: string, password: string, name: string, role: string, tier: string) => {
     // 1. Try Edge Function first if available
     try {
@@ -920,6 +939,8 @@ export default function Admin() {
                 ? '🚀 Landing Page Generator'
                 : activeTab === 'quick_prompt'
                 ? '⚡ Prompt Cepat (AI Auto-Fill)'
+                : activeTab === 'lp_cloner'
+                ? '📑 AI LP Clone & Re-Angle (1:1 Replica)'
                 : activeTab === 'api_settings'
                 ? '⚙️ Konfigurasi API AI (KoboiLLM / OpenAI)'
                 : activeTab === 'competitor_spy'
@@ -985,6 +1006,17 @@ export default function Admin() {
                 setForm(quickForm);
                 handleTabChange('tools');
               }}
+            />
+          </TabsContent>
+
+          {/* LP CLONER TAB */}
+          <TabsContent value="lp_cloner">
+            <LpCloner
+              onApplyToGenerator={(clonedForm) => {
+                setForm(clonedForm);
+                handleTabChange('tools');
+              }}
+              onOpenLpBuilder={() => handleTabChange('lpbuilder')}
             />
           </TabsContent>
 
@@ -1359,6 +1391,15 @@ export default function Admin() {
                                   {u.product_code === 'LPE' ? '⬇ Gratis' : '⬆ Bayar'}
                                 </Button>
                               )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1 text-xs text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10 h-7 px-2"
+                                onClick={() => handleImpersonateUser(u)}
+                                title="Intip / Masuk ke Dashboard sebagai User ini"
+                              >
+                                <Eye className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Intip</span>
+                              </Button>
                               <Button size="sm" variant="ghost" className="text-muted-foreground h-7 w-7 p-0" onClick={() => setResetDialog({ open: true, userId: u.id, email: u.email })} title="Reset Password">
                                 <KeyRound className="h-3.5 w-3.5" />
                               </Button>

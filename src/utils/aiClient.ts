@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 export interface AiApiConfig {
   apiKey: string;
   endpointUrl: string;
@@ -11,26 +13,77 @@ export const DEFAULT_AI_CONFIG: AiApiConfig = {
 };
 
 const STORAGE_KEY = 'lpb_ai_config';
+let memoryConfig: AiApiConfig | null = null;
 
 export function getStoredAiConfig(): AiApiConfig {
+  if (memoryConfig && memoryConfig.apiKey) {
+    return memoryConfig;
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return {
+      const cfg: AiApiConfig = {
         apiKey: parsed.apiKey || '',
         endpointUrl: parsed.endpointUrl || DEFAULT_AI_CONFIG.endpointUrl,
         model: parsed.model || DEFAULT_AI_CONFIG.model,
       };
+      memoryConfig = cfg;
+      return cfg;
     }
   } catch {}
   return DEFAULT_AI_CONFIG;
 }
 
-export function saveStoredAiConfig(config: AiApiConfig): void {
+export async function saveStoredAiConfig(config: AiApiConfig): Promise<void> {
+  memoryConfig = config;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   } catch {}
+
+  // Also sync to Supabase app_settings for global persistence
+  try {
+    await supabase.from('app_settings').upsert(
+      {
+        key: 'lpb_ai_config',
+        value: JSON.stringify(config),
+        updated_at: new Date().toISOString(),
+      } as any,
+      { onConflict: 'key' }
+    );
+  } catch (e) {
+    console.warn('Could not sync AI config to Supabase app_settings:', e);
+  }
+}
+
+export async function syncAiConfigFromCloud(): Promise<AiApiConfig> {
+  try {
+    const { data } = await (supabase as any)
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'lpb_ai_config')
+      .maybeSingle();
+
+    if (data?.value) {
+      const parsed = JSON.parse(data.value);
+      if (parsed && parsed.apiKey) {
+        const cloudConfig: AiApiConfig = {
+          apiKey: parsed.apiKey,
+          endpointUrl: parsed.endpointUrl || DEFAULT_AI_CONFIG.endpointUrl,
+          model: parsed.model || DEFAULT_AI_CONFIG.model,
+        };
+        memoryConfig = cloudConfig;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudConfig));
+        return cloudConfig;
+      }
+    }
+  } catch {}
+  return getStoredAiConfig();
+}
+
+// Auto-sync on startup
+if (typeof window !== 'undefined') {
+  syncAiConfigFromCloud();
 }
 
 export async function testAiApiConnection(config: AiApiConfig): Promise<{ success: boolean; message: string }> {
@@ -72,10 +125,16 @@ export async function sendAiChatMessage(
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
   customConfig?: Partial<AiApiConfig>
 ): Promise<string> {
-  const currentConfig = { ...getStoredAiConfig(), ...customConfig };
+  let currentConfig = { ...getStoredAiConfig(), ...customConfig };
 
   if (!currentConfig.apiKey.trim()) {
-    throw new Error('API Key belum diisi. Silakan isi API Key di menu Konfigurasi API AI.');
+    // Try one more cloud sync
+    const synced = await syncAiConfigFromCloud();
+    currentConfig = { ...synced, ...customConfig };
+  }
+
+  if (!currentConfig.apiKey.trim()) {
+    throw new Error('API Key KoboiLLM belum diatur oleh Administrator di panel Admin.');
   }
 
   const response = await fetch(currentConfig.endpointUrl, {

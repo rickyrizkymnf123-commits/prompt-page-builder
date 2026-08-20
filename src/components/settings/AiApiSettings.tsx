@@ -41,16 +41,21 @@ export function AiApiSettings() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [testInput, setTestInput] = useState('');
   const [isChatting, setIsChatting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    setConfig(getStoredAiConfig());
+    import('@/utils/aiClient').then(({ syncAiConfigFromCloud, getStoredAiConfig }) => {
+      syncAiConfigFromCloud().then((cfg) => setConfig(cfg));
+    });
   }, []);
 
-  const handleSave = () => {
-    saveStoredAiConfig(config);
+  const handleSave = async () => {
+    setIsSaving(true);
+    await saveStoredAiConfig(config);
+    setIsSaving(false);
     toast({
-      title: '💾 Pengaturan Disimpan!',
-      description: 'Konfigurasi API AI telah tersimpan di sistem browser Anda.',
+      title: '💾 Pengaturan Disimpan Permanen!',
+      description: 'Konfigurasi API AI telah tersimpan di browser & database server (tidak akan hilang saat refresh).',
     });
   };
 

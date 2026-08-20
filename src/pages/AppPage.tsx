@@ -18,7 +18,7 @@ import { AiApiSettings } from "@/components/settings/AiApiSettings";
 import { FormState, initialFormState, SalesNotifConfig, CountdownConfig, ScarcitySeatConfig, BonusItem } from "@/types/form";
 import { generatePrompt } from "@/utils/generatePrompt";
 import { Button } from "@/components/ui/button";
-import { Zap, RotateCcw, Copy, BookmarkPlus, FolderOpen, ChevronRight, Menu, ArrowLeft } from "lucide-react";
+import { Zap, RotateCcw, Copy, BookmarkPlus, FolderOpen, ChevronRight, Menu, ArrowLeft, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,6 +31,7 @@ import { CompetitorSpy } from "@/components/tools/CompetitorSpy";
 import { CreativeSync } from "@/components/tools/CreativeSync";
 import { FiveSecondTest } from "@/components/tools/FiveSecondTest";
 import { QuickPromptMode } from "@/components/tools/QuickPromptMode";
+import { LpCloner } from "@/components/tools/LpCloner";
 import { AffiliateProgram } from "@/components/affiliate/AffiliateProgram";
 import { LiveBlueprintDisplay } from "@/components/preview/LiveBlueprintDisplay";
 import { translations, Language } from "@/utils/i18n";
@@ -167,6 +168,12 @@ export default function AppPage() {
   const [userId, setUserId] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [darkMode, setDarkMode] = useState(true);
+  const [impersonatedUser, setImpersonatedUser] = useState<{
+    id: string;
+    email: string;
+    name: string;
+    tier: 'free' | 'paid';
+  } | null>(null);
 
   // Sidebar Drawer state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -212,6 +219,35 @@ export default function AppPage() {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
+
+      // Check Impersonation Mode (Mode Intip)
+      const impRaw = sessionStorage.getItem('lpb_impersonated_user');
+      if (impRaw) {
+        try {
+          const imp = JSON.parse(impRaw);
+          if (imp && imp.isImpersonating) {
+            setImpersonatedUser(imp);
+            setUserId(imp.id);
+            setUserEmail(imp.email);
+            setUserTier(imp.tier || 'free');
+
+            try {
+              const { data: settings } = await (supabase as any).from('app_settings').select('value').eq('key', 'scalev_order_url').maybeSingle();
+              if (settings?.value) setOrderUrl(settings.value);
+            } catch {}
+
+            if (imp.tier !== 'paid') {
+              const { data: usage } = await supabase.from('prompt_usage').select('used_count').eq('user_id', imp.id).maybeSingle();
+              const count = usage?.used_count ?? 0;
+              setPromptUsage(count);
+              setUsageLimitReached(count >= FREE_LIMIT);
+            }
+            setLoading(false);
+            return;
+          }
+        } catch {}
+      }
+
       setUserId(session.user.id);
       setUserEmail(session.user.email || '');
 
@@ -339,12 +375,14 @@ export default function AppPage() {
   const pageTitles: Record<string, string> = {
     generator: '🚀 Landing Page Generator',
     quick_prompt: '⚡ Prompt Cepat (AI Auto-Fill)',
+    lp_cloner: '📑 AI LP Clone & Re-Angle (1:1 Replica)',
     api_settings: '⚙️ Konfigurasi API AI (KoboiLLM / OpenAI)',
     competitor_spy: '🕵️‍♂️ AI Competitor Spy Tool',
     creative_sync: '🎬 Creative-to-Landing Page Sync',
     five_second: '⏱️ Tes 5 Detik (Clarity Test)',
     audit: '🔍 AI Landing Page Auditor',
     templates: '📋 Galeri Template',
+    lpbuilder: '🚀 Live LP Builder Engine',
     affiliate: '🤝 Program Kemitraan (Affiliate)',
   };
 
@@ -354,6 +392,31 @@ export default function AppPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
+      {/* Impersonation Banner */}
+      {impersonatedUser && (
+        <div className="bg-gradient-to-r from-amber-600 via-indigo-600 to-purple-700 text-white px-3 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold flex items-center justify-between shadow-lg sticky top-0 z-50">
+          <div className="flex items-center gap-2">
+            <Eye className="w-4 h-4 text-amber-300 animate-pulse flex-shrink-0" />
+            <span>
+              <strong>Mode Intip Aktif:</strong> Melihat sebagai{' '}
+              <code className="bg-black/30 px-1.5 py-0.5 rounded font-mono text-amber-200">{impersonatedUser.email}</code>{' '}
+              ({impersonatedUser.tier === 'paid' ? '⭐ Berbayar' : '🆓 Gratis'})
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-7 text-xs font-bold gap-1 bg-white text-slate-900 hover:bg-white/90 shadow-sm"
+            onClick={() => {
+              sessionStorage.removeItem('lpb_impersonated_user');
+              navigate('/admin?tab=users');
+            }}
+          >
+            Keluar Mode Intip →
+          </Button>
+        </div>
+      )}
+
       {/* Top Header with Hamburger ☰ and Language Switcher beside Dark Mode */}
       <Header
         darkMode={darkMode}
@@ -370,7 +433,7 @@ export default function AppPage() {
         activeTab={activePage}
         onSelectTab={handlePageChange}
         userEmail={userEmail}
-        isAdmin={userEmail === 'fauzymnf29@gmail.com'}
+        isAdmin={impersonatedUser ? false : (userEmail === 'fauzymnf29@gmail.com')}
         onLogout={async () => {
           await supabase.auth.signOut();
           navigate('/login');
@@ -568,6 +631,17 @@ export default function AppPage() {
           />
         )}
 
+        {/* TAB: LP CLONER & RE-ANGLE */}
+        {activePage === 'lp_cloner' && (
+          <LpCloner
+            onApplyToGenerator={(clonedForm) => {
+              setForm(clonedForm);
+              handlePageChange('generator');
+            }}
+            onOpenLpBuilder={() => handlePageChange('lpbuilder')}
+          />
+        )}
+
         {/* TAB 3: KOBOILLM / OPENAI API CONFIGURATION */}
         {activePage === 'api_settings' && <AiApiSettings />}
 
@@ -575,7 +649,14 @@ export default function AppPage() {
         {activePage === 'competitor_spy' && <CompetitorSpy />}
 
         {/* TAB 5: CREATIVE SYNC */}
-        {activePage === 'creative_sync' && <CreativeSync />}
+        {activePage === 'creative_sync' && (
+          <CreativeSync
+            onApplyToForm={(data) => {
+              setForm(prev => ({ ...prev, ...data }));
+              handlePageChange('generator');
+            }}
+          />
+        )}
 
         {/* TAB 6: TES 5 DETIK */}
         {activePage === 'five_second' && <FiveSecondTest />}
@@ -603,7 +684,7 @@ export default function AppPage() {
         )}
 
         {/* TAB 10: LP BUILDER */}
-        {activePage === 'lpbuilder' && <HtmlGeneratorTab isAdmin={isPaid} />}
+        {activePage === 'lpbuilder' && <HtmlGeneratorTab isAdmin={false} />}
 
         {/* TAB 11: WEBHOOK */}
         {activePage === 'webhook' && isPaid && <UserWebhookSettings userId={userId} />}

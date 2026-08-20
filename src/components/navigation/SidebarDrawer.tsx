@@ -19,6 +19,7 @@ import {
   FileText,
   Settings,
   ExternalLink,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -65,12 +66,12 @@ export function SidebarDrawer({
       badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
     },
     {
-      id: 'api_settings',
-      label: 'Konfigurasi API AI',
-      desc: 'Koneksi KoboiLLM / OpenAI & Live Chat',
-      icon: <Cpu className="w-4 h-4 text-indigo-400" />,
-      badge: 'v8.0',
-      badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+      id: 'lp_cloner',
+      label: 'AI LP Clone & Re-Angle (1:1)',
+      desc: 'Duplikat & re-angle LP kompetitor 1:1',
+      icon: <Copy className="w-4 h-4 text-pink-400" />,
+      badge: 'New',
+      badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
     },
     {
       id: 'competitor_spy',
@@ -138,6 +139,14 @@ export function SidebarDrawer({
       icon: <Users className="w-4 h-4 text-amber-400" />,
       badge: pendingUsersCount > 0 ? `${pendingUsersCount} Pending` : 'Users',
       badgeColor: pendingUsersCount > 0 ? 'bg-amber-500 text-white font-black' : 'bg-white/10 text-slate-300',
+    },
+    {
+      id: 'api_settings',
+      label: 'Konfigurasi API AI (KoboiLLM)',
+      desc: 'Koneksi API Key & Model AI Global',
+      icon: <Cpu className="w-4 h-4 text-indigo-400" />,
+      badge: 'Global',
+      badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
     },
     {
       id: 'logs',
