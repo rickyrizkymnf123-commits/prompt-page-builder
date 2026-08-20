@@ -603,7 +603,7 @@ export default function AppPage() {
         )}
 
         {/* TAB 10: LP BUILDER */}
-        {activePage === 'lpbuilder' && isPaid && <HtmlGeneratorTab />}
+        {activePage === 'lpbuilder' && <HtmlGeneratorTab isAdmin={isPaid} />}
 
         {/* TAB 11: WEBHOOK */}
         {activePage === 'webhook' && isPaid && <UserWebhookSettings userId={userId} />}

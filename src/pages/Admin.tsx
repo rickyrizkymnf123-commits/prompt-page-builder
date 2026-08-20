@@ -532,19 +532,95 @@ export default function Admin() {
     setActionLoading(null);
   };
 
+  const createMemberAccount = async (email: string, password: string, name: string, role: string, tier: string) => {
+    // 1. Try Edge Function first if available
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-users", {
+        body: { action: "add_member", email, password, name, role, tier }
+      });
+      if (!error && !data?.error) {
+        return { success: true, userId: data?.user_id };
+      }
+      if (data?.error && (data.error.includes("already been registered") || data.error.includes("already registered"))) {
+        throw new Error("Email sudah terdaftar. Gunakan email lain.");
+      }
+    } catch (edgeErr: any) {
+      if (edgeErr?.message?.includes("already been registered") || edgeErr?.message?.includes("already registered")) {
+        throw edgeErr;
+      }
+      console.warn("Edge function not available, using direct auth signup fallback:", edgeErr);
+    }
+
+    // 2. Direct Fallback using isolated secondary client (does not overwrite admin session)
+    const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL;
+    const SUPABASE_PUBLISHABLE_KEY = (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const { createClient } = await import("@supabase/supabase-js");
+    const tempClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    });
+
+    const { data: signUpData, error: signUpErr } = await tempClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name, name }
+      }
+    });
+
+    if (signUpErr) {
+      if (signUpErr.message.includes("already registered") || signUpErr.message.includes("already been registered")) {
+        throw new Error("Email sudah terdaftar. Gunakan email lain.");
+      }
+      throw signUpErr;
+    }
+
+    const newUid = signUpData?.user?.id;
+    if (newUid) {
+      // Upsert into profiles, entitlements, user_roles
+      await Promise.allSettled([
+        supabase.from("profiles").upsert({
+          id: newUid,
+          user_id: newUid,
+          email,
+          name: name || email.split("@")[0],
+          created_at: new Date().toISOString(),
+        } as any, { onConflict: "user_id" }),
+
+        supabase.from("entitlements").upsert({
+          user_id: newUid,
+          status: "active",
+          product_code: tier === "paid" ? "LPE" : "LPE_FREE",
+          order_id: `MANUAL_${Date.now()}`,
+          created_at: new Date().toISOString(),
+        } as any, { onConflict: "user_id" }),
+
+        supabase.from("user_roles").upsert({
+          user_id: newUid,
+          role: role || "user",
+        } as any, { onConflict: "user_id" }),
+      ]);
+    }
+
+    return { success: true, userId: newUid };
+  };
+
   const handleAddMember = async () => {
     if (!addMemberForm.email || !addMemberForm.password) { showToast({ title: "Error", description: "Email dan password wajib.", variant: "destructive" }); return; }
     if (addMemberForm.password.length < 6) { showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" }); return; }
     setAddMemberLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "add_member", email: addMemberForm.email, password: addMemberForm.password, name: addMemberForm.name, role: addMemberForm.role, tier: addMemberTier } });
-      const errMsg = data?.error || error?.message;
-      if (errMsg) {
-        const friendlyMsg = errMsg.includes("already been registered") ? "Email sudah terdaftar. Gunakan email lain." : errMsg;
-        showToast({ title: "Gagal", description: friendlyMsg, variant: "destructive" });
-      } else {
-        showToast({ title: "Berhasil", description: `Member ${addMemberForm.email} ditambahkan.` }); setAddMemberDialog(false); setAddMemberForm({ email: '', password: '', name: '', role: 'user' }); setAddMemberTier('free'); await fetchUsers();
-      }
+      await createMemberAccount(
+        addMemberForm.email.trim().toLowerCase(),
+        addMemberForm.password.trim(),
+        addMemberForm.name.trim(),
+        addMemberForm.role,
+        addMemberTier
+      );
+      showToast({ title: "Berhasil", description: `Member ${addMemberForm.email} berhasil ditambahkan.` });
+      setAddMemberDialog(false);
+      setAddMemberForm({ email: '', password: '', name: '', role: 'user' });
+      setAddMemberTier('free');
+      await fetchUsers();
     } catch (e: any) {
       showToast({ title: "Gagal", description: e?.message || "Terjadi kesalahan.", variant: "destructive" });
     }
@@ -570,17 +646,44 @@ export default function Admin() {
   };
 
   const handleBulkAddMembers = async () => {
-    const members = bulkAddRows.filter(r => r.email.trim());
-    if (members.length === 0) { showToast({ title: "Error", description: "Tidak ada data member yang valid.", variant: "destructive" }); return; }
+    const validMembers = bulkAddRows.filter(r => r.email.trim());
+    if (validMembers.length === 0) { showToast({ title: "Error", description: "Tidak ada data member yang valid.", variant: "destructive" }); return; }
     setBulkAddLoading(true);
     setBulkAddResults(null);
-    const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "bulk_add_members", members, tier: bulkAddTier } });
-    if (error) { showToast({ title: "Gagal", description: error.message, variant: "destructive" }); }
-    else {
-      setBulkAddResults(data.results || []);
-      showToast({ title: `✅ ${data.successCount} berhasil, ${data.failCount} gagal` });
-      await fetchUsers();
+    let doneViaEdge = false;
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-users", { body: { action: "bulk_add_members", members: validMembers, tier: bulkAddTier } });
+      if (!error && data?.results) {
+        setBulkAddResults(data.results || []);
+        showToast({ title: `✅ ${data.successCount} berhasil, ${data.failCount} gagal` });
+        doneViaEdge = true;
+      }
+    } catch {}
+
+    if (!doneViaEdge) {
+      const results: { email: string; success: boolean; error?: string }[] = [];
+      for (const m of validMembers) {
+        try {
+          const mEmail = m.email.trim().toLowerCase();
+          const mPass = m.password.trim();
+          const mName = m.name.trim();
+          if (!mEmail || !mPass || mPass.length < 6) {
+            results.push({ email: mEmail, success: false, error: "Password < 6 karakter" });
+            continue;
+          }
+          await createMemberAccount(mEmail, mPass, mName, 'user', bulkAddTier);
+          results.push({ email: mEmail, success: true });
+        } catch (err: any) {
+          results.push({ email: m.email, success: false, error: err.message || "Gagal" });
+        }
+      }
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      setBulkAddResults(results);
+      showToast({ title: `✅ ${successCount} berhasil, ${failCount} gagal` });
     }
+
+    await fetchUsers();
     setBulkAddLoading(false);
   };
 

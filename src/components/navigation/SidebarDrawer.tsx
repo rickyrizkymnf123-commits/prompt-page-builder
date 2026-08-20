@@ -113,6 +113,14 @@ export function SidebarDrawer({
       badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
     },
     {
+      id: 'lpbuilder',
+      label: 'Live LP Builder Engine',
+      desc: 'Engine generator HTML langsung',
+      icon: <ExternalLink className="w-4 h-4 text-purple-400" />,
+      badge: 'Engine',
+      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    },
+    {
       id: 'affiliate',
       label: 'Program Affiliate',
       desc: 'Komisi referral & penarikan dana',
@@ -146,14 +154,6 @@ export function SidebarDrawer({
       icon: <Settings className="w-4 h-4 text-slate-400" />,
       badge: 'Config',
       badgeColor: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
-    },
-    {
-      id: 'lpbuilder',
-      label: 'Live LP Builder Engine',
-      desc: 'Engine generator HTML langsung',
-      icon: <ExternalLink className="w-4 h-4 text-purple-400" />,
-      badge: 'Engine',
-      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
     },
   ];
 
