@@ -160,20 +160,65 @@ export default function AppPage() {
   const [templateHtml, setTemplateHtml] = useState("");
   const [mode, setMode] = useState<'prompt' | 'template'>('prompt');
 
-  const [loading, setLoading] = useState(true);
-  const [userTier, setUserTier] = useState<'free' | 'paid'>('free');
+  const [loading, setLoading] = useState(() => {
+    try {
+      const impRaw = localStorage.getItem('lpb_impersonated_user') || sessionStorage.getItem('lpb_impersonated_user');
+      if (impRaw) {
+        const parsed = JSON.parse(impRaw);
+        if (parsed?.isImpersonating) return false;
+      }
+    } catch {}
+    return true;
+  });
+  const [userTier, setUserTier] = useState<'free' | 'paid'>(() => {
+    try {
+      const impRaw = localStorage.getItem('lpb_impersonated_user') || sessionStorage.getItem('lpb_impersonated_user');
+      if (impRaw) {
+        const parsed = JSON.parse(impRaw);
+        if (parsed?.tier) return parsed.tier;
+      }
+    } catch {}
+    return 'free';
+  });
   const [promptUsage, setPromptUsage] = useState(0);
   const [usageLimitReached, setUsageLimitReached] = useState(false);
   const [orderUrl, setOrderUrl] = useState('');
-  const [userId, setUserId] = useState('');
-  const [userEmail, setUserEmail] = useState('');
+  const [userId, setUserId] = useState(() => {
+    try {
+      const impRaw = localStorage.getItem('lpb_impersonated_user') || sessionStorage.getItem('lpb_impersonated_user');
+      if (impRaw) {
+        const parsed = JSON.parse(impRaw);
+        if (parsed?.id) return parsed.id;
+      }
+    } catch {}
+    return '';
+  });
+  const [userEmail, setUserEmail] = useState(() => {
+    try {
+      const impRaw = localStorage.getItem('lpb_impersonated_user') || sessionStorage.getItem('lpb_impersonated_user');
+      if (impRaw) {
+        const parsed = JSON.parse(impRaw);
+        if (parsed?.email) return parsed.email;
+      }
+    } catch {}
+    return '';
+  });
   const [darkMode, setDarkMode] = useState(true);
   const [impersonatedUser, setImpersonatedUser] = useState<{
     id: string;
     email: string;
     name: string;
     tier: 'free' | 'paid';
-  } | null>(null);
+  } | null>(() => {
+    try {
+      const impRaw = localStorage.getItem('lpb_impersonated_user') || sessionStorage.getItem('lpb_impersonated_user');
+      if (impRaw) {
+        const parsed = JSON.parse(impRaw);
+        if (parsed && parsed.isImpersonating) return parsed;
+      }
+    } catch {}
+    return null;
+  });
 
   // Sidebar Drawer state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -217,11 +262,8 @@ export default function AppPage() {
   // Auth & Session Check
   useEffect(() => {
     const checkAccess = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/login"); return; }
-
-      // Check Impersonation Mode (Mode Intip)
-      const impRaw = sessionStorage.getItem('lpb_impersonated_user');
+      // Check Impersonation Mode (Mode Intip) first
+      const impRaw = localStorage.getItem('lpb_impersonated_user') || sessionStorage.getItem('lpb_impersonated_user');
       if (impRaw) {
         try {
           const imp = JSON.parse(impRaw);
@@ -237,10 +279,12 @@ export default function AppPage() {
             } catch {}
 
             if (imp.tier !== 'paid') {
-              const { data: usage } = await supabase.from('prompt_usage').select('used_count').eq('user_id', imp.id).maybeSingle();
-              const count = usage?.used_count ?? 0;
-              setPromptUsage(count);
-              setUsageLimitReached(count >= FREE_LIMIT);
+              try {
+                const { data: usage } = await supabase.from('prompt_usage').select('used_count').eq('user_id', imp.id).maybeSingle();
+                const count = usage?.used_count ?? 0;
+                setPromptUsage(count);
+                setUsageLimitReached(count >= FREE_LIMIT);
+              } catch {}
             }
             setLoading(false);
             return;
@@ -248,9 +292,10 @@ export default function AppPage() {
         } catch {}
       }
 
-      setUserId(session.user.id);
-      setUserEmail(session.user.email || '');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { navigate("/login"); return; }
 
+      setUserId(session.user.id);
       const isAdmin = session.user.email === 'fauzymnf29@gmail.com';
 
       const { data: entitlements } = await supabase
@@ -338,11 +383,19 @@ export default function AppPage() {
   };
 
   const handleSelectTemplate = (html: string) => {
-    if (!isPaid) return;
+    if (!isPaid) {
+      if (orderUrl) window.open(orderUrl, '_blank');
+      return;
+    }
     setTemplateHtml(html);
     setMode('template');
     setCurrentStep(3);
+    handlePageChange('generator');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast({
+      title: '✏️ Mode Edit Template Aktif',
+      description: 'Template berhasil dimuat ke editor visual & kode. Anda dapat mengedit teks, styling, dan langsung preview / copy / download HTML.',
+    });
   };
 
   const handleSaveAsCustomTemplate = async (htmlToSave: string) => {
@@ -394,25 +447,26 @@ export default function AppPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Impersonation Banner */}
       {impersonatedUser && (
-        <div className="bg-gradient-to-r from-amber-600 via-indigo-600 to-purple-700 text-white px-3 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold flex items-center justify-between shadow-lg sticky top-0 z-50">
-          <div className="flex items-center gap-2">
+        <div className="bg-gradient-to-r from-amber-600 via-indigo-600 to-purple-700 text-white px-3 sm:px-6 py-2.5 text-xs sm:text-sm font-bold flex items-center justify-between shadow-xl sticky top-0 z-[100] border-b border-white/20">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
             <Eye className="w-4 h-4 text-amber-300 animate-pulse flex-shrink-0" />
             <span>
-              <strong>Mode Intip Aktif:</strong> Melihat sebagai{' '}
-              <code className="bg-black/30 px-1.5 py-0.5 rounded font-mono text-amber-200">{impersonatedUser.email}</code>{' '}
-              ({impersonatedUser.tier === 'paid' ? '⭐ Berbayar' : '🆓 Gratis'})
+              <strong>Mode Intip Aktif:</strong> Anda sedang melihat & mencoba dashboard sebagai{' '}
+              <span className="bg-black/40 px-2 py-0.5 rounded font-mono text-amber-300 border border-white/10">{impersonatedUser.email}</span>{' '}
+              <span className="text-xs font-normal opacity-90">({impersonatedUser.tier === 'paid' ? '⭐ Akun Berbayar' : '🆓 Akun Gratis'})</span>
             </span>
           </div>
           <Button
             size="sm"
-            variant="secondary"
-            className="h-7 text-xs font-bold gap-1 bg-white text-slate-900 hover:bg-white/90 shadow-sm"
+            variant="default"
+            className="h-8 text-xs font-black gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md shrink-0 ml-2 border border-amber-300 cursor-pointer"
             onClick={() => {
+              localStorage.removeItem('lpb_impersonated_user');
               sessionStorage.removeItem('lpb_impersonated_user');
-              navigate('/admin?tab=users');
+              window.location.href = '/admin?tab=users';
             }}
           >
-            Keluar Mode Intip →
+            ← Kembali ke Mode Admin
           </Button>
         </div>
       )}
@@ -433,7 +487,7 @@ export default function AppPage() {
         activeTab={activePage}
         onSelectTab={handlePageChange}
         userEmail={userEmail}
-        isAdmin={impersonatedUser ? false : (userEmail === 'fauzymnf29@gmail.com')}
+        isAdmin={false}
         onLogout={async () => {
           await supabase.auth.signOut();
           navigate('/login');

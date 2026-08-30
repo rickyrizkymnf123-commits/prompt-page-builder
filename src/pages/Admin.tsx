@@ -152,6 +152,7 @@ export default function Admin() {
 
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [logs, setLogs] = useState<ProvisionLog[]>([]);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -416,6 +417,7 @@ export default function Admin() {
     const check = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
+      setAdminEmail(session.user.email || '');
       const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).maybeSingle();
       if (roleData?.role !== "admin" && session.user.email !== "fauzymnf29@gmail.com") { navigate("/app"); return; }
       setAuthorized(true);
@@ -473,16 +475,30 @@ export default function Admin() {
     if (!confirm('Yakin ingin menghapus user ini secara permanen?')) return;
     setActionLoading(userId);
     try {
-      await Promise.all([
-        supabase.from("profiles").delete().eq("user_id", userId),
-        supabase.from("entitlements").delete().eq("user_id", userId),
-        supabase.from("user_roles").delete().eq("user_id", userId),
-        supabase.from("prompt_usage").delete().eq("user_id", userId),
-        supabase.from("user_signing_secrets").delete().eq("user_id", userId),
-      ]);
+      // 1. Try RPC admin_delete_user first
+      let deletedViaRpc = false;
       try {
-        await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: userId } });
+        const { error: rpcErr } = await supabase.rpc('admin_delete_user', { target_user_id: userId });
+        if (!rpcErr) deletedViaRpc = true;
       } catch {}
+
+      if (!deletedViaRpc) {
+        // 2. Try Edge function
+        try {
+          await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: userId } });
+        } catch {}
+
+        // 3. Fallback table cleanups
+        await Promise.allSettled([
+          supabase.from("profiles").delete().eq("user_id", userId),
+          supabase.from("entitlements").delete().eq("user_id", userId),
+          supabase.from("user_roles").delete().eq("user_id", userId),
+          supabase.from("prompt_usage").delete().eq("user_id", userId),
+          supabase.from("user_signing_secrets").delete().eq("user_id", userId),
+          supabase.from("saved_projects").delete().eq("user_id", userId),
+          supabase.from("affiliate_referrals").delete().eq("user_id", userId),
+        ]);
+      }
       showToast({ title: "🗑 User Dihapus", description: "Data user berhasil dihapus dari sistem." });
     } catch (e: any) {
       showToast({ title: "Error", description: e.message, variant: "destructive" });
@@ -533,22 +549,60 @@ export default function Admin() {
     setActionLoading(null);
   };
 
+  const handleChangeRole = async (userId: string, targetRole: 'admin' | 'user') => {
+    const targetUser = users.find((u) => u.id === userId);
+    if (targetRole === 'user' && targetUser?.email === "fauzymnf29@gmail.com") {
+      showToast({ title: "Aksi Ditolak", description: "Email Admin utama tidak dapat diubah menjadi User biasa.", variant: "destructive" });
+      return;
+    }
+
+    const confirmMsg = targetRole === 'admin'
+      ? `Yakin ingin menjadikan ${targetUser?.email || 'user ini'} sebagai Admin? Akun ini akan memiliki akses penuh ke Admin Panel.`
+      : `Yakin ingin mengembalikan ${targetUser?.email || 'user ini'} menjadi User biasa?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    setActionLoading(userId);
+    try {
+      const { error: dbErr } = await supabase
+        .from("user_roles")
+        .upsert({ user_id: userId, role: targetRole }, { onConflict: "user_id" });
+
+      if (dbErr) {
+        await supabase.functions.invoke("admin-users", {
+          body: { action: "change_role", user_id: userId, role: targetRole }
+        });
+      }
+
+      showToast({
+        title: targetRole === 'admin' ? "👑 Berhasil Menjadikan Admin" : "👤 Role Diubah ke User",
+        description: targetRole === 'admin' ? `User ${targetUser?.email || ''} sekarang memiliki akses Admin.` : `User ${targetUser?.email || ''} telah menjadi User biasa.`
+      });
+    } catch (e: any) {
+      showToast({ title: "Error", description: e.message || "Gagal merubah role user.", variant: "destructive" });
+    }
+    await fetchUsers();
+    setActionLoading(null);
+  };
+
   const handleImpersonateUser = (targetUser: AdminUser) => {
-    const impersonationData = {
-      id: targetUser.id,
-      email: targetUser.email,
-      name: targetUser.name || targetUser.email.split('@')[0],
-      role: targetUser.role,
-      tier: targetUser.product_code === 'LPE' ? 'paid' : 'free',
-      isImpersonating: true,
-      originalAdminEmail: userEmail || 'fauzymnf29@gmail.com',
-    };
-    sessionStorage.setItem('lpb_impersonated_user', JSON.stringify(impersonationData));
-    showToast({
-      title: '👀 Masuk Mode Intip User',
-      description: `Beralih ke tampilan dashboard ${targetUser.email}.`,
-    });
-    navigate('/app');
+    try {
+      const email = targetUser.email || `user-${targetUser.id.slice(0, 8)}`;
+      const impersonationData = {
+        id: targetUser.id,
+        email: email,
+        name: targetUser.name && targetUser.name !== '-' ? targetUser.name : email.split('@')[0],
+        role: targetUser.role || 'user',
+        tier: targetUser.product_code === 'LPE' ? 'paid' : 'free',
+        isImpersonating: true,
+        originalAdminEmail: adminEmail || 'fauzymnf29@gmail.com',
+      };
+      localStorage.setItem('lpb_impersonated_user', JSON.stringify(impersonationData));
+      sessionStorage.setItem('lpb_impersonated_user', JSON.stringify(impersonationData));
+    } catch (e) {
+      console.error("Impersonation setup error:", e);
+    }
+    window.location.href = '/app';
   };
 
   const createMemberAccount = async (email: string, password: string, name: string, role: string, tier: string) => {
@@ -724,16 +778,26 @@ export default function Admin() {
         showToast({ title: `❌ ${ids.length} User Ditolak.` });
       } else if (bulkDialog.action === 'delete') {
         for (const uid of ids) {
-          await Promise.all([
-            supabase.from("profiles").delete().eq("user_id", uid),
-            supabase.from("entitlements").delete().eq("user_id", uid),
-            supabase.from("user_roles").delete().eq("user_id", uid),
-            supabase.from("prompt_usage").delete().eq("user_id", uid),
-            supabase.from("user_signing_secrets").delete().eq("user_id", uid),
-          ]);
+          let deletedViaRpc = false;
           try {
-            await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: uid } });
+            const { error: rpcErr } = await supabase.rpc('admin_delete_user', { target_user_id: uid });
+            if (!rpcErr) deletedViaRpc = true;
           } catch {}
+
+          if (!deletedViaRpc) {
+            try {
+              await supabase.functions.invoke("admin-users", { body: { action: "delete", user_id: uid } });
+            } catch {}
+            await Promise.allSettled([
+              supabase.from("profiles").delete().eq("user_id", uid),
+              supabase.from("entitlements").delete().eq("user_id", uid),
+              supabase.from("user_roles").delete().eq("user_id", uid),
+              supabase.from("prompt_usage").delete().eq("user_id", uid),
+              supabase.from("user_signing_secrets").delete().eq("user_id", uid),
+              supabase.from("saved_projects").delete().eq("user_id", uid),
+              supabase.from("affiliate_referrals").delete().eq("user_id", uid),
+            ]);
+          }
         }
         showToast({ title: `🗑 ${ids.length} User Berhasil Dihapus!` });
       } else if (bulkDialog.action === 'tier_paid' || bulkDialog.action === 'tier_free') {
@@ -742,6 +806,17 @@ export default function Admin() {
           await supabase.from("entitlements").update({ product_code: prod }).eq("user_id", uid);
         }
         showToast({ title: `✅ ${ids.length} User diubah ke ${bulkDialog.action === 'tier_paid' ? 'Berbayar' : 'Gratis'}` });
+      } else if (bulkDialog.action === 'role_admin' || bulkDialog.action === 'role_user') {
+        const targetRole = bulkDialog.action === 'role_admin' ? 'admin' : 'user';
+        for (const uid of ids) {
+          const targetUser = users.find(u => u.id === uid);
+          if (targetRole === 'user' && targetUser?.email === "fauzymnf29@gmail.com") continue;
+          await supabase.from("user_roles").upsert({ user_id: uid, role: targetRole }, { onConflict: "user_id" });
+          try {
+            await supabase.functions.invoke("admin-users", { body: { action: "change_role", user_id: uid, role: targetRole } });
+          } catch {}
+        }
+        showToast({ title: `✅ ${ids.length} User diubah rolenya ke ${targetRole === 'admin' ? 'Admin 👑' : 'User 👤'}` });
       } else if (bulkDialog.action === 'reset_password') {
         if (!bulkPassword || bulkPassword.length < 6) {
           showToast({ title: "Error", description: "Password minimal 6 karakter.", variant: "destructive" });
@@ -1304,6 +1379,12 @@ export default function Admin() {
                       <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'tier_free' })} className="text-xs gap-1 h-7">
                         🆓 Gratis
                       </Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'role_admin' })} className="text-xs gap-1 h-7 border-amber-500/40 text-amber-400 hover:bg-amber-500/10">
+                        <ShieldCheck className="h-3.5 w-3.5" /> 👑 Jadi Admin
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'role_user' })} className="text-xs gap-1 h-7 border-purple-500/40 text-purple-400 hover:bg-purple-500/10">
+                        <Shield className="h-3.5 w-3.5" /> 👤 Set User
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'reset_password' })} className="text-xs gap-1 h-7">
                         <KeyRound className="h-3.5 w-3.5" /> Reset Pass
                       </Button>
@@ -1362,7 +1443,11 @@ export default function Admin() {
                             </div>
                           </TableCell>
                           <TableCell><StatusBadge status={u.status} /></TableCell>
-                          <TableCell className="hidden lg:table-cell"><span className={`text-xs font-medium ${u.role==="admin"?"text-primary":"text-muted-foreground"}`}>{u.role}</span></TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${u.role === "admin" ? "bg-amber-500/10 text-amber-400 border border-amber-500/30" : "bg-secondary text-muted-foreground border border-border"}`}>
+                              {u.role === "admin" ? "👑 Admin" : "👤 User"}
+                            </span>
+                          </TableCell>
                           <TableCell className="text-xs text-muted-foreground hidden md:table-cell">{new Date(u.created_at).toLocaleDateString("id-ID")}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1 flex-wrap">
@@ -1391,11 +1476,28 @@ export default function Admin() {
                                   {u.product_code === 'LPE' ? '⬇ Gratis' : '⬆ Bayar'}
                                 </Button>
                               )}
+                              {/* Role Toggle Button */}
+                              {u.email !== "fauzymnf29@gmail.com" && (
+                                u.role === "admin" ? (
+                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-purple-400 border-purple-500/40 hover:bg-purple-500/20 h-7 px-2 font-semibold" onClick={() => handleChangeRole(u.id, 'user')} disabled={actionLoading === u.id} title="Ubah role kembali ke User biasa">
+                                    <Shield className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Set User</span>
+                                  </Button>
+                                ) : (
+                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-400 border-amber-500/40 hover:bg-amber-500/20 h-7 px-2 font-semibold" onClick={() => handleChangeRole(u.id, 'admin')} disabled={actionLoading === u.id} title="Jadikan pengguna ini sebagai Admin">
+                                    <ShieldCheck className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Jadi Admin</span>
+                                  </Button>
+                                )
+                              )}
                               <Button
+                                type="button"
                                 size="sm"
                                 variant="outline"
-                                className="gap-1 text-xs text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10 h-7 px-2"
-                                onClick={() => handleImpersonateUser(u)}
+                                className="gap-1 text-xs text-indigo-400 border-indigo-500/40 hover:bg-indigo-500/20 h-7 px-2 font-semibold cursor-pointer"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleImpersonateUser(u);
+                                }}
                                 title="Intip / Masuk ke Dashboard sebagai User ini"
                               >
                                 <Eye className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Intip</span>
@@ -1519,11 +1621,11 @@ export default function Admin() {
             <div className="space-y-6">
               <Tabs defaultValue="demos">
                 <TabsList className="w-full grid grid-cols-2 h-10">
-                  <TabsTrigger value="demos" className="text-xs sm:text-sm gap-1">🖼 Demos</TabsTrigger>
-                  <TabsTrigger value="generate" className="text-xs sm:text-sm gap-1">⚡ Generate HTML</TabsTrigger>
+                  <TabsTrigger value="demos" className="text-xs sm:text-sm gap-1">🖼 Kelola Website Demo</TabsTrigger>
+                  <TabsTrigger value="generate" className="text-xs sm:text-sm gap-1">⚡ Live LP Builder Engine</TabsTrigger>
                 </TabsList>
                 <TabsContent value="demos" className="mt-6"><DemoManagementTab /></TabsContent>
-                <TabsContent value="generate" className="mt-6"><HtmlGeneratorTab /></TabsContent>
+                <TabsContent value="generate" className="mt-6"><HtmlGeneratorTab isAdmin={true} /></TabsContent>
               </Tabs>
             </div>
           </TabsContent>
@@ -1637,6 +1739,8 @@ export default function Admin() {
               {bulkDialog.action === 'reject' && '❌ Tolak User Terpilih'}
               {bulkDialog.action === 'tier_paid' && '⭐ Ubah ke Berbayar Massal'}
               {bulkDialog.action === 'tier_free' && '🆓 Ubah ke Gratis Massal'}
+              {bulkDialog.action === 'role_admin' && '👑 Jadikan Admin Massal'}
+              {bulkDialog.action === 'role_user' && '👤 Kembalikan ke User Biasa Massal'}
               {bulkDialog.action === 'reset_password' && '🔑 Reset Password Massal'}
               {bulkDialog.action === 'delete' && '🗑 Hapus Beberapa User Sekaligus'}
             </DialogTitle>
@@ -1662,6 +1766,16 @@ export default function Admin() {
           {bulkDialog.action === 'tier_free' && (
             <p className="text-sm text-foreground">
               User yang dipilih akan diubah tier-nya menjadi <strong>🆓 Gratis (Limit 5x)</strong>.
+            </p>
+          )}
+          {bulkDialog.action === 'role_admin' && (
+            <p className="text-sm text-foreground">
+              User yang dipilih akan diubah rolenya menjadi <strong>👑 Admin</strong> dan akan memiliki akses penuh ke Admin Panel.
+            </p>
+          )}
+          {bulkDialog.action === 'role_user' && (
+            <p className="text-sm text-foreground">
+              User yang dipilih akan dikembalikan rolenya menjadi <strong>👤 User Biasa</strong>.
             </p>
           )}
           {bulkDialog.action === 'reset_password' && (

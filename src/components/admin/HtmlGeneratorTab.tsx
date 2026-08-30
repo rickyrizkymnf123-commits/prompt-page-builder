@@ -437,8 +437,14 @@ const HtmlGeneratorTab = ({ isAdmin = true }: HtmlGeneratorTabProps) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-bold text-lg md:text-xl mb-1">Generate HTML</h2>
-        <p className="text-sm text-muted-foreground">Customize konten landing page, CTA link, dan demo otomatis dari tab Demos.</p>
+        <h2 className="font-bold text-lg md:text-xl mb-1">
+          {isAdmin ? "⚡ Live LP Builder Engine (Admin Mode)" : "🚀 Live LP Builder Engine"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {isAdmin
+            ? "Kustomisasi konten landing page, link CTA, upload screenshot tiap step, dan sinkronisasi demo global."
+            : "Kustomisasi konten landing page, skema warna & gaya visual, harga & tombol CTA, lalu generate file HTML instan."}
+        </p>
       </div>
 
       <Tabs defaultValue="content" className="w-full">

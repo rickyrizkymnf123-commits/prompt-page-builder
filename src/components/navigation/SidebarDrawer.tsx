@@ -141,6 +141,22 @@ export function SidebarDrawer({
       badgeColor: pendingUsersCount > 0 ? 'bg-amber-500 text-white font-black' : 'bg-white/10 text-slate-300',
     },
     {
+      id: 'templates',
+      label: 'Kelola Template (Database)',
+      desc: 'Database template LP (+ Tambah & Edit)',
+      icon: <LayoutTemplate className="w-4 h-4 text-sky-400" />,
+      badge: 'DB Admin',
+      badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
+    },
+    {
+      id: 'lpbuilder',
+      label: 'Kelola Website Demo (LP Builder)',
+      desc: 'Upload link demo & Live LP Builder Engine',
+      icon: <ExternalLink className="w-4 h-4 text-purple-400" />,
+      badge: 'Demo & Engine',
+      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    },
+    {
       id: 'api_settings',
       label: 'Konfigurasi API AI (KoboiLLM)',
       desc: 'Koneksi API Key & Model AI Global',

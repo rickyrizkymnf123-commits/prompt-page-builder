@@ -11,9 +11,12 @@
 1. **💾 Saved Projects Database (`public.saved_projects`)**:
    - Simpan, buka, edit, dan update form custom ke database Supabase kapan saja.
    - Autosave draft otomatis ke `localStorage` (`lpb_form_draft`).
-2. **🛡️ Session Stability & Fix Reset Password**:
+2. **🛡️ Session Stability, Fix Reset Password, Complete User Deletion & Admin Role Management**:
    - Pengecekan sesi persisten stabil tanpa force logout.
-   - Password reset di Admin menggunakan RPC `admin_set_user_password` langsung ke database Supabase sehingga 100% andal tanpa error edge function.
+   - Password reset di Admin menggunakan RPC `admin_set_user_password`.
+   - Complete User Deletion: Menghapus user secara atomic dari `auth.users` dan seluruh tabel relasi (`profiles`, `entitlements`, `user_roles`, `saved_projects`, dll.).
+   - Admin Role Management: Fitur mempromosikan user biasa menjadi Admin (`👑 Jadi Admin`) dan sebaliknya (`👤 Set User`) secara individual maupun massal (bulk).
+   - Orphan User Recovery: Jika user terhapus di masa lalu tetapi record `auth.users` tersisa, pendaftaran ulang secara otomatis mendeteksi dan menempatkan user ke antrean persetujuan (ACC) Admin.
 3. **📲 CTA Modes & Form Actions**:
    - Direct WhatsApp (CTWA) dengan Auto-Text Generator.
    - Direct Link / Microsite Checkout (Scalev, WinMe, OrderHero, Mayar, dll.).

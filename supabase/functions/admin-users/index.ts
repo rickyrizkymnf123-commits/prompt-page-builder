@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
         .from("user_roles")
         .select("role")
         .eq("user_id", callerId);
-      const isAdmin = roles?.some((r: any) => r.role === "admin");
+      const isAdmin = roles?.some((r: any) => r.role === "admin") || userData?.user?.email === "fauzymnf29@gmail.com";
       if (!isAdmin) {
         return new Response(JSON.stringify({ error: "Forbidden" }), {
           status: 403,
@@ -119,6 +119,10 @@ Deno.serve(async (req) => {
         await adminClient.from("profiles").delete().eq("user_id", user_id);
         await adminClient.from("user_roles").delete().eq("user_id", user_id);
         await adminClient.from("prompt_usage").delete().eq("user_id", user_id);
+        await adminClient.from("user_signing_secrets").delete().eq("user_id", user_id);
+        await adminClient.from("saved_projects").delete().eq("user_id", user_id);
+        await adminClient.from("affiliate_referrals").delete().eq("user_id", user_id);
+        
         const { error } = await adminClient.auth.admin.deleteUser(user_id);
         if (error) {
           return new Response(JSON.stringify({ error: error.message }), {
@@ -186,6 +190,20 @@ Deno.serve(async (req) => {
           });
         }
         await adminClient.from("prompt_usage").upsert({ user_id, used_count: 0, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // --- CHANGE ROLE ---
+      if (action === "change_role") {
+        if (!user_id || !role) {
+          return new Response(JSON.stringify({ error: "user_id and role required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        await adminClient.from("user_roles").upsert({ user_id, role }, { onConflict: "user_id" });
         return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

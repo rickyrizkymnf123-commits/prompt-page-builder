@@ -160,8 +160,8 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl, use
                   👁 Preview
                 </Button>
                 {isPaid ? (
-                  <Button size="sm" onClick={(e) => { e.stopPropagation(); onSelectTemplate(tpl.html_content); }} className="text-xs font-semibold h-8 shadow bg-primary text-primary-foreground">
-                    ✅ Gunakan
+                  <Button size="sm" onClick={(e) => { e.stopPropagation(); onSelectTemplate(tpl.html_content); }} className="text-xs font-bold h-8 shadow bg-primary text-primary-foreground">
+                    ✏️ Gunakan & Edit
                   </Button>
                 ) : (
                   <Button size="sm" onClick={(e) => { e.stopPropagation(); handleUpgrade(); }} className="text-xs font-semibold h-8 gap-1 shadow">
@@ -172,7 +172,7 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl, use
             </div>
 
             {/* Content Details */}
-            <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+            <div className="p-3.5 space-y-2.5 flex-1 flex flex-col justify-between">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
@@ -183,14 +183,22 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl, use
                 <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">{tpl.description}</p>
               </div>
 
-              <div className="pt-2">
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full text-xs font-semibold h-8"
+                  onClick={() => openPreview(tpl)}
+                >
+                  👁 Preview
+                </Button>
                 {isPaid ? (
                   <Button
                     size="sm"
                     className="w-full text-xs font-bold h-8 bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => onSelectTemplate(tpl.html_content)}
                   >
-                    Gunakan Template Ini →
+                    ✏️ Edit Template
                   </Button>
                 ) : (
                   <Button
@@ -199,7 +207,7 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl, use
                     variant="outline"
                     onClick={handleUpgrade}
                   >
-                    <Lock className="h-3 w-3 mr-1" /> Upgrade untuk Membuka
+                    <Lock className="h-3 w-3 mr-1" /> Upgrade
                   </Button>
                 )}
               </div>
@@ -216,7 +224,7 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl, use
         >
           <div className="bg-card w-full h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:max-w-5xl rounded-none sm:rounded-2xl border border-border overflow-hidden flex flex-col shadow-2xl">
             {/* Modal Header Toolbar */}
-            <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between gap-2 bg-secondary/40 flex-shrink-0">
+            <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between gap-2 bg-secondary/40 flex-shrink-0 flex-wrap">
               <div className="min-w-0">
                 <h3 className="font-bold text-foreground text-xs sm:text-base truncate">{previewTemplate.title}</h3>
                 <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{previewTemplate.category}</p>
@@ -252,9 +260,9 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl, use
                   <Button
                     size="sm"
                     onClick={() => { onSelectTemplate(previewTemplate.html_content); closePreview(); }}
-                    className="text-xs font-bold h-8 bg-primary text-primary-foreground"
+                    className="text-xs font-bold h-8 bg-primary text-primary-foreground gap-1"
                   >
-                    ✅ Gunakan
+                    ✏️ Gunakan & Edit Template
                   </Button>
                 ) : (
                   <Button size="sm" onClick={handleUpgrade} className="gap-1 text-xs font-bold h-8">

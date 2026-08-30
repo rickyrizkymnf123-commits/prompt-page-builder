@@ -50,3 +50,31 @@
   - Di [`Step1Framework.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/steps/Step1Framework.tsx), [`Step2Product.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/steps/Step2Product.tsx), [`Step3Target.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/steps/Step3Target.tsx), [`Step6Elements.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/steps/Step6Elements.tsx), [`Step7Platform.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/components/steps/Step7Platform.tsx), [`Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/Admin.tsx), dan [`AppPage.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/AppPage.tsx), dipasangkan prop `language` dan kamus terjemahan `translations[language]` di seluruh judul langkah, label, placeholder, tombol, dan deskripsi.
   - Di [`Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/remix-of-prompt-page-builder/src/pages/Admin.tsx), ditambahkan seluruh handler yang sebelumnya hilang (`tieredPricing`, `ctaMode`, `warnaBrandCustom`, `typography`, `onChangeBonusList`, `onChangeTieredPricing`, `onChangeCtaMode`, `onChangeTypography`).
   - Diverifikasi build `npm run build` (0 error), dicommit ke GitHub, dan live di Vercel: `https://prompt-page-builder-app.vercel.app`.
+
+## Session: 2026-08-24 (Menjalankan Server Dev di Localhost)
+
+- **User Request**:
+  - `C:\Users\UC\.gemini\antigravity-ide\scratch\prompt-page-builder` - jalankan di localhost sekarang.
+
+- **Solusi & Implementasi**:
+  - Memeriksa konfigurasi `package.json` dan meluncurkan server lokal dengan `npm run dev` di `http://localhost:8081`.
+  - **Fix Penghapusan User & Re-Registration (Approval List)**:
+    1. Di [`supabase/functions/admin-users/index.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/supabase/functions/admin-users/index.ts), ditambahkan pengecekan admin email `fauzymnf29@gmail.com` dan pembersihan lengkap tabel `saved_projects`, `affiliate_referrals`, `user_signing_secrets`, `prompt_usage`, `user_roles`, `profiles`, `entitlements` serta penghapusan akun dari `auth.users` via `auth.admin.deleteUser`.
+    2. Di [`src/pages/Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/src/pages/Admin.tsx), diperbarui handler single delete (`handleDelete`) & bulk delete (`handleBulkAction`) agar secara hierarki mencoba RPC `admin_delete_user`, Edge Function `admin-users`, serta cleanup tabel database.
+    3. Di [`src/pages/Login.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/src/pages/Login.tsx), diperbaiki logika `handleRegister` dengan mekanisme *orphan user recovery*. Jika user lama terhapus dari `entitlements` namun record `auth.users` masih tersisa, proses pendaftaran ulang secara otomatis memulihkan profil & menempatkan user ke antrean persetujuan (`status: pending`) agar muncul di list ACC admin.
+    4. Dibuat script SQL RPC [`supabase/admin_delete_user.sql`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/supabase/admin_delete_user.sql) dan migrasi [`supabase/migrations/20260824_admin_delete_user.sql`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/supabase/migrations/20260824_admin_delete_user.sql).
+  - Diverifikasi dengan `npm run build` (0 error) dan server aktif berjalan di `http://localhost:8081`.
+
+## Session: 2026-08-30 (Fitur Menjadikan Admin untuk User)
+
+- **User Request**:
+  - `tolong adakan fitur jadi kan admin untuk users`
+
+- **Solusi & Implementasi**:
+  1. Di [`src/pages/Admin.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/src/pages/Admin.tsx), menambahkan fungsi `handleChangeRole` untuk mengubah role pengguna antara Admin (`admin`) dan User biasa (`user`).
+  2. Menambahkan tombol aksi 1-klik **`👑 Jadi Admin`** (untuk mempromosikan user biasa menjadi Admin) dan **`👤 Set User`** (untuk mengembalikan status Admin ke User biasa).
+  3. Menambahkan opsi **Aksi Massal (Bulk Action)**: `👑 Jadi Admin` dan `👤 Set User` pada baris kontrol tabel user terpilih.
+  4. Memperbarui tampilan **Role Badge** di tabel user dengan desain visual yang jelas (`👑 Admin` vs `👤 User`).
+  5. Memperbarui Edge Function [`supabase/functions/admin-users/index.ts`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/supabase/functions/admin-users/index.ts) dengan aksi `change_role`.
+  6. Diverifikasi build `npm run build` (0 error).
+

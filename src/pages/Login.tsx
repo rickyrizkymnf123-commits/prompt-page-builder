@@ -61,7 +61,8 @@ export default function Login() {
         .eq("user_id", data.user.id);
 
       const isAdmin =
-        roles?.some((r) => r.role === "admin") || data.user.email === "fauzymnf29@gmail.com";
+        roles?.some((r) => r.role === "admin") ||
+        data.user.email === "fauzymnf29@gmail.com";
 
       if (isAdmin) {
         navigate("/admin");
@@ -156,6 +157,60 @@ export default function Login() {
 
       if (signUpError) {
         if (signUpError.message.includes("already registered") || signUpError.message.includes("User already registered")) {
+          // Check if this is an orphaned user account (e.g. deleted from profiles/entitlements in past)
+          try {
+            const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+              email: regEmail.trim(),
+              password: regPassword,
+            });
+
+            if (!signInErr && signInData.user) {
+              const orphanedUid = signInData.user.id;
+              const { data: existingEnt } = await supabase
+                .from("entitlements")
+                .select("id")
+                .eq("user_id", orphanedUid);
+
+              if (!existingEnt || existingEnt.length === 0) {
+                // Re-initialize profile, role, and pending entitlement for approval!
+                await supabase.from("profiles").upsert({
+                  user_id: orphanedUid,
+                  email: regEmail.trim(),
+                  name: regName.trim(),
+                  phone: regPhone.trim(),
+                }, { onConflict: "user_id" });
+
+                await supabase.from("user_roles").upsert({
+                  user_id: orphanedUid,
+                  role: "user",
+                }, { onConflict: "user_id" });
+
+                await supabase.from("entitlements").upsert({
+                  user_id: orphanedUid,
+                  order_id: "reg-" + Date.now(),
+                  product_code: "LPE",
+                  status: "pending",
+                }, { onConflict: "user_id" });
+
+                await supabase.auth.signOut();
+
+                setRegSuccess(
+                  `🎉 Pendaftaran berhasil! Akun untuk "${regEmail.trim()}" telah dibuat dan saat ini berstatus MENUNGGU PERSETUJUAN (ACC) dari Admin. Silakan tunggu atau hubungi Admin.`
+                );
+                setLoginEmail(regEmail.trim());
+                setRegName("");
+                setRegPhone("");
+                setRegEmail("");
+                setRegPassword("");
+                setRegConfirmPassword("");
+                setRegLoading(false);
+                return;
+              } else {
+                await supabase.auth.signOut();
+              }
+            }
+          } catch {}
+
           setRegError("Email ini sudah terdaftar. Silakan masuk menggunakan form Login.");
         } else {
           setRegError(signUpError.message || "Gagal mendaftarkan akun.");
