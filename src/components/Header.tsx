@@ -1,4 +1,4 @@
-import { Moon, Sun, LogOut, Rocket, Menu, Globe } from 'lucide-react';
+import { Moon, Sun, LogOut, Rocket, Menu, Globe, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ interface Props {
   language?: 'id' | 'en';
   onToggleLang?: () => void;
   onOpenMenu?: () => void;
+  isAdmin?: boolean;
 }
 
 export function Header({
@@ -17,6 +18,7 @@ export function Header({
   language = 'id',
   onToggleLang,
   onOpenMenu,
+  isAdmin = false,
 }: Props) {
   const navigate = useNavigate();
 
@@ -57,8 +59,22 @@ export function Header({
         </div>
       </div>
 
-      {/* Right: Language Switcher, Dark Mode, and Logout */}
+      {/* Right: Admin Panel Button, Language Switcher, Dark Mode, and Logout */}
       <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+        {/* Admin Panel Quick Access Button */}
+        {isAdmin && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/admin')}
+            className="h-7 sm:h-8 px-2 sm:px-3 text-[11px] sm:text-xs font-bold gap-1 text-amber-400 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 shadow-sm"
+            title="Buka Admin Panel"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+            <span>👑 <span className="hidden sm:inline">Admin Panel</span></span>
+          </Button>
+        )}
+
         {/* Multi-Language Switcher (beside Dark Mode) */}
         {onToggleLang && (
           <button

@@ -265,13 +265,31 @@ export function SidebarDrawer({
                 👑 Menu Administrator
               </p>
 
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  window.location.href = '/admin';
+                }}
+                className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-gradient-to-r from-amber-500/20 to-purple-600/20 hover:from-amber-500/30 hover:to-purple-600/30 border border-amber-500/40 text-white font-bold text-xs transition-all shadow-md"
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-400" />
+                  <span>⚡ Buka Full Admin Panel (/admin)</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-amber-300" />
+              </button>
+
               {adminMenuItems.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => handleItemClick(item.id)}
+                    onClick={() => {
+                      onClose();
+                      window.location.href = `/admin?tab=${item.id}`;
+                    }}
                     className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-left transition-all border ${
                       isActive
                         ? 'bg-amber-500/20 border-amber-500/50 text-white shadow-md shadow-amber-900/30 font-bold'

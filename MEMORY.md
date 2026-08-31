@@ -2,6 +2,7 @@
 
 ## Production Infrastructure
 - **Live Production URL**: [https://prompt-page-builder-app.vercel.app](https://prompt-page-builder-app.vercel.app)
+- **Latest Deployment ID**: `dpl_5iSgvmyTtNF1tzTB3ZpDuxyC8pwh` (Status: READY)
 - **GitHub Repository**: [https://github.com/rickyrizkymnf123-commits/prompt-page-builder](https://github.com/rickyrizkymnf123-commits/prompt-page-builder)
 - **Database (Supabase Project Ref)**: `uxerfoonlifdpgiiwvdi`
 - **Main Admin**: `fauzymnf29@gmail.com`

@@ -204,6 +204,7 @@ export default function AppPage() {
     return '';
   });
   const [darkMode, setDarkMode] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [impersonatedUser, setImpersonatedUser] = useState<{
     id: string;
     email: string;
@@ -296,14 +297,22 @@ export default function AppPage() {
       if (!session) { navigate("/login"); return; }
 
       setUserId(session.user.id);
-      const isAdmin = session.user.email === 'fauzymnf29@gmail.com';
+      
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      const userIsAdmin = roleData?.role === 'admin' || session.user.email === 'fauzymnf29@gmail.com';
+      setIsAdmin(userIsAdmin);
 
       const { data: entitlements } = await supabase
         .from("entitlements")
         .select("id, product_code, status")
         .eq("user_id", session.user.id);
 
-      const hasPaid = isAdmin || entitlements?.some((e: any) => e.status === 'active' && e.product_code === 'LPE');
+      const hasPaid = userIsAdmin || entitlements?.some((e: any) => e.status === 'active' && e.product_code === 'LPE');
       setUserTier(hasPaid ? 'paid' : 'free');
 
       try {
@@ -478,6 +487,7 @@ export default function AppPage() {
         language={form.language || 'id'}
         onToggleLang={() => handleChange('language', form.language === 'en' ? 'id' : 'en')}
         onOpenMenu={() => setIsSidebarOpen(true)}
+        isAdmin={isAdmin}
       />
 
       {/* Slide-out Sidebar Drawer */}
@@ -487,7 +497,7 @@ export default function AppPage() {
         activeTab={activePage}
         onSelectTab={handlePageChange}
         userEmail={userEmail}
-        isAdmin={false}
+        isAdmin={isAdmin}
         onLogout={async () => {
           await supabase.auth.signOut();
           navigate('/login');
