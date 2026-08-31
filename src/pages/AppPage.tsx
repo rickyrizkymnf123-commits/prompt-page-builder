@@ -272,14 +272,27 @@ export default function AppPage() {
             setImpersonatedUser(imp);
             setUserId(imp.id);
             setUserEmail(imp.email);
-            setUserTier(imp.tier || 'free');
+
+            // Fetch role for impersonated user from DB or imp object
+            let isImpAdmin = imp.role === 'admin' || imp.email === 'fauzymnf29@gmail.com';
+            try {
+              const { data: roleData } = await supabase
+                .from("user_roles")
+                .select("role")
+                .eq("user_id", imp.id)
+                .maybeSingle();
+              if (roleData?.role === 'admin') isImpAdmin = true;
+            } catch {}
+
+            setIsAdmin(isImpAdmin);
+            setUserTier(isImpAdmin ? 'paid' : (imp.tier || 'free'));
 
             try {
               const { data: settings } = await (supabase as any).from('app_settings').select('value').eq('key', 'scalev_order_url').maybeSingle();
               if (settings?.value) setOrderUrl(settings.value);
             } catch {}
 
-            if (imp.tier !== 'paid') {
+            if (!isImpAdmin && imp.tier !== 'paid') {
               try {
                 const { data: usage } = await supabase.from('prompt_usage').select('used_count').eq('user_id', imp.id).maybeSingle();
                 const count = usage?.used_count ?? 0;
@@ -462,7 +475,7 @@ export default function AppPage() {
             <span>
               <strong>Mode Intip Aktif:</strong> Anda sedang melihat & mencoba dashboard sebagai{' '}
               <span className="bg-black/40 px-2 py-0.5 rounded font-mono text-amber-300 border border-white/10">{impersonatedUser.email}</span>{' '}
-              <span className="text-xs font-normal opacity-90">({impersonatedUser.tier === 'paid' ? '⭐ Akun Berbayar' : '🆓 Akun Gratis'})</span>
+              <span className="text-xs font-normal opacity-90">({isAdmin ? '👑 Akun Admin' : impersonatedUser.tier === 'paid' ? '⭐ Akun Berbayar' : '🆓 Akun Gratis'})</span>
             </span>
           </div>
           <Button

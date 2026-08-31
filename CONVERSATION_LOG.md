@@ -162,13 +162,19 @@
 - **Solusi & Implementasi**:
   - Menyediakan link langsung dan langkah resmi pembuatan Access Token untuk Vercel (`https://vercel.com/account/tokens`), Supabase (`https://supabase.com/dashboard/account/tokens`), dan GitHub Personal Access Token (`https://github.com/settings/tokens`).
 
-## Session: 2026-08-31 (Eksekusi Deploy Vercel, Supabase Edge Function, & GitHub Push)
+## Session: 2026-08-31 (Fix Menu Admin Panel untuk Semua User yang Dijadikan Admin)
 
 - **User Request**:
-  - Mengirimkan token autentikasi (Supabase, GitHub, Vercel) dan meminta langsung update ke live Vercel.
+  - `udah ada fitur nya tapi di user yang sudah saya tambahkan admin ga ada menu admin panel nya , saya bikin maikha jadi admin tapi di users nya belum ada menu admin`
 
 - **Solusi & Implementasi**:
-  1. **GitHub Push**: Mendorong commit `228dead` ke repository GitHub (`origin main`) menggunakan token `ghp_...`. Status: Success.
-  2. **Supabase Edge Function Deploy**: Mendeploy ulang Edge Function `admin-users` ke proyek Supabase `uxerfoonlifdpgiiwvdi` menggunakan token `sbp_...`. Status: Deployed.
-  3. **Vercel Production Deploy**: Membangun dan mendeploy aplikasi ke Vercel Production (`https://prompt-page-builder-app.vercel.app`) menggunakan token `vcp_...`. Status: READY (`dpl_5iSgvmyTtNF1tzTB3ZpDuxyC8pwh`).
-  4. Aplikasi telah 100% rilis secara live di produksi tanpa bug/error.
+  1. **Check Role dari Database (`user_roles`)**:
+     - Di [`src/pages/AppPage.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/src/pages/AppPage.tsx), sebelumnya `isAdmin` di-hardcode `false` dan hanya mengecek email `fauzymnf29@gmail.com`.
+     - Diperbarui agar memanggil query ke `user_roles` (`role === 'admin'`). Jika user (seperti Maikha / `fashioonindonesiaa@gmail.com`) memiliki role `admin`, `isAdmin` diset `true`.
+  2. **Tombol Quick Access & Navigation**:
+     - Di [`src/components/Header.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/src/components/Header.tsx), menambahkan prop `isAdmin` dan menampilkan tombol **`👑 Admin Panel`** di kanan atas header untuk setiap pengguna berpangkat Admin.
+     - Di [`src/components/navigation/SidebarDrawer.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/src/components/navigation/SidebarDrawer.tsx), menampilkan menu **`👑 Menu Administrator`** dan tombol **`⚡ Buka Full Admin Panel (/admin)`** yang mengarahkan langsung ke `/admin` atau tab yang dipilih.
+  3. **Build & Live Deployment**:
+     - Diverifikasi `npm run build` (0 error).
+     - Git push commit `944ea5e` ke GitHub `main`.
+     - Redeploy Vercel Production: `https://prompt-page-builder-app.vercel.app` (Deployment ID: `dpl_E88zHybntoJkx59zqiDph1tbsA3E` - `READY`).
