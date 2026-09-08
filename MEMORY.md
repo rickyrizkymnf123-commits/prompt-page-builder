@@ -1,7 +1,7 @@
 # Memory
 
 ## Production Infrastructure
-- **Live Production URL**: [https://prompt-page-builder-app.vercel.app](https://prompt-page-builder-app.vercel.app)
+- **Live Production URL**: [https://prompt-page-builder-app.vercel.app](https://prompt-page-builder-app.vercel.app) / [https://www.lpbuildertools.my.id](https://www.lpbuildertools.my.id)
 - **Latest Deployment ID**: `dpl_JDrnZ5UV4KMSZvndnQcKcCmEFmcq` (Status: READY)
 - **GitHub Repository**: [https://github.com/rickyrizkymnf123-commits/prompt-page-builder](https://github.com/rickyrizkymnf123-commits/prompt-page-builder)
 - **Database (Supabase Project Ref)**: `uxerfoonlifdpgiiwvdi`
