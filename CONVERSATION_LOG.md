@@ -224,3 +224,19 @@
   4. **Verifikasi & Build**:
      - `npm run build` sukses (0 error, exit code 0).
      - Local server aktif di `http://localhost:8080/` (200 OK).
+
+## Session: 2026-09-08 (Link & Panduan Pembuatan Access Token Vercel, GitHub, & Supabase)
+
+- **User Request**:
+  - `berikan saya link untuk membuat token vercel , github , supabse`
+
+- **Solusi & Informasi**:
+  1. **Vercel Access Token**:
+     - Direct Link: https://vercel.com/account/tokens
+     - Scope: Full account / team
+  2. **GitHub Personal Access Token (Classic / PAT)**:
+     - Direct Link: https://github.com/settings/tokens/new
+     - Scope: `repo`
+  3. **Supabase Access Token**:
+     - Direct Link: https://supabase.com/dashboard/account/tokens
+     - Kegunaan: Autentikasi CLI dan API Supabase
