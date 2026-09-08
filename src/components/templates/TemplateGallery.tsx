@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { sampleTemplates, LpTemplate } from '@/data/sampleTemplates';
 import { supabase } from '@/integrations/supabase/client';
 import { Lock, Smartphone, Monitor, Sparkles, FolderOpen, Check } from 'lucide-react';
+import { getAdminWaUrl } from '@/components/common/UpgradeModal';
 
 interface Props {
   onSelectTemplate: (html: string) => void;
@@ -81,7 +82,11 @@ export function TemplateGallery({ onSelectTemplate, isPaid = true, orderUrl, use
     : allTemplates.filter(t => t.category === selectedCategory);
 
   const handleUpgrade = () => {
-    if (orderUrl) window.open(orderUrl, '_blank');
+    if (orderUrl) {
+      window.open(orderUrl, '_blank');
+    } else {
+      window.open(getAdminWaUrl('upgrade', undefined, 'Galeri Template Siap Pakai'), '_blank');
+    }
   };
 
   const openPreview = (tpl: LpTemplate) => {

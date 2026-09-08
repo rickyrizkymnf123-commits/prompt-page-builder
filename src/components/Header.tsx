@@ -1,4 +1,4 @@
-import { Moon, Sun, LogOut, Rocket, Menu, Globe, ShieldCheck } from 'lucide-react';
+import { Moon, Sun, LogOut, Rocket, Menu, Globe, ShieldCheck, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ interface Props {
   onToggleLang?: () => void;
   onOpenMenu?: () => void;
   isAdmin?: boolean;
+  userTier?: 'free' | 'paid';
+  onOpenUpgrade?: () => void;
 }
 
 export function Header({
@@ -19,6 +21,8 @@ export function Header({
   onToggleLang,
   onOpenMenu,
   isAdmin = false,
+  userTier = 'free',
+  onOpenUpgrade,
 }: Props) {
   const navigate = useNavigate();
 
@@ -52,14 +56,18 @@ export function Header({
               <span className="sm:hidden">LP Builder</span>
               <span className="hidden sm:inline">Landing Page <span className="text-primary">Builder</span></span>
             </h1>
-            <span className="text-[9px] font-black uppercase tracking-wider bg-primary/15 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full hidden md:inline-block">
-              Pro
+            <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full hidden md:inline-block border ${
+              isAdmin || userTier === 'paid'
+                ? 'bg-primary/15 text-primary border-primary/30'
+                : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+            }`}>
+              {isAdmin ? 'Admin' : userTier === 'paid' ? 'Pro' : 'Free'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Right: Admin Panel Button, Language Switcher, Dark Mode, and Logout */}
+      {/* Right: Admin Panel Button, Upgrade Pro Button, Language Switcher, Dark Mode, and Logout */}
       <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
         {/* Admin Panel Quick Access Button */}
         {isAdmin && (
@@ -72,6 +80,20 @@ export function Header({
           >
             <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
             <span>👑 <span className="hidden sm:inline">Admin Panel</span></span>
+          </Button>
+        )}
+
+        {/* Upgrade Pro Button for Free Tier Users */}
+        {!isAdmin && userTier === 'free' && onOpenUpgrade && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenUpgrade}
+            className="h-7 sm:h-8 px-2 sm:px-3 text-[11px] sm:text-xs font-black gap-1 text-amber-300 border-amber-500/40 bg-gradient-to-r from-amber-500/20 via-purple-500/15 to-amber-500/20 hover:from-amber-500/30 hover:to-purple-500/30 shadow-sm transition-all animate-pulse hover:animate-none"
+            title="Upgrade ke Tier Berbayar (Pro) via WhatsApp Admin"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>⚡ <span className="hidden sm:inline">Upgrade Pro</span></span>
           </Button>
         )}
 

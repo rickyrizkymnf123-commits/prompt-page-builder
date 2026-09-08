@@ -427,22 +427,26 @@ export default function Admin() {
     check();
   }, [navigate]);
 
-  const handleApprove = async (userId: string, entitlementId?: string | null) => {
+  const handleApprove = async (userId: string, entitlementId?: string | null, targetTier: 'free' | 'paid' = 'free') => {
     setActionLoading(userId);
+    const prod = targetTier === 'paid' ? 'LPE' : 'LPE_FREE';
     try {
       if (entitlementId) {
-        await supabase.from("entitlements").update({ status: "active", product_code: "LPE" }).eq("id", entitlementId);
+        await supabase.from("entitlements").update({ status: "active", product_code: prod }).eq("id", entitlementId);
       } else {
         await supabase.from("entitlements").upsert({
           user_id: userId,
           order_id: "acc-" + Date.now(),
-          product_code: "LPE",
+          product_code: prod,
           status: "active",
         }, { onConflict: "user_id" });
       }
       // Ensure user role exists
       await supabase.from("user_roles").upsert({ user_id: userId, role: "user" }, { onConflict: "user_id" });
-      showToast({ title: "✅ Berhasil di-ACC", description: "Pengguna sekarang aktif dan dapat login." });
+      showToast({
+        title: `✅ Berhasil di-ACC (${targetTier === 'paid' ? '⭐ Berbayar' : '🆓 Gratis'})`,
+        description: `Pengguna aktif dengan status ${targetTier === 'paid' ? 'Pro (Full Akses)' : 'Tier Gratis (LP Generator Utama)'}.`,
+      });
     } catch (e: any) {
       showToast({ title: "Error", description: e.message, variant: "destructive" });
     }
@@ -766,11 +770,16 @@ export default function Admin() {
     const ids = Array.from(selectedUsers);
 
     try {
-      if (bulkDialog.action === 'approve') {
+      if (bulkDialog.action === 'approve' || bulkDialog.action === 'approve_free') {
+        for (const uid of ids) {
+          await supabase.from("entitlements").update({ status: "active", product_code: "LPE_FREE" }).eq("user_id", uid);
+        }
+        showToast({ title: `✅ ${ids.length} User Berhasil di-ACC sebagai Tier Gratis!` });
+      } else if (bulkDialog.action === 'approve_paid') {
         for (const uid of ids) {
           await supabase.from("entitlements").update({ status: "active", product_code: "LPE" }).eq("user_id", uid);
         }
-        showToast({ title: `✅ ${ids.length} User Berhasil di-ACC!` });
+        showToast({ title: `⭐ ${ids.length} User Berhasil di-ACC sebagai Tier Berbayar!` });
       } else if (bulkDialog.action === 'reject') {
         for (const uid of ids) {
           await supabase.from("entitlements").update({ status: "rejected" }).eq("user_id", uid);
@@ -1367,8 +1376,11 @@ export default function Admin() {
                   {selectedUsers.size > 0 && (
                     <div className="flex gap-1.5 flex-wrap w-full sm:w-auto sm:ml-auto mt-1 sm:mt-0 items-center bg-secondary/80 p-1.5 rounded-lg border border-border">
                       <span className="text-xs font-semibold text-primary px-1">{selectedUsers.size} dipilih:</span>
-                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'approve' })} className="text-xs gap-1 h-7 border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10">
-                        <CheckCircle className="h-3.5 w-3.5" /> ACC
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'approve_free' })} className="text-xs gap-1 h-7 border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10" title="ACC Massal sebagai Tier Gratis">
+                        <CheckCircle className="h-3.5 w-3.5" /> ACC Gratis
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'approve_paid' })} className="text-xs gap-1 h-7 border-purple-500/40 text-purple-400 hover:bg-purple-500/10" title="ACC Massal sebagai Tier Berbayar (Pro)">
+                        <Zap className="h-3.5 w-3.5 text-amber-400" /> ACC Pro
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setBulkDialog({ open: true, action: 'reject' })} className="text-xs gap-1 h-7 border-amber-500/40 text-amber-500 hover:bg-amber-500/10">
                         <XCircle className="h-3.5 w-3.5" /> Tolak
@@ -1453,18 +1465,61 @@ export default function Admin() {
                             <div className="flex items-center justify-end gap-1 flex-wrap">
                               {u.status === "pending" && (
                                 <>
-                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7 px-2" onClick={() => handleApprove(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
-                                    <CheckCircle className="h-3.5 w-3.5" /> ACC
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7 px-2 font-bold"
+                                    onClick={() => handleApprove(u.id, u.entitlement_id, 'free')}
+                                    disabled={actionLoading === u.id}
+                                    title="ACC sebagai Tier Gratis (Hanya LP Generator Utama)"
+                                  >
+                                    <CheckCircle className="h-3.5 w-3.5" /> ACC Gratis
                                   </Button>
-                                  <Button size="sm" variant="outline" className="gap-1 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 h-7 px-2" onClick={() => handleReject(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 text-xs text-purple-400 border-purple-500/40 hover:bg-purple-500/10 h-7 px-2 font-bold"
+                                    onClick={() => handleApprove(u.id, u.entitlement_id, 'paid')}
+                                    disabled={actionLoading === u.id}
+                                    title="ACC sebagai Tier Berbayar (Pro Full Akses)"
+                                  >
+                                    <Zap className="h-3.5 w-3.5 text-amber-400" /> ACC Pro
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 h-7 px-2"
+                                    onClick={() => handleReject(u.id, u.entitlement_id)}
+                                    disabled={actionLoading === u.id}
+                                    title="Tolak Pendaftaran"
+                                  >
                                     <XCircle className="h-3.5 w-3.5" /> Tolak
                                   </Button>
                                 </>
                               )}
                               {u.status === "rejected" && (
-                                <Button size="sm" variant="outline" className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7 px-2" onClick={() => handleApprove(u.id, u.entitlement_id)} disabled={actionLoading === u.id}>
-                                  <CheckCircle className="h-3.5 w-3.5" /> ACC
-                                </Button>
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-500/10 h-7 px-2 font-bold"
+                                    onClick={() => handleApprove(u.id, u.entitlement_id, 'free')}
+                                    disabled={actionLoading === u.id}
+                                    title="Pulihkan & ACC sebagai Tier Gratis"
+                                  >
+                                    <CheckCircle className="h-3.5 w-3.5" /> ACC Gratis
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 text-xs text-purple-400 border-purple-500/40 hover:bg-purple-500/10 h-7 px-2 font-bold"
+                                    onClick={() => handleApprove(u.id, u.entitlement_id, 'paid')}
+                                    disabled={actionLoading === u.id}
+                                    title="Pulihkan & ACC sebagai Tier Berbayar (Pro)"
+                                  >
+                                    <Zap className="h-3.5 w-3.5 text-amber-400" /> ACC Pro
+                                  </Button>
+                                </>
                               )}
                               {u.status === "active" && u.role !== 'admin' && (
                                 <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-500 border-amber-300/40 hover:bg-amber-500/10 h-7 px-2" onClick={() => handleReject(u.id, u.entitlement_id)} disabled={actionLoading === u.id} title="Nonaktifkan / Tolak Akses">
@@ -1735,6 +1790,8 @@ export default function Admin() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
+              {bulkDialog.action === 'approve_free' && '✅ ACC sebagai Tier Gratis Massal'}
+              {bulkDialog.action === 'approve_paid' && '⭐ ACC sebagai Tier Berbayar Massal'}
               {bulkDialog.action === 'approve' && '✅ ACC / Setujui User Terpilih'}
               {bulkDialog.action === 'reject' && '❌ Tolak User Terpilih'}
               {bulkDialog.action === 'tier_paid' && '⭐ Ubah ke Berbayar Massal'}
@@ -1748,9 +1805,19 @@ export default function Admin() {
               Tindakan ini akan diterapkan ke <strong>{selectedUsers.size} user</strong> yang Anda pilih.
             </DialogDescription>
           </DialogHeader>
+          {bulkDialog.action === 'approve_free' && (
+            <p className="text-sm text-foreground">
+              Semua user yang dipilih akan di-ACC dan berstatus <strong>Aktif di Tier Gratis</strong> (hanya dapat mengakses LP Generator Utama).
+            </p>
+          )}
+          {bulkDialog.action === 'approve_paid' && (
+            <p className="text-sm text-foreground">
+              Semua user yang dipilih akan di-ACC dan berstatus <strong>Aktif di Tier Berbayar (Pro)</strong> dengan akses penuh ke seluruh fitur.
+            </p>
+          )}
           {bulkDialog.action === 'approve' && (
             <p className="text-sm text-foreground">
-              Semua user yang dipilih akan langsung di-ACC dan berstatus <strong>Aktif</strong> dengan akses penuh ke builder.
+              Semua user yang dipilih akan langsung di-ACC dan berstatus <strong>Aktif</strong>.
             </p>
           )}
           {bulkDialog.action === 'reject' && (

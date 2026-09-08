@@ -174,7 +174,53 @@
   2. **Tombol Quick Access & Navigation**:
      - Di [`src/components/Header.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/src/components/Header.tsx), menambahkan prop `isAdmin` dan menampilkan tombol **`👑 Admin Panel`** di kanan atas header untuk setiap pengguna berpangkat Admin.
      - Di [`src/components/navigation/SidebarDrawer.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/src/components/navigation/SidebarDrawer.tsx), menampilkan menu **`👑 Menu Administrator`** dan tombol **`⚡ Buka Full Admin Panel (/admin)`** yang mengarahkan langsung ke `/admin` atau tab yang dipilih.
-  3. **Build & Live Deployment**:
-     - Diverifikasi `npm run build` (0 error).
-     - Git push commit `944ea5e` ke GitHub `main`.
-     - Redeploy Vercel Production: `https://prompt-page-builder-app.vercel.app` (Deployment ID: `dpl_E88zHybntoJkx59zqiDph1tbsA3E` - `READY`).
+  3. **Fix Mode Intip (Impersonation Mode)**:
+     - Di [`src/pages/AppPage.tsx`](file:///C:/Users/UC/.gemini/antigravity-ide/scratch/prompt-page-builder/src/pages/AppPage.tsx), menambahkan query role database dan pembacaan `imp.role` ketika **Mode Intip** diaktifkan oleh Admin, sehingga `isAdmin` bernilai `true` saat mengintip user berpangkat Admin.
+     - Memperbarui banner Mode Intip agar menampilkan label **`👑 Akun Admin`** apabila user yang diintip adalah Admin.
+  5. **Penghapusan Proyek Duplikat Vercel**:
+     - Menghapus proyek Vercel duplikat `prompt-page-builder` (`npx vercel remove prompt-page-builder`) menggunakan token Vercel.
+     - Di dashboard Vercel kini hanya tersisa 1 proyek utama yang aktif: **`remix-of-prompt-page-builder`** dengan domain resmi **`https://prompt-page-builder-app.vercel.app`**.
+
+## Session: 2026-09-08 (Jalankan Project di Localhost)
+
+- **User Request**:
+  - `D:\BACKUP_ANTIGRAVITY_PROJECTS\Projects_Full\prompt-page-builder jalankan di localhost`
+
+- **Solusi & Implementasi**:
+  1. **Pemeriksaan Environment & Dependensi**:
+     - Path project: `D:\BACKUP_ANTIGRAVITY_PROJECTS\Projects_Full\prompt-page-builder`
+     - Runtime: Node.js v24.15.0, npm v11.12.1.
+     - Melakukan instalasi dependensi (`npm install`) karena folder `node_modules` belum ada.
+  2. **Menjalankan Dev Server**:
+     - Menjalankan `npm run dev` (Vite v5.4.19) pada background task.
+     - Server aktif dan berjalan di:
+       - Local: `http://localhost:8080/`
+       - Network: `http://192.168.1.4:8080/`
+  3. **Verifikasi**:
+     - HTTP GET request ke `http://localhost:8080` berhasil dengan status **`200 OK`**.
+  4. **Pembaruan Konteks & Memory**:
+     - Memperbarui file [`GEMINI.md`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/GEMINI.md) dan [`MEMORY.md`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/MEMORY.md).
+
+## Session: 2026-09-08 (Pending Registrasi untuk ACC Admin & Pembatasan Tier Gratis via WA)
+
+- **User Request**:
+  - `ketika ada yang daftar tolong pending dulu supaya admin bisa acc , dan untuk user tier gratis , hanya bisa akses tools pembuatan landing page aja atau LP generetor utama , ketika mereka ingin akses fitur yang lebih bagus harus bayar bisa nanti kasih akses no wa ini untuk mereka bisa hubungin admin +62 856-0396-2335`
+
+- **Solusi & Implementasi**:
+  1. **Alur Pending Registrasi & Notifikasi WhatsApp**:
+     - Memperbarui [`src/pages/Login.tsx`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/src/pages/Login.tsx): saat register baru atau orphan recovery, dibuat record `entitlements` dengan `product_code: 'LPE_FREE'` dan `status: 'pending'`.
+     - Sesi langsung dibersihkan (`signOut`), memindahkan user ke form Login dengan pemberitahuan pendaftaran berhasil & status menunggu persetujuan (ACC).
+     - Menyediakan tombol CTA hijau WhatsApp resmi langsung ke Admin (`+62 856-0396-2335`) dengan pesan template berisikan email pendaftar.
+     - Login sebelum di-ACC diblokir dengan peringatan ramah + tombol WhatsApp.
+     - Menambahkan proteksi entitlement aktif pada [`src/pages/Index.tsx`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/src/pages/Index.tsx) dan [`src/pages/AppPage.tsx`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/src/pages/AppPage.tsx).
+  2. **Pembatasan Hak Akses Tier Gratis**:
+     - Membuat komponen [`src/components/common/UpgradeModal.tsx`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/src/components/common/UpgradeModal.tsx) dengan desain Apple Liquid Glass yang menampilkan daftar fitur Pro dan tombol WhatsApp ke `+62 856-0396-2335`.
+     - Pada [`src/components/navigation/SidebarDrawer.tsx`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/src/components/navigation/SidebarDrawer.tsx), semua menu selain `LP Generator (Utama)` diberi badge emas `🔒 PRO`. Klik pada menu terkunci memunculkan modal upgrade.
+     - Menambahkan tab guard dan auto-redirect di [`src/pages/AppPage.tsx`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/src/pages/AppPage.tsx).
+     - Di [`src/components/Header.tsx`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/src/components/Header.tsx), menambahkan badge `Free` dan tombol `⚡ Upgrade Pro` untuk user gratis.
+  3. **Opsi ACC Admin di Panel Administrator**:
+     - Di [`src/pages/Admin.tsx`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/src/pages/Admin.tsx), menambahkan tombol aksi individual `✅ ACC Gratis` (mengaktifkan sebagai `LPE_FREE`) dan `⭐ ACC Pro` (mengaktifkan sebagai `LPE`).
+     - Menambahkan kontrol aksi massal (Bulk Action) untuk `ACC Gratis` dan `ACC Pro`.
+  4. **Verifikasi & Build**:
+     - `npm run build` sukses (0 error, exit code 0).
+     - Local server aktif di `http://localhost:8080/` (200 OK).

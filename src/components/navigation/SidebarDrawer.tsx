@@ -20,6 +20,7 @@ import {
   Settings,
   ExternalLink,
   Copy,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -30,9 +31,11 @@ interface Props {
   onSelectTab: (tab: string) => void;
   userEmail?: string;
   isAdmin?: boolean;
+  isPaid?: boolean;
   pendingUsersCount?: number;
   onLogout?: () => void;
   onOpenSavedProjects?: () => void;
+  onRequireUpgrade?: (featureName: string) => void;
 }
 
 export function SidebarDrawer({
@@ -42,9 +45,11 @@ export function SidebarDrawer({
   onSelectTab,
   userEmail,
   isAdmin,
+  isPaid = true,
   pendingUsersCount = 0,
   onLogout,
   onOpenSavedProjects,
+  onRequireUpgrade,
 }: Props) {
   if (!isOpen) return null;
 
@@ -182,8 +187,13 @@ export function SidebarDrawer({
     },
   ];
 
-  const handleItemClick = (id: string) => {
-    onSelectTab(id);
+  const handleItemClick = (item: { id: string; label: string }) => {
+    if (!isPaid && !isAdmin && item.id !== 'generator') {
+      onClose();
+      onRequireUpgrade?.(item.label);
+      return;
+    }
+    onSelectTab(item.id);
     onClose();
   };
 
@@ -227,31 +237,40 @@ export function SidebarDrawer({
 
             {coreMenuItems.map((item) => {
               const isActive = activeTab === item.id;
+              const isLocked = !isPaid && !isAdmin && item.id !== 'generator';
               return (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => handleItemClick(item.id)}
+                  onClick={() => handleItemClick(item)}
                   className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-left transition-all border ${
                     isActive
                       ? 'bg-purple-600/20 border-purple-500/50 text-white shadow-md shadow-purple-900/30 font-bold'
+                      : isLocked
+                      ? 'bg-white/[0.02] hover:bg-white/[0.06] border-white/5 text-slate-400 hover:text-slate-200'
                       : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/5 text-slate-300 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0 pr-1">
-                    <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                      {item.icon}
+                    <div className={`w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0 ${
+                      isLocked ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-white/5 border-white/10'
+                    }`}>
+                      {isLocked ? <Lock className="w-4 h-4 text-amber-400" /> : item.icon}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold truncate">{item.label}</p>
+                      <p className={`text-xs font-bold truncate ${isLocked ? 'text-slate-300' : ''}`}>{item.label}</p>
                       <p className="text-[10px] text-slate-400 truncate opacity-80">{item.desc}</p>
                     </div>
                   </div>
 
                   <span
-                    className={`text-[9px] font-black px-2 py-0.5 rounded-full border flex-shrink-0 ${item.badgeColor}`}
+                    className={`text-[9px] font-black px-2 py-0.5 rounded-full border flex-shrink-0 ${
+                      isLocked
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        : item.badgeColor
+                    }`}
                   >
-                    {item.badge}
+                    {isLocked ? '🔒 PRO' : item.badge}
                   </span>
                 </button>
               );

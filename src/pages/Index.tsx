@@ -15,7 +15,20 @@ const Index = () => {
           navigate("/admin");
           return;
         }
-        navigate("/app");
+
+        // Check active entitlement
+        const { data: entitlements } = await supabase
+          .from("entitlements")
+          .select("status")
+          .eq("user_id", session.user.id);
+
+        const isActive = entitlements?.some((e) => e.status === "active");
+        if (isActive) {
+          navigate("/app");
+        } else {
+          await supabase.auth.signOut();
+          navigate("/login?status=pending");
+        }
       } else {
         navigate("/login");
       }

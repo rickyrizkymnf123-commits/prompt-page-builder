@@ -34,6 +34,7 @@ import { QuickPromptMode } from "@/components/tools/QuickPromptMode";
 import { LpCloner } from "@/components/tools/LpCloner";
 import { AffiliateProgram } from "@/components/affiliate/AffiliateProgram";
 import { LiveBlueprintDisplay } from "@/components/preview/LiveBlueprintDisplay";
+import { UpgradeModal } from "@/components/common/UpgradeModal";
 import { translations, Language } from "@/utils/i18n";
 
 function Stepper({ current }: { current: number }) {
@@ -224,6 +225,25 @@ export default function AppPage() {
   // Sidebar Drawer state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Upgrade Modal state
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeFeatureName, setUpgradeFeatureName] = useState("");
+
+  const tabFeatureNames: Record<string, string> = {
+    quick_prompt: 'Prompt Cepat (AI Auto-Fill)',
+    lp_cloner: 'AI LP Clone & Re-Angle (1:1)',
+    api_settings: 'AI API Configuration',
+    competitor_spy: 'AI Competitor Spy',
+    creative_sync: 'Creative-to-LP Sync',
+    five_second: 'Tes 5 Detik (Clarity Test)',
+    audit: 'AI Landing Page Auditor',
+    templates: 'Galeri Template Siap Pakai',
+    lpbuilder: 'Live LP Builder Engine',
+    affiliate: 'Program Affiliate',
+    webhook: 'Pengaturan Webhook',
+    tutorial: 'Video Tutorial',
+  };
+
   const activePage = searchParams.get('tab') || 'generator';
   const isPaid = userTier === 'paid';
   const FREE_LIMIT = 5;
@@ -232,10 +252,27 @@ export default function AppPage() {
   const t = translations[currentLang] || translations.id;
 
   const handlePageChange = (tabName: string) => {
+    if (!isPaid && !isAdmin && tabName !== 'generator') {
+      const feat = tabFeatureNames[tabName] || 'Fitur Eksklusif Pro';
+      setUpgradeFeatureName(feat);
+      setUpgradeModalOpen(true);
+      setIsSidebarOpen(false);
+      return;
+    }
     setSearchParams({ tab: tabName });
     setIsSidebarOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Guard: if non-paid, non-admin user arrives at a locked tab via URL, redirect to generator & open upgrade modal
+  useEffect(() => {
+    if (!loading && !isPaid && !isAdmin && activePage !== 'generator') {
+      const feat = tabFeatureNames[activePage] || 'Fitur Eksklusif Pro';
+      setUpgradeFeatureName(feat);
+      setUpgradeModalOpen(true);
+      setSearchParams({ tab: 'generator' });
+    }
+  }, [loading, isPaid, isAdmin, activePage]);
 
   // Load draft from localStorage
   useEffect(() => {
@@ -325,6 +362,13 @@ export default function AppPage() {
         .select("id, product_code, status")
         .eq("user_id", session.user.id);
 
+      const isActive = userIsAdmin || entitlements?.some((e: any) => e.status === 'active');
+      if (!isActive) {
+        await supabase.auth.signOut();
+        navigate("/login?status=pending");
+        return;
+      }
+
       const hasPaid = userIsAdmin || entitlements?.some((e: any) => e.status === 'active' && e.product_code === 'LPE');
       setUserTier(hasPaid ? 'paid' : 'free');
 
@@ -380,7 +424,9 @@ export default function AppPage() {
 
   const handleGenerate = async () => {
     if (!isPaid && usageLimitReached) {
-      toast({ title: '🔒 Limit Tercapai', description: `Kamu sudah menggunakan ${FREE_LIMIT}x generate gratis. Upgrade untuk unlimited.`, variant: 'destructive' });
+      setUpgradeFeatureName("Unlimited Generate Master Prompt");
+      setUpgradeModalOpen(true);
+      toast({ title: '🔒 Limit Tercapai', description: `Kamu sudah menggunakan ${FREE_LIMIT}x generate gratis. Hubungi Admin via WhatsApp untuk upgrade ke Pro/Unlimited.`, variant: 'destructive' });
       return;
     }
     setIsGenerating(true);
@@ -406,7 +452,8 @@ export default function AppPage() {
 
   const handleSelectTemplate = (html: string) => {
     if (!isPaid) {
-      if (orderUrl) window.open(orderUrl, '_blank');
+      setUpgradeFeatureName("Galeri Template Siap Pakai");
+      setUpgradeModalOpen(true);
       return;
     }
     setTemplateHtml(html);
@@ -501,6 +548,11 @@ export default function AppPage() {
         onToggleLang={() => handleChange('language', form.language === 'en' ? 'id' : 'en')}
         onOpenMenu={() => setIsSidebarOpen(true)}
         isAdmin={isAdmin}
+        userTier={userTier}
+        onOpenUpgrade={() => {
+          setUpgradeFeatureName("Semua Fitur Premium");
+          setUpgradeModalOpen(true);
+        }}
       />
 
       {/* Slide-out Sidebar Drawer */}
@@ -511,10 +563,23 @@ export default function AppPage() {
         onSelectTab={handlePageChange}
         userEmail={userEmail}
         isAdmin={isAdmin}
+        isPaid={isPaid}
+        onRequireUpgrade={(feat) => {
+          setUpgradeFeatureName(feat);
+          setUpgradeModalOpen(true);
+        }}
         onLogout={async () => {
           await supabase.auth.signOut();
           navigate('/login');
         }}
+      />
+
+      {/* Reusable Pro Upgrade Modal with WhatsApp Contact */}
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        featureName={upgradeFeatureName}
+        userEmail={userEmail}
       />
 
       {/* Clean Sub-header Bar with Page Title & Quick Action */}

@@ -2,7 +2,7 @@
 
 ## Production Infrastructure
 - **Live Production URL**: [https://prompt-page-builder-app.vercel.app](https://prompt-page-builder-app.vercel.app)
-- **Latest Deployment ID**: `dpl_E88zHybntoJkx59zqiDph1tbsA3E` (Status: READY)
+- **Latest Deployment ID**: `dpl_JDrnZ5UV4KMSZvndnQcKcCmEFmcq` (Status: READY)
 - **GitHub Repository**: [https://github.com/rickyrizkymnf123-commits/prompt-page-builder](https://github.com/rickyrizkymnf123-commits/prompt-page-builder)
 - **Database (Supabase Project Ref)**: `uxerfoonlifdpgiiwvdi`
 - **Main Admin**: `fauzymnf29@gmail.com`
@@ -52,3 +52,15 @@
     - Generator script Pixel & CAPI tracking lead event saat klik WhatsApp.
 16. **🔀 Drag & Drop Section Reorder**:
     - Pengaturan urutan section landing page secara adaptif.
+17. **⏳ Pending Registration (Admin ACC) & Free Tier Restriction (WhatsApp +62 856-0396-2335)**:
+    - User baru mendaftar dengan status `pending` dan tier `LPE_FREE`.
+    - User pending diblokir dari login dan diarahkan menghubungi WhatsApp Admin `+62 856-0396-2335`.
+    - Admin dapat meng-ACC sebagai `ACC Gratis` (`LPE_FREE`) atau `ACC Pro` (`LPE`).
+    - User tier gratis hanya dapat mengakses LP Generator Utama; fitur lain dikunci dengan modal upgrade ke WhatsApp Admin.
+
+## Local Development Environment
+- **Workspace**: `D:\BACKUP_ANTIGRAVITY_PROJECTS\Projects_Full\prompt-page-builder`
+- **Runtime**: Node.js v24.15.0, npm v11.12.1
+- **Dev Server**: `npm run dev` running on `http://localhost:8080/` (Vite v5.4.19)
+- **Supabase Project Ref**: `uxerfoonlifdpgiiwvdi`
+- **Admin WhatsApp**: `+62 856-0396-2335`
