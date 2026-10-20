@@ -2,7 +2,7 @@
 
 ## Production Infrastructure
 - **Live Production URL**: [https://prompt-page-builder-app.vercel.app](https://prompt-page-builder-app.vercel.app) / [https://www.lpbuildertools.my.id](https://www.lpbuildertools.my.id)
-- **Latest Deployment ID**: `dpl_JDrnZ5UV4KMSZvndnQcKcCmEFmcq` (Status: READY)
+- **Latest Deployment ID**: `dpl_8f2FNQwzBCZzNKGakDvZWzKQ48FZ` (Status: READY)
 - **GitHub Repository**: [https://github.com/rickyrizkymnf123-commits/prompt-page-builder](https://github.com/rickyrizkymnf123-commits/prompt-page-builder)
 - **Database (Supabase Project Ref)**: `uxerfoonlifdpgiiwvdi`
 - **Main Admin**: `fauzymnf29@gmail.com`
@@ -54,7 +54,7 @@
     - Pengaturan urutan section landing page secara adaptif.
 17. **⏳ Pending Registration (Admin ACC) & Free Tier Restriction (WhatsApp +62 856-0396-2335)**:
     - User baru mendaftar dengan status `pending` dan tier `LPE_FREE`.
-    - User pending diblokir dari login dan diarahkan menghubungi WhatsApp Admin `+62 856-0396-2335`.
+    - User pending diblokir dari login dan diberi notifikasi bahwa akses akan di-ACC setelah mengikuti kelas gratis (tanpa tautan WhatsApp).
     - Admin dapat meng-ACC sebagai `ACC Gratis` (`LPE_FREE`) atau `ACC Pro` (`LPE`).
     - User tier gratis hanya dapat mengakses LP Generator Utama; fitur lain dikunci dengan modal upgrade ke WhatsApp Admin.
 

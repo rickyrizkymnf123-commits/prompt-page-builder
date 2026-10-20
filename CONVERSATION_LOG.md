@@ -253,3 +253,22 @@
   3. Pesan WhatsApp sudah terisi template otomatis berisi email pendaftar: `Halo Admin, saya baru saja mendaftar di Prompt Page Builder dengan email: ... Mohon untuk di-ACC akun saya agar bisa mulai membuat Landing Page. Terima kasih!`.
   4. Jika user mencoba login sebelum di-ACC, sistem memblokir akses dan kembali menampilkan tombol kontak WhatsApp Admin.
   5. Menawarkan opsi jika user ingin dibuat *auto-redirect* (langsung membuka WhatsApp otomatis saat submit pendaftaran).
+
+
+## Session: 2026-10-20 (Pembaruan Alur Pendaftaran: Notifikasi ACC Setelah Ikut Kelas Gratis, Tanpa WA)
+
+- **User Request**:
+  - `gua pengen di ganti jadi ga usah di bawa ke wa bilang aja akses akan di acc setelah ikut kelas gratis`
+
+- **Solusi & Implementasi**:
+  1. Di [`src/pages/Login.tsx`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/src/pages/Login.tsx):
+     - Menghapus tombol & tautan WhatsApp dari alur pendaftaran dan notifikasi pending approval.
+     - Memperbarui pesan sukses pendaftaran baru: `🎉 Pendaftaran berhasil! Akun untuk "[email]" telah dibuat dan berstatus MENUNGGU PERSETUJUAN (ACC). Akses akan di-ACC setelah Anda mengikuti kelas gratis.`
+     - Memperbarui pesan blokir login untuk akun berstatus pending: `⏳ Akun Anda sedang MENUNGGU PERSETUJUAN (ACC). Akses akan di-ACC setelah Anda mengikuti kelas gratis.`
+     - Memperbarui pesan penanganan URL `?status=pending`.
+  2. Build & Verifikasi:
+     - `npm run build` sukses (0 error, exit code 0).
+     - Local dev server berjalan normal (200 OK).
+     - Berhasil dicommit & push ke GitHub `main` (`eff0ce9`).
+     - Vercel production deployment `dpl_8f2FNQwzBCZzNKGakDvZWzKQ48FZ` selesai berstatus `READY`.
+     - Domain live `prompt-page-builder-app.vercel.app` & `www.lpbuildertools.my.id` aktif (200 OK).
