@@ -240,3 +240,16 @@
   3. **Supabase Access Token**:
      - Direct Link: https://supabase.com/dashboard/account/tokens
      - Kegunaan: Autentikasi CLI dan API Supabase
+
+
+## Session: 2026-10-20 (Konfirmasi & Review Alur Pendaftaran ke WhatsApp)
+
+- **User Request**:
+  - `ketika ada yang daftar ke tools ini di arahkan ke wa yah ?`
+
+- **Penjelasan & Review Alur**:
+  1. Saat ini, user yang mendaftar baru mendapatkan status `pending` (menunggu persetujuan admin) dan tier gratis `LPE_FREE`.
+  2. Begitu klik tombol **Daftar Sekarang**, sistem otomatis menampilkan notifikasi sukses bahwa akun berstatus `MENUNGGU PERSETUJUAN (ACC)` dan menampilkan tombol CTA WhatsApp resmi langsung ke Admin (`+62 856-0396-2335`).
+  3. Pesan WhatsApp sudah terisi template otomatis berisi email pendaftar: `Halo Admin, saya baru saja mendaftar di Prompt Page Builder dengan email: ... Mohon untuk di-ACC akun saya agar bisa mulai membuat Landing Page. Terima kasih!`.
+  4. Jika user mencoba login sebelum di-ACC, sistem memblokir akses dan kembali menampilkan tombol kontak WhatsApp Admin.
+  5. Menawarkan opsi jika user ingin dibuat *auto-redirect* (langsung membuka WhatsApp otomatis saat submit pendaftaran).
