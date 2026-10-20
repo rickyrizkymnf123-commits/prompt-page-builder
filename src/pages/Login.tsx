@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LogIn, UserPlus, AlertCircle, CheckCircle2, Eye, EyeOff, Clock, ShieldAlert, MessageCircle } from "lucide-react";
-import { ADMIN_WA_DISPLAY, getAdminWaUrl } from "@/components/common/UpgradeModal";
+import { LogIn, UserPlus, AlertCircle, CheckCircle2, Eye, EyeOff, Clock, ShieldAlert } from "lucide-react";
+
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
@@ -35,7 +35,7 @@ export default function Login() {
   useEffect(() => {
     const statusParam = searchParams.get("status");
     if (statusParam === "pending") {
-      setLoginError("⏳ Akun Anda sedang MENUNGGU PERSETUJUAN (ACC) dari Admin. Silakan hubungi Admin melalui WhatsApp untuk aktivasi.");
+      setLoginError("⏳ Akun Anda sedang MENUNGGU PERSETUJUAN (ACC). Akses akan di-ACC setelah Anda mengikuti kelas gratis.");
     }
   }, [searchParams]);
 
@@ -92,7 +92,7 @@ export default function Login() {
           product_code: "LPE_FREE",
           status: "pending",
         }, { onConflict: "user_id" });
-        setLoginError("⏳ Akun Anda sedang MENUNGGU PERSETUJUAN (ACC) dari Admin. Silakan hubungi Admin melalui WhatsApp untuk aktivasi cepat.");
+        setLoginError("⏳ Akun Anda sedang MENUNGGU PERSETUJUAN (ACC). Akses akan di-ACC setelah Anda mengikuti kelas gratis.");
         await supabase.auth.signOut();
         setLoginLoading(false);
         return;
@@ -106,14 +106,14 @@ export default function Login() {
 
       const rejectedEntitlement = entitlements.find((e) => e.status === "rejected");
       if (rejectedEntitlement) {
-        setLoginError("❌ Pendaftaran akun Anda DITOLAK oleh Admin. Silakan hubungi Admin via WhatsApp jika ini merupakan kesalahan.");
+        setLoginError("❌ Pendaftaran akun Anda tidak disetujui oleh Admin.");
         await supabase.auth.signOut();
         setLoginLoading(false);
         return;
       }
 
       // If status is pending or anything else
-      setLoginError("⏳ Akun Anda masih MENUNGGU PERSETUJUAN (ACC) dari Admin. Silakan hubungi Admin melalui WhatsApp untuk aktivasi cepat.");
+      setLoginError("⏳ Akun Anda sedang MENUNGGU PERSETUJUAN (ACC). Akses akan di-ACC setelah Anda mengikuti kelas gratis.");
       await supabase.auth.signOut();
     } catch (err: any) {
       console.error("Login exception:", err);
@@ -204,7 +204,7 @@ export default function Login() {
                 await supabase.auth.signOut();
 
                 setRegSuccess(
-                  `🎉 Pendaftaran berhasil! Akun untuk "${regEmail.trim()}" telah dibuat dan saat ini berstatus MENUNGGU PERSETUJUAN (ACC) dari Admin. Silakan hubungi Admin via WhatsApp agar dapat langsung diaktifkan.`
+                  `🎉 Pendaftaran berhasil! Akun untuk "${regEmail.trim()}" telah dibuat dan berstatus MENUNGGU PERSETUJUAN (ACC). Akses akan di-ACC setelah Anda mengikuti kelas gratis.`
                 );
                 setLoginEmail(regEmail.trim());
                 setActiveTab("login");
@@ -259,7 +259,7 @@ export default function Login() {
 
         // Show success state
         setRegSuccess(
-          `🎉 Pendaftaran berhasil! Akun untuk "${regEmail.trim()}" telah dibuat dan saat ini berstatus MENUNGGU PERSETUJUAN (ACC) dari Admin. Silakan hubungi Admin via WhatsApp agar dapat langsung diaktifkan.`
+          `🎉 Pendaftaran berhasil! Akun untuk "${regEmail.trim()}" telah dibuat dan berstatus MENUNGGU PERSETUJUAN (ACC). Akses akan di-ACC setelah Anda mengikuti kelas gratis.`
         );
 
         // Pre-fill login email and switch to login tab
@@ -337,21 +337,13 @@ export default function Login() {
           {activeTab === "login" && (
             <form onSubmit={handleLogin} className="space-y-4">
               {regSuccess && (
-                <div className="space-y-2">
+
                   <div className="flex items-start gap-2.5 text-emerald-600 dark:text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg leading-relaxed">
                     <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
                     <span>{regSuccess}</span>
                   </div>
-                  <a
-                    href={getAdminWaUrl("approval", loginEmail)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all hover:scale-[1.01] active:scale-[0.99]"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    <span>Hubungi Admin via WA ({ADMIN_WA_DISPLAY})</span>
-                  </a>
-                </div>
+
+
               )}
 
               <div className="space-y-2">
@@ -393,11 +385,11 @@ export default function Login() {
               </div>
 
               {loginError && (
-                <div className="space-y-2">
+
                   <div className="flex items-start gap-2.5 text-destructive text-xs bg-destructive/10 border border-destructive/20 p-3 rounded-lg leading-relaxed">
                     {loginError.includes("MENUNGGU") ? (
                       <Clock className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
-                    ) : loginError.includes("DITOLAK") ? (
+                    ) : loginError.includes("DITOLAK") || loginError.includes("tidak disetujui") ? (
                       <ShieldAlert className="h-4 w-4 shrink-0 text-destructive mt-0.5" />
                     ) : (
                       <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -405,18 +397,8 @@ export default function Login() {
                     <span>{loginError}</span>
                   </div>
 
-                  {(loginError.includes("MENUNGGU") || loginError.includes("DITOLAK")) && (
-                    <a
-                      href={getAdminWaUrl("approval", loginEmail)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all hover:scale-[1.01] active:scale-[0.99]"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      <span>Chat Admin via WA ({ADMIN_WA_DISPLAY})</span>
-                    </a>
-                  )}
-                </div>
+
+
               )}
 
               <Button type="submit" className="w-full gap-2 font-semibold shadow-md" size="lg" disabled={loginLoading}>
