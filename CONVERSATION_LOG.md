@@ -272,3 +272,15 @@
      - Berhasil dicommit & push ke GitHub `main` (`eff0ce9`).
      - Vercel production deployment `dpl_8f2FNQwzBCZzNKGakDvZWzKQ48FZ` selesai berstatus `READY`.
      - Domain live `prompt-page-builder-app.vercel.app` & `www.lpbuildertools.my.id` aktif (200 OK).
+
+
+## Session: 2026-10-20 (Migrasi Port Local Dev dari 8080 ke 8081)
+
+- **User Request**:
+  - `jangan jalanin di localhost 8080 port itu gua pake`
+
+- **Solusi & Implementasi**:
+  1. Menghentikan background task dev server lama yang berjalan di port 8080 dan memastikan port 8080 bebas untuk proses `node ds-helper.mjs` milik pengguna.
+  2. Mengubah konfigurasi port di [`vite.config.ts`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/vite.config.ts) dari `8080` menjadi `8081`.
+  3. Menjalankan Vite dev server baru di `http://localhost:8081/` (status: 200 OK).
+  4. Memperbarui file konfigurasi [`GEMINI.md`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/GEMINI.md) dan [`MEMORY.md`](file:///D:/BACKUP_ANTIGRAVITY_PROJECTS/Projects_Full/prompt-page-builder/MEMORY.md).

@@ -61,6 +61,6 @@
 ## Local Development Environment
 - **Workspace**: `D:\BACKUP_ANTIGRAVITY_PROJECTS\Projects_Full\prompt-page-builder`
 - **Runtime**: Node.js v24.15.0, npm v11.12.1
-- **Dev Server**: `npm run dev` running on `http://localhost:8080/` (Vite v5.4.19)
+- **Dev Server**: `npm run dev` running on `http://localhost:8081/` (Vite v5.4.19)
 - **Supabase Project Ref**: `uxerfoonlifdpgiiwvdi`
 - **Admin WhatsApp**: `+62 856-0396-2335`
